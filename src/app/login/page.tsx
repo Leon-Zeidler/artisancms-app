@@ -1,51 +1,52 @@
-"use client"; // Required for useState and form handling
+// src/app/login/page.tsx
+"use client";
 
 import { useState } from 'react';
-// Import the Supabase client we created using a relative path
+import { useRouter } from 'next/navigation'; // Standard Next.js import
+import Link from 'next/link'; // Standard Next.js import
+// Use relative path from src/app/login/page.tsx
 import { supabase } from '../../lib/supabaseClient'; 
-import { useRouter } from 'next/navigation'; // Import useRouter
 
 export default function LoginPage() {
-  // State variables to hold the user's input
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null); // State for error messages
-  const [loading, setLoading] = useState(false); // State for loading indicator
-  const router = useRouter(); // Initialize the router
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  // Function to handle form submission
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault(); // Prevent default form submission (page reload)
-    setLoading(true); // Show loading state
-    setError(null); // Clear previous errors
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+    console.log("Attempting login...");
 
-    // Call Supabase's built-in signInWithPassword function
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email: email,
       password: password,
     });
 
-    setLoading(false); // Hide loading state
+    setLoading(false);
 
-    if (error) {
-      console.error('Login error:', error.message);
-      setError('Login failed. Please check your email and password.'); // Set user-friendly error
+    if (signInError) {
+      console.error('Login error:', signInError.message);
+      setError(`Login failed: ${signInError.message}`);
     } else {
       console.log('Login successful:', data);
-      // Redirect to the dashboard on successful login
-      router.push('/dashboard'); 
+      // Successful login will trigger session update,
+      // DashboardLayout's useEffect will handle redirect based on onboarding status
+      router.push('/dashboard'); // Redirect to dashboard area
+      router.refresh(); // Force refresh to ensure layout re-evaluates auth state
     }
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
-      {/* Changed background to light gray for contrast */}
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl border border-gray-200">
+    <main className="flex min-h-screen items-center justify-center bg-gray-100 p-4"> {/* Changed background */}
+      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl border border-gray-200"> {/* Added border */}
+        
         <h1 className="mb-6 text-center text-3xl font-bold text-gray-900">
           Login
         </h1>
-
-        {/* Bind the form submission to our handleLogin function */}
+        
         <form onSubmit={handleLogin}>
           {/* Email Address Section */}
           <div className="mb-4">
@@ -56,14 +57,14 @@ export default function LoginPage() {
               type="email"
               id="email"
               name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
               placeholder="you@example.com"
-              value={email} // Bind input value to state
-              onChange={(e) => setEmail(e.target.value)} // Update state on change
-              required // Make field required
+              required
             />
           </div>
-
+          
           {/* Password Section */}
           <div className="mb-6">
             <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-700">
@@ -73,38 +74,39 @@ export default function LoginPage() {
               type="password"
               id="password"
               name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
               placeholder="••••••••"
-              value={password} // Bind input value to state
-              onChange={(e) => setPassword(e.target.value)} // Update state on change
-              required // Make field required
+              required
             />
+            {/* Add "Forgot Password?" link here later if needed */}
           </div>
 
-          {/* Error Message Display */}
+           {/* Error Message Display */}
           {error && (
             <p className="mb-4 text-center text-sm text-red-600">{error}</p>
           )}
-
+          
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading} // Disable button while loading
-            className={`w-full rounded-md px-4 py-2 text-lg font-semibold text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+            disabled={loading}
+            className={`w-full rounded-md px-4 py-2 text-lg font-semibold text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors ${
               loading 
                 ? 'bg-orange-300 cursor-not-allowed' 
-                : 'bg-orange-600 hover:bg-orange-700'
+                : 'bg-orange-600 hover:bg-orange-700' 
             }`}
           >
-            {loading ? 'Logging in...' : 'Log In'} {/* Show loading text */}
+            {loading ? 'Logging In...' : 'Log In'}
           </button>
-
-          {/* Sign Up Link (We'll implement this later) */}
+          
+          {/* Sign Up Link */}
           <p className="mt-6 text-center text-sm text-gray-600">
             Don't have an account?{' '}
-            <a href="#" className="font-medium text-orange-600 hover:text-orange-500">
+            <Link href="/signup" className="font-medium text-orange-600 hover:text-orange-500">
               Sign Up
-            </a>
+            </Link>
           </p>
         </form>
       </div>
