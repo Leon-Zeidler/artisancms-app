@@ -5,7 +5,8 @@ import Link from 'next/link'; // Standard Next.js import
 // Import hooks for data fetching
 import React, { useState, useEffect } from 'react';
 // Import Supabase client using the configured alias
-import { supabase } from '@/lib/supabaseClient'; 
+import { supabase } from '@/lib/supabaseClient';
+import Navbar from '@/components/Navbar'; // *** Import the new Navbar component ***
 
 // --- TYPE DEFINITIONS (Ensure consistency) ---
 type Project = {
@@ -27,7 +28,7 @@ type Profile = {
     about_text: string | null;
     updated_at: string | null;
     // Add onboarding_complete if you need it for logic here later
-    onboarding_complete?: boolean | null; 
+    onboarding_complete?: boolean | null;
 };
 
 // Simple SVG Icon component (same as before)
@@ -49,7 +50,7 @@ const testimonials = [ { body: 'Hervorragende Arbeit! Pünktlich, sauber und seh
 
 
 export default function PublicHomepage() {
-  // === State Variables for Dynamic Content ===
+  // === State Variables ===
   const [profile, setProfile] = useState<Profile | null>(null);
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,8 +63,8 @@ export default function PublicHomepage() {
       setError(null);
       let profileData: Profile | null = null;
       let projectsData: Project[] = [];
-      let profileErrorDetails: any = null; // Variable to store specific profile error
-      let projectsErrorDetails: any = null; // Variable to store specific project error
+      let profileErrorDetails: any = null;
+      let projectsErrorDetails: any = null;
 
 
       try {
@@ -71,64 +72,51 @@ export default function PublicHomepage() {
         console.log("Homepage: Fetching profile data...");
         const { data: profiles, error: profileFetchError } = await supabase
           .from('profiles')
-          .select('*') // Select all columns for now
-          .limit(1); 
+          .select('*')
+          .limit(1);
 
-        profileErrorDetails = profileFetchError; // Store error details
-        console.log("Homepage: Profile fetch response:", { profiles, profileFetchError }); // Detailed log
+        profileErrorDetails = profileFetchError;
+        console.log("Homepage: Profile fetch response:", { profiles, profileFetchError });
 
         if (profileFetchError) {
             console.error("Homepage: Error during profile fetch:", profileFetchError);
-            // Don't throw immediately, allow project fetch to attempt
         } else {
              profileData = profiles && profiles.length > 0 ? profiles[0] : null;
              console.log("Homepage: Profile data found:", profileData);
-             setProfile(profileData); // Set profile state here
+             setProfile(profileData);
         }
 
         // --- Fetch Featured Projects ---
         console.log("Homepage: Fetching featured projects...");
-        // *** UPDATED .select() to include all required fields ***
         const { data: projects, error: projectsFetchError } = await supabase
           .from('projects')
-          .select(` 
-             id, 
-             title, 
-             image_url, 
-             status, 
-             "project-date", 
-             created_at 
-          `) // Ensure all needed fields are here
+          .select(`id, title, image_url, status, "project-date", created_at`)
           .eq('status', 'Published')
           .order('created_at', { ascending: false })
           .limit(3);
 
-        projectsErrorDetails = projectsFetchError; // Store error details
-        console.log("Homepage: Projects fetch response:", { projects, projectsFetchError }); // Detailed log
+        projectsErrorDetails = projectsFetchError;
+        console.log("Homepage: Projects fetch response:", { projects, projectsFetchError });
 
         if (projectsFetchError) {
            console.error("Homepage: Error during projects fetch:", projectsFetchError);
-           // Don't throw immediately
         } else {
             projectsData = (projects || []).map(p => ({
-                ...p, 
-                client: null, 
-                ai_description: null 
-            })) as Project[]; 
+                ...p,
+                client: null,
+                ai_description: null
+            })) as Project[];
             console.log("Homepage: Featured projects data:", projectsData);
-            setFeaturedProjects(projectsData); // Set project state here
+            setFeaturedProjects(projectsData);
         }
 
         // --- Final Error Check ---
-        // If profile fetch failed specifically, set that as the main error
         if (profileErrorDetails) {
             throw new Error(`Profile fetch failed: ${profileErrorDetails.message}`);
         }
-        // If project fetch failed (and profile didn't), set that error
          if (projectsErrorDetails) {
             throw new Error(`Projects fetch failed: ${projectsErrorDetails.message}`);
         }
-         // Check if profile is still null after attempts
          if (!profileData) {
             throw new Error("Unternehmensprofil konnte nicht geladen werden.");
          }
@@ -137,27 +125,25 @@ export default function PublicHomepage() {
       } catch (err) {
         console.error("Homepage: Error in fetchData block:", err);
         const message = err instanceof Error ? err.message : "An unknown error occurred";
-        setError(`Fehler: ${message}`); // Set specific error message
-        setProfile(null); // Clear profile on error
-        setFeaturedProjects([]); // Clear projects on error
+        setError(`Fehler: ${message}`);
+        setProfile(null);
+        setFeaturedProjects([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []); // Run once on mount
+  }, []);
 
   // --- Helper to parse services ---
-  // (Code remains the same)
-  const parsedServices = profile?.services_description?.split('\n').map(line => { const parts = line.split(':'); const name = parts[0]?.trim(); const description = parts.slice(1).join(':').trim(); if (name && description) { const iconKey = Object.keys(serviceIcons).find(key => name.toLowerCase().includes(key.toLowerCase())) || 'Default'; return { name, description, icon: serviceIcons[iconKey as keyof typeof serviceIcons] }; } return null; }).filter(Boolean) as { name: string; description: string; icon: string }[] || []; 
+  const parsedServices = profile?.services_description?.split('\n').map(line => { const parts = line.split(':'); const name = parts[0]?.trim(); const description = parts.slice(1).join(':').trim(); if (name && description) { const iconKey = Object.keys(serviceIcons).find(key => name.toLowerCase().includes(key.toLowerCase())) || 'Default'; return { name, description, icon: serviceIcons[iconKey as keyof typeof serviceIcons] }; } return null; }).filter(Boolean) as { name: string; description: string; icon: string }[] || [];
 
 
   // === Render Loading / Error States ===
   if (loading) {
      return <div className="min-h-screen flex items-center justify-center">Lade Webseite...</div>;
   }
-  // Show specific error message if fetching failed
   if (error) {
      return <div className="min-h-screen flex items-center justify-center text-center text-red-600 p-8">
                 <p>Fehler beim Laden der Seite:</p>
@@ -165,28 +151,18 @@ export default function PublicHomepage() {
                 <p className="mt-4 text-xs text-gray-500">(Bitte überprüfen Sie die Supabase RLS Policen für 'profiles' und 'projects' auf öffentlichen Lesezugriff)</p>
             </div>;
   }
-   // This condition might not be strictly needed now due to error handling above, but good fallback
    if (!profile && !loading) {
        return <div className="min-h-screen flex items-center justify-center text-red-600">Fehler: Unternehmensprofil konnte nicht geladen werden (Keine Daten gefunden).</div>;
   }
 
 
-  // === Main Render Logic (Using Fetched Data) ===
-  // (The rest of the JSX structure remains the same as before)
+  // === Main Render Logic ===
   return (
     <div className="min-h-screen bg-white text-gray-900">
 
       {/* ========== NAVBAR ========== */}
-      <nav className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex-shrink-0"> <Link href="/" className="text-xl font-bold text-gray-900"> {profile?.business_name || 'ArtisanCMS'} </Link> </div>
-            <div className="hidden space-x-8 md:flex"> <Link href="#leistungen" className="font-medium text-gray-600 hover:text-orange-600">Leistungen</Link> <Link href="/portfolio" className="font-medium text-gray-600 hover:text-orange-600">Projekte</Link> <Link href="#kontakt" className="font-medium text-gray-600 hover:text-orange-600">Kontakt</Link> </div>
-            <div className="hidden md:block"> <Link href="/login" className="rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700"> Kunden-Login </Link> </div>
-            <div className="md:hidden"> <button type="button" className="inline-flex items-center justify-center rounded-md p-2 text-gray-400"> <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg> </button> </div>
-          </div>
-        </div>
-      </nav>
+      {/* *** Replace the old nav with the Navbar component *** */}
+      <Navbar businessName={profile?.business_name} />
 
       {/* ========== HERO SECTION ========== */}
       <main className="isolate">
@@ -213,4 +189,3 @@ export default function PublicHomepage() {
     </div>
   );
 }
-
