@@ -12,7 +12,9 @@
     "@supabase/supabase-js": "^2.76.1",
     "next": "14.2.5",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-hot-toast": "^2.6.0",
+    "resend": "^6.2.2"
   },
   "devDependencies": {
     "@types/node": "^20",

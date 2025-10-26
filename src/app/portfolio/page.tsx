@@ -1,136 +1,85 @@
-// Mark as client component for data fetching
+// src/app/portfolio/page.tsx
 "use client";
 
-// Import necessary hooks and components
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link'; // For linking back home or to project details
-import { supabase } from '@/lib/supabaseClient'; // Use the configured path alias
+import Link from 'next/link';
+import { supabase } from '@/lib/supabaseClient';
+import Navbar from '@/components/Navbar';
+// *** Corrected import casing ***
+import Footer from '@/components/Footer'; // Import Footer with lowercase 'f'
 
 // --- TYPE DEFINITIONS ---
-// Re-use the Project type (ensure consistency with dashboard definition)
-type Project = {
-  id: string;
-  title: string | null;
-  client?: string | null; // Optional
-  'project-date': string | null;
-  image_url: string | null;
-  status: 'Published' | 'Draft' | string | null;
-  created_at: string;
-  ai_description?: string | null; // Add description if needed for snippet
-};
+type Project = { /* ... */ id: string; title: string | null; client?: string | null; 'project-date': string | null; image_url: string | null; status: 'Published' | 'Draft' | string | null; created_at: string; ai_description?: string | null; };
+type Profile = { id: string; business_name: string | null; /* other fields if needed */ };
 
-// --- PORTFOLIO CARD COMPONENT ---
-// Similar to ProjectCard on dashboard, but adapted for public view
-function PortfolioCard({ project }: { project: Project }) {
-  // Use a default placeholder if image_url is null or empty
-  const imageUrl = project.image_url || `https://placehold.co/600x400/A3A3A3/FFF?text=${encodeURIComponent(project.title || 'Project')}`;
-  // Placeholder link - eventually will link to /portfolio/[id]
-  const projectUrl = `/portfolio/${project.id}`; // Dynamic route based on ID
 
-  return (
-    <article className="flex flex-col items-start justify-between group">
-       {/* Make the card itself a link to the detail page */}
-      <Link href={projectUrl} className="block w-full">
-        <div className="relative w-full">
-            <img
-            src={imageUrl}
-            alt={project.title || 'Project image'}
-            className="aspect-[16/9] w-full rounded-2xl bg-gray-100 object-cover sm:aspect-[2/1] lg:aspect-[3/2] border border-gray-200 group-hover:opacity-90 transition-opacity"
-            onError={(e) => (e.currentTarget.src = 'https://placehold.co/600x400/ef4444/ffffff?text=Image+Error')}
-            />
-            <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10" />
-        </div>
-        <div className="max-w-xl mt-4">
-            <div className="relative">
-            <h3 className="text-lg font-semibold leading-6 text-gray-900 group-hover:text-orange-600">
-                {project.title || 'Untitled Project'}
-            </h3>
-             {/* Optional: Add a short description snippet here if needed */}
-             {/* <p className="mt-2 line-clamp-2 text-sm leading-6 text-gray-600">{project.ai_description || ''}</p> */}
-            </div>
-        </div>
-      </Link>
-    </article>
-  );
-}
+// --- PORTFOLIO CARD COMPONENT (remains the same) ---
+function PortfolioCard({ project }: { project: Project }) { /* ... */ const imageUrl = project.image_url || `https://placehold.co/600x400/A3A3A3/FFF?text=${encodeURIComponent(project.title || 'Project')}`; const projectUrl = `/portfolio/${project.id}`; return ( <article className="flex flex-col items-start justify-between group"> <Link href={projectUrl} className="block w-full"> <div className="relative w-full"> <img src={imageUrl} alt={project.title || 'Project image'} className="aspect-[16/9] w-full rounded-2xl bg-gray-100 object-cover sm:aspect-[2/1] lg:aspect-[3/2] border border-gray-200 group-hover:opacity-90 transition-opacity" onError={(e) => (e.currentTarget.src = 'https://placehold.co/600x400/ef4444/ffffff?text=Image+Error')} /> <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10" /> </div> <div className="max-w-xl mt-4"> <div className="relative"> <h3 className="text-lg font-semibold leading-6 text-gray-900 group-hover:text-orange-600"> {project.title || 'Untitled Project'} </h3> </div> </div> </Link> </article> ); }
 
 
 // --- MAIN PORTFOLIO PAGE COMPONENT ---
 export default function PortfolioPage() {
   // === State Variables ===
   const [projects, setProjects] = useState<Project[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null); // *** NEW: Profile state ***
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // === Data Fetching with useEffect ===
+  // === Data Fetching ===
   useEffect(() => {
-    const fetchPublishedProjects = async () => {
+    const fetchData = async () => { // Combined fetch function
       setLoading(true);
       setError(null);
+      let profileError = null;
+      let projectsError = null;
 
-      // === Supabase Query ===
-      // Fetch only projects where status is 'Published'
-      // No auth check needed here as this is a public page,
-      // but RLS still applies on the backend (we need a policy for public reads!)
-      console.log("Fetching published projects...");
-      const { data, error: fetchError } = await supabase
-        .from('projects')
-        .select(`
-          id,
-          title,
-          "project-date",
-          image_url,
-          status,
-          created_at,
-          ai_description 
-        `)
-        .eq('status', 'Published') // Filter for Published projects
-        .order('project-date', { ascending: false, nullsFirst: false }) // Order by date, newest first
-        .order('created_at', { ascending: false }); // Secondary sort by creation
+      try {
+        // Fetch Profile (only need business_name)
+        const { data: profileData, error: pError } = await supabase
+          .from('profiles')
+          .select('id, business_name')
+          .limit(1)
+          .single(); // Use single() if you expect only one profile
+        profileError = pError;
+        if (profileData) setProfile(profileData);
 
-      console.log("Supabase fetch response:", { data, fetchError });
+        // Fetch Published Projects
+        const { data: projectsData, error: projError } = await supabase
+          .from('projects')
+          .select(`id, title, "project-date", image_url, status, created_at, ai_description`)
+          .eq('status', 'Published')
+          .order('project-date', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false });
+        projectsError = projError;
+        if (projectsData) setProjects(projectsData);
 
-      if (fetchError) {
-        console.error('Error fetching published projects:', fetchError);
-        setError(`Projekte konnten nicht geladen werden: ${fetchError.message}`);
-      } else {
-         console.log("Fetched published projects data:", data);
-        setProjects(data || []);
+        // Handle errors after trying both fetches
+        if (profileError) throw new Error(`Profil konnte nicht geladen werden: ${profileError.message}`);
+        if (projectsError) throw new Error(`Projekte konnten nicht geladen werden: ${projectsError.message}`);
+        if (!profileData) throw new Error("Kein Unternehmensprofil gefunden."); // Add this check
+
+      } catch (err) {
+        console.error('Error fetching portfolio data:', err);
+        const message = err instanceof Error ? err.message : "Ein Fehler ist aufgetreten.";
+        setError(message);
+        setProfile(null); // Clear on error
+        setProjects([]); // Clear on error
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    fetchPublishedProjects();
-  }, []); // Empty array ensures this runs only once on mount
+    fetchData();
+  }, []);
 
   // === Render Logic ===
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col">
-       {/* You might want to extract the Navbar into a reusable component later */}
-       <nav className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm">
-         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-           <div className="flex h-16 items-center justify-between">
-             <div className="flex-shrink-0">
-               <Link href="/" className="text-xl font-bold text-gray-900">ArtisanCMS</Link>
-             </div>
-             <div className="hidden space-x-8 md:flex">
-                <Link href="/#leistungen" className="font-medium text-gray-600 hover:text-orange-600">Leistungen</Link>
-                <Link href="/portfolio" className="font-bold text-orange-600">Projekte</Link> {/* Highlight current page */}
-                <Link href="/#kontakt" className="font-medium text-gray-600 hover:text-orange-600">Kontakt</Link>
-             </div>
-             <div className="hidden md:block">
-               <Link href="/login" className="rounded-md bg-gray-800 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700">
-                 Kunden-Login
-               </Link>
-             </div>
-              {/* Mobile menu button placeholder */}
-             <div className="md:hidden"> <button type="button" className="inline-flex items-center justify-center rounded-md p-2 text-gray-400"> <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg> </button> </div>
-           </div>
-         </div>
-       </nav>
+       {/* Use Navbar, pass business name */}
+       <Navbar businessName={profile?.business_name} />
 
         {/* ========== PORTFOLIO GRID SECTION ========== */}
-        <div className="py-24 sm:py-32 flex-grow"> {/* Added flex-grow */}
+        <div className="py-24 sm:py-32 flex-grow">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 {/* Header */}
                 <div className="mx-auto max-w-2xl lg:mx-0">
@@ -141,14 +90,10 @@ export default function PortfolioPage() {
                 </div>
 
                 {/* Loading State */}
-                {loading && (
-                    <p className="text-slate-600 mt-16 text-center">Lade Projekte...</p>
-                )}
+                {loading && ( <p className="text-slate-600 mt-16 text-center">Lade Projekte...</p> )}
 
                 {/* Error State */}
-                {error && (
-                    <p className="text-red-600 mt-16 text-center">{error}</p>
-                )}
+                {error && ( <p className="text-red-600 mt-16 text-center">{error}</p> )}
 
                 {/* Project Grid */}
                 {!loading && !error && (
@@ -167,19 +112,8 @@ export default function PortfolioPage() {
             </div>
         </div>
 
-      {/* Re-use Footer component later */}
-       <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="mx-auto max-w-7xl overflow-hidden px-6 py-12 lg:px-8">
-             <nav className="-mb-6 columns-2 sm:flex sm:justify-center sm:space-x-12" aria-label="Footer">
-                 <div className="pb-6"> <Link href="/#leistungen" className="text-sm leading-6 text-gray-600 hover:text-gray-900">Leistungen</Link> </div>
-                 <div className="pb-6"> <Link href="/portfolio" className="text-sm leading-6 text-gray-600 hover:text-gray-900">Projekte</Link> </div>
-                 <div className="pb-6"> <Link href="/impressum" className="text-sm leading-6 text-gray-600 hover:text-gray-900">Impressum</Link> </div>
-                 <div className="pb-6"> <Link href="/datenschutz" className="text-sm leading-6 text-gray-600 hover:text-gray-900">Datenschutz</Link> </div>
-             </nav>
-            <p className="mt-10 text-center text-xs leading-5 text-gray-500"> &copy; {new Date().getFullYear()} Ihr Firmenname. Alle Rechte vorbehalten. </p>
-            <p className="mt-2 text-center text-xs leading-5 text-gray-500"> Powered by ArtisanCMS </p>
-        </div>
-       </footer>
+      {/* Use Footer, pass business name */}
+       <Footer businessName={profile?.business_name} />
     </div>
   );
 }
