@@ -3,9 +3,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, notFound } from 'next/navigation'; // Import useParams and notFound
+import { useParams, notFound } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import Navbar from '@/components/Navbar'; // Use uppercase N
+import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer'; // Use uppercase F
 
 // --- TYPE DEFINITIONS ---
@@ -46,8 +46,8 @@ export default function ClientTestimonialsPage() {
     const fetchTestimonialsData = async () => {
       setLoading(true);
       setError(null);
-      setProfile(null); // Reset
-      setTestimonials([]); // Reset
+      setProfile(null);
+      setTestimonials([]);
 
       let profileData: Profile | null = null;
 
@@ -60,21 +60,27 @@ export default function ClientTestimonialsPage() {
           .eq('slug', slug)
           .maybeSingle();
 
-        if (profileError) throw profileError;
-        if (!profileResult) return notFound(); // Show 404 if profile slug invalid
+        if (profileError) {
+             console.error("Testimonials List: Error fetching profile:", profileError);
+             throw new Error(`Profil konnte nicht geladen werden: ${profileError.message}`);
+         }
+        if (!profileResult) {
+            console.log(`Testimonials List: No profile found for slug ${slug}.`);
+            return notFound(); // Show 404
+        }
 
         profileData = profileResult as Profile;
         setProfile(profileData);
         console.log(`Testimonials List: Found profile ID: ${profileData.id}`);
 
-        // --- 2. Fetch Published Testimonials for this Profile ---
+        // --- 2. Fetch Published Testimonials for THIS Profile ID ---
         console.log(`Testimonials List: Fetching published testimonials for profile ID: ${profileData.id}...`);
         const { data, error: fetchError } = await supabase
           .from('testimonials')
           .select('*') // Select all testimonial fields
-          .eq('user_id', profileData.id) // Filter by profile ID
+          .eq('user_id', profileData.id) // *** CRITICAL: Filter by profile ID ***
           .eq('is_published', true) // Only show published
-          .order('created_at', { ascending: false }); // Order by creation date
+          .order('created_at', { ascending: false });
 
         if (fetchError) {
           console.error('Error fetching published testimonials:', fetchError);
@@ -86,9 +92,11 @@ export default function ClientTestimonialsPage() {
 
       } catch (err: any) {
         console.error("Error fetching testimonials data:", err);
-         if (err?.code !== 'PGRST116' && !error) {
+         if (!error) { // Don't overwrite notFound state
            setError(err.message || "Ein Fehler ist aufgetreten.");
          }
+         setProfile(null);
+         setTestimonials([]);
       } finally {
         setLoading(false);
       }
@@ -100,14 +108,12 @@ export default function ClientTestimonialsPage() {
   // === Render Logic ===
   if (loading) { return <div className="min-h-screen flex items-center justify-center">Lade Kundenstimmen...</div>; }
   if (error && !profile) { return <div className="min-h-screen flex items-center justify-center text-center text-red-600 p-8"><p>Fehler:</p><p className="mt-2 text-sm">{error}</p></div>; }
-  if (!profile) { return <div className="min-h-screen flex items-center justify-center text-red-600">Profil nicht gefunden.</div>; }
+  if (!profile) { return null; /* Handled by notFound */ }
 
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col">
-       {/* Pass profile name and slug */}
        <Navbar businessName={profile?.business_name} slug={profile?.slug}/>
 
-        {/* ========== TESTIMONIALS LIST SECTION ========== */}
         <main className="flex-grow py-24 sm:py-32">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 {/* Header */}
@@ -118,12 +124,11 @@ export default function ClientTestimonialsPage() {
                     </p>
                 </div>
 
-                {/* Show testimonial specific loading/error if profile loaded */}
-                {loading && <p className="text-slate-600 mt-16 text-center">Lade Kundenstimmen...</p>}
+                {/* Show testimonial specific error if profile loaded fine */}
                 {error && <p className="text-red-600 mt-16 text-center">{error}</p>}
 
-                {/* Testimonials Grid/List */}
-                {!loading && !error && (
+                {/* Testimonials Grid/List - Render only if no error */}
+                {!error && (
                     <div className="mx-auto mt-16 flow-root">
                         <div className="-my-12 divide-y divide-gray-200">
                             {testimonials.length > 0 ? (
@@ -159,7 +164,6 @@ export default function ClientTestimonialsPage() {
             </div>
         </main>
 
-      {/* Pass profile name and slug */}
        <Footer businessName={profile?.business_name} slug={profile?.slug}/>
     </div>
   );
