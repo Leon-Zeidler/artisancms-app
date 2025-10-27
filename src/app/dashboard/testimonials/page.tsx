@@ -94,8 +94,7 @@ export default function TestimonialsManagementPage() {
     const [actionLoading, setActionLoading] = useState<Record<string, 'publish' | 'delete' | 'save' | null>>({});
     const [modalState, setModalState] = useState<ModalState>({ isOpen: false, mode: 'add', data: null });
     const [deleteConfirmState, setDeleteConfirmState] = useState<{ isOpen: boolean; testimonial: Testimonial | null }>({ isOpen: false, testimonial: null });
-    // *** ENSURE isConfirmingDelete is DEFINED ***
-    const [isConfirmingDelete, setIsConfirmingDelete] = useState(false); // State for delete modal loading
+    const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
     const router = useRouter();
 
     // Fetch Testimonials
@@ -133,7 +132,10 @@ export default function TestimonialsManagementPage() {
         console.log("Upserting testimonial:", dataToUpsert);
 
         const savePromise = async () => {
-            const { error: upsertError } = await supabase.from('testimonials').upsert(dataToUpsert, { onConflict: 'id' });
+            // *** REMOVED returning: 'minimal' from upsert options ***
+            const { error: upsertError } = await supabase
+                .from('testimonials')
+                .upsert(dataToUpsert, { onConflict: 'id' }); // Remove returning option
             if (upsertError) throw upsertError;
         };
 
@@ -160,9 +162,7 @@ export default function TestimonialsManagementPage() {
     const handleDeleteRequest = (testimonial: Testimonial) => { setDeleteConfirmState({ isOpen: true, testimonial: testimonial }); };
     const handleConfirmDelete = async () => {
         const testimonialToDelete = deleteConfirmState.testimonial; if (!testimonialToDelete || !currentUser) return;
-        // *** Use setIsConfirmingDelete for modal loading state ***
         setIsConfirmingDelete(true);
-        // setLoadingState(testimonialToDelete.id, 'delete'); // Can optionally remove this if modal loading is enough
         console.log(`Deleting testimonial ${testimonialToDelete.id}`);
 
         const deletePromise = async () => {
@@ -180,10 +180,8 @@ export default function TestimonialsManagementPage() {
              error: (err: any) => `Löschen fehlgeschlagen: ${err.message}`
         });
 
-        // *** Reset modal loading state ***
         setIsConfirmingDelete(false);
-        // setLoadingState(testimonialToDelete.id, null); // Remove if using modal state
-        setDeleteConfirmState({ isOpen: false, testimonial: null }); // Reset state after toast
+        setDeleteConfirmState({ isOpen: false, testimonial: null });
     };
     const handleCancelDelete = () => { setDeleteConfirmState({ isOpen: false, testimonial: null }); };
 
@@ -207,7 +205,7 @@ export default function TestimonialsManagementPage() {
                     {testimonials.length > 0 ? (
                         testimonials.map((t) => {
                              const isLoading = actionLoading[t.id];
-                             // *** CORRECTED isDisabled check using isConfirmingDelete ***
+                             // *** CORRECTED isDisabled check ***
                              const isDisabled = !!isLoading || actionLoading.modal === 'save' || (deleteConfirmState.testimonial?.id === t.id && isConfirmingDelete);
                             return (
                                 <div key={t.id} className={`p-4 bg-slate-800 rounded-lg border border-slate-700 transition-opacity ${isDisabled ? 'opacity-70 pointer-events-none' : ''}`}>
@@ -219,9 +217,10 @@ export default function TestimonialsManagementPage() {
                                         </div>
                                         <div className="flex items-center space-x-2 flex-shrink-0">
                                             {/* Buttons... */}
-                                            <button onClick={() => handlePublishToggle(t)} disabled={isDisabled || isLoading === 'publish'} title={t.is_published ? 'Verbergen' : 'Veröffentlichen'} className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isLoading === 'publish' ? 'bg-slate-600 text-slate-400 cursor-wait' : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : t.is_published ? 'bg-yellow-600/20 text-yellow-300 hover:bg-yellow-500/30' : 'bg-green-600/20 text-green-300 hover:bg-green-500/30' }`}> <span className="sr-only">{t.is_published ? 'Verbergen' : 'Veröffentlichen'}</span> {isLoading === 'publish' ? <ArrowPathIcon className="h-4 w-4" /> : t.is_published ? <EyeSlashIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />} </button>
-                                            <button onClick={() => openEditModal(t)} disabled={isDisabled} title="Bearbeiten" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600/20 text-blue-300 hover:bg-blue-500/30' }`}> <span className="sr-only">Bearbeiten</span> <PencilIcon className="h-4 w-4" /> </button>
-                                            <button onClick={() => handleDeleteRequest(t)} disabled={isDisabled || isLoading === 'delete'} title="Löschen" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isLoading === 'delete' ? 'bg-slate-600 text-slate-400 cursor-wait' : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-red-600/20 text-red-300 hover:bg-red-500/30' }`}> <span className="sr-only">Löschen</span> {isLoading === 'delete' ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />} </button>
+                                            {/* *** CORRECTED disabled prop logic - ensure boolean *** */}
+                                            <button onClick={() => handlePublishToggle(t)} disabled={!!isDisabled || isLoading === 'publish'} title={t.is_published ? 'Verbergen' : 'Veröffentlichen'} className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isLoading === 'publish' ? 'bg-slate-600 text-slate-400 cursor-wait' : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : t.is_published ? 'bg-yellow-600/20 text-yellow-300 hover:bg-yellow-500/30' : 'bg-green-600/20 text-green-300 hover:bg-green-500/30' }`}> <span className="sr-only">{t.is_published ? 'Verbergen' : 'Veröffentlichen'}</span> {isLoading === 'publish' ? <ArrowPathIcon className="h-4 w-4" /> : t.is_published ? <EyeSlashIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />} </button>
+                                            <button onClick={() => openEditModal(t)} disabled={!!isDisabled} title="Bearbeiten" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600/20 text-blue-300 hover:bg-blue-500/30' }`}> <span className="sr-only">Bearbeiten</span> <PencilIcon className="h-4 w-4" /> </button>
+                                            <button onClick={() => handleDeleteRequest(t)} disabled={!!isDisabled || isLoading === 'delete'} title="Löschen" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isLoading === 'delete' ? 'bg-slate-600 text-slate-400 cursor-wait' : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-red-600/20 text-red-300 hover:bg-red-500/30' }`}> <span className="sr-only">Löschen</span> {isLoading === 'delete' ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />} </button>
                                         </div>
                                     </div>
                                 </div>
@@ -233,7 +232,6 @@ export default function TestimonialsManagementPage() {
 
             {/* Modals */}
             <TestimonialModal modalState={modalState} onClose={closeModal} onSave={handleSaveTestimonial} isSaving={actionLoading.modal === 'save'} />
-            {/* *** CORRECTED prop name passed to ConfirmationModal *** */}
             <ConfirmationModal isOpen={deleteConfirmState.isOpen} title="Kundenstimme löschen" message={`Möchten Sie die Kundenstimme von "${deleteConfirmState.testimonial?.author_name || ''}" wirklich unwiderruflich löschen?`} confirmText="Ja, löschen" onConfirm={handleConfirmDelete} onCancel={handleCancelDelete} isConfirming={isConfirmingDelete} />
         </main>
     );
