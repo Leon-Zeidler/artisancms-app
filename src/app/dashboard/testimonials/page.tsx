@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
-// import Footer from '@/components/Footer'; // Usually not needed in dashboard
+import toast from 'react-hot-toast';
 
 // --- Icons ---
 const PlusIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /> </svg> );
@@ -30,6 +30,7 @@ type Testimonial = {
 };
 
 type TestimonialFormData = Omit<Testimonial, 'id' | 'created_at' | 'user_id'>;
+
 type ModalState = {
     isOpen: boolean;
     mode: 'add' | 'edit';
@@ -39,30 +40,8 @@ type ModalState = {
 // --- Confirmation Modal ---
 interface ConfirmationModalProps { isOpen: boolean; title: string; message: string; confirmText?: string; cancelText?: string; onConfirm: () => void; onCancel: () => void; isConfirming: boolean;}
 function ConfirmationModal({ isOpen, title, message, confirmText = "Bestätigen", cancelText = "Abbrechen", onConfirm, onCancel, isConfirming }: ConfirmationModalProps) {
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog">
-      <div className="bg-slate-800 rounded-lg shadow-xl p-6 max-w-sm w-full border border-slate-700">
-        <div className="flex items-start">
-          <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-900/50 sm:mx-0 sm:h-10 sm:w-10">
-            <ExclamationTriangleIcon className="h-6 w-6 text-red-400" aria-hidden="true" />
-          </div>
-          <div className="ml-4 text-left">
-            <h3 className="text-base font-semibold leading-6 text-white" id="modal-title">{title}</h3>
-            <div className="mt-2"> <p className="text-sm text-slate-400">{message}</p> </div>
-          </div>
-        </div>
-        <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse sm:gap-x-3">
-          <button type="button" disabled={isConfirming} onClick={onConfirm} className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:w-auto transition-colors ${ isConfirming ? 'bg-red-800 text-red-300 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700'}`}>
-            {isConfirming ? (<><ArrowPathIcon className="-ml-1 mr-2 h-5 w-5 animate-spin" /> Wird ausgeführt...</>) : confirmText}
-          </button>
-          <button type="button" disabled={isConfirming} onClick={onCancel} className="mt-3 inline-flex w-full justify-center rounded-md bg-slate-700 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-slate-600 hover:bg-slate-600 sm:mt-0 sm:w-auto disabled:opacity-50">
-            {cancelText}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+    if (!isOpen) return null;
+    return ( <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog"> <div className="bg-slate-800 rounded-lg shadow-xl p-6 max-w-sm w-full border border-slate-700"> <div className="flex items-start"> <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-900/50 sm:mx-0 sm:h-10 sm:w-10"> <ExclamationTriangleIcon className="h-6 w-6 text-red-400" aria-hidden="true" /> </div> <div className="ml-4 text-left"> <h3 className="text-base font-semibold leading-6 text-white" id="modal-title">{title}</h3> <div className="mt-2"> <p className="text-sm text-slate-400">{message}</p> </div> </div> </div> <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse sm:gap-x-3"> <button type="button" disabled={isConfirming} onClick={onConfirm} className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:w-auto transition-colors ${ isConfirming ? 'bg-red-800 text-red-300 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700'}`}> {isConfirming ? (<><ArrowPathIcon className="-ml-1 mr-2 h-5 w-5 animate-spin" /> Wird ausgeführt...</>) : confirmText} </button> <button type="button" disabled={isConfirming} onClick={onCancel} className="mt-3 inline-flex w-full justify-center rounded-md bg-slate-700 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-slate-600 hover:bg-slate-600 sm:mt-0 sm:w-auto disabled:opacity-50"> {cancelText} </button> </div> </div> </div> );
 }
 
 // --- ADD/EDIT MODAL ---
@@ -83,20 +62,9 @@ function TestimonialModal({ modalState, onClose, onSave, isSaving }: Testimonial
     );
     const [localError, setLocalError] = useState<string | null>(null);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value, type } = e.target;
-        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value }));
-        setLocalError(null);
-    };
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { const { name, value, type } = e.target; setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value })); setLocalError(null); };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLocalError(null);
-        if (!formData.author_name.trim() || !formData.body.trim()) {
-            setLocalError("Name des Autors und Text dürfen nicht leer sein."); return;
-        }
-        await onSave(formData, modalState.data?.id);
-    };
+    const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); setLocalError(null); if (!formData.author_name.trim() || !formData.body.trim()) { setLocalError("Name des Autors und Text dürfen nicht leer sein."); return; } await onSave(formData, modalState.data?.id); };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog">
@@ -104,34 +72,12 @@ function TestimonialModal({ modalState, onClose, onSave, isSaving }: Testimonial
                  <button onClick={onClose} disabled={isSaving} className="absolute top-4 right-4 text-slate-400 hover:text-white disabled:opacity-50"> <XMarkIcon className="h-6 w-6" /> </button>
                 <h2 className="text-xl font-semibold text-white mb-6"> {modalState.mode === 'add' ? 'Neue Kundenstimme hinzufügen' : 'Kundenstimme bearbeiten'} </h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label htmlFor="author_name" className="block text-sm font-medium text-slate-300 mb-1">Name des Autors *</label>
-                        <input type="text" name="author_name" id="author_name" required value={formData.author_name} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" />
-                    </div>
-                    <div>
-                        <label htmlFor="author_handle" className="block text-sm font-medium text-slate-300 mb-1">Zusatz (z.B. Firma, Ort)</label>
-                        <input type="text" name="author_handle" id="author_handle" value={formData.author_handle ?? ''} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" />
-                    </div>
-                    <div>
-                        <label htmlFor="body" className="block text-sm font-medium text-slate-300 mb-1">Text der Kundenstimme *</label>
-                        <textarea name="body" id="body" rows={5} required value={formData.body} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" />
-                    </div>
-                     <div className="relative flex items-start">
-                        <div className="flex h-6 items-center">
-                            <input id="is_published" name="is_published" type="checkbox" checked={formData.is_published} onChange={handleChange} className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-orange-600 focus:ring-orange-600 focus:ring-offset-slate-800" />
-                        </div>
-                        <div className="ml-3 text-sm leading-6">
-                            <label htmlFor="is_published" className="font-medium text-slate-300">Veröffentlicht</label>
-                            <p className="text-slate-500 text-xs">Soll diese Kundenstimme auf der Webseite angezeigt werden?</p>
-                        </div>
-                    </div>
+                    <div> <label htmlFor="author_name" className="block text-sm font-medium text-slate-300 mb-1">Name des Autors *</label> <input type="text" name="author_name" id="author_name" required value={formData.author_name} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" /> </div>
+                    <div> <label htmlFor="author_handle" className="block text-sm font-medium text-slate-300 mb-1">Zusatz (z.B. Firma, Ort)</label> <input type="text" name="author_handle" id="author_handle" value={formData.author_handle ?? ''} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" /> </div>
+                    <div> <label htmlFor="body" className="block text-sm font-medium text-slate-300 mb-1">Text der Kundenstimme *</label> <textarea name="body" id="body" rows={5} required value={formData.body} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" /> </div>
+                     <div className="relative flex items-start"> <div className="flex h-6 items-center"> <input id="is_published" name="is_published" type="checkbox" checked={formData.is_published} onChange={handleChange} className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-orange-600 focus:ring-orange-600 focus:ring-offset-slate-800" /> </div> <div className="ml-3 text-sm leading-6"> <label htmlFor="is_published" className="font-medium text-slate-300">Veröffentlicht</label> <p className="text-slate-500 text-xs">Soll diese Kundenstimme auf der Webseite angezeigt werden?</p> </div> </div>
                     {localError && <p className="text-sm text-red-500">{localError}</p>}
-                    <div className="flex justify-end gap-3 pt-4">
-                        <button type="button" onClick={onClose} disabled={isSaving} className="rounded-md px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-50"> Abbrechen </button>
-                        <button type="submit" disabled={isSaving} className={`inline-flex items-center gap-x-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors ${ isSaving ? 'bg-orange-800 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'}`}>
-                             {isSaving && <ArrowPathIcon className="h-4 w-4 animate-spin" />} {isSaving ? 'Wird gespeichert...' : 'Speichern'}
-                        </button>
-                    </div>
+                    <div className="flex justify-end gap-3 pt-4"> <button type="button" onClick={onClose} disabled={isSaving} className="rounded-md px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-50"> Abbrechen </button> <button type="submit" disabled={isSaving} className={`inline-flex items-center gap-x-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors ${ isSaving ? 'bg-orange-800 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'}`}> {isSaving && <ArrowPathIcon className="h-4 w-4 animate-spin" />} {isSaving ? 'Wird gespeichert...' : 'Speichern'} </button> </div>
                 </form>
             </div>
         </div>
@@ -140,6 +86,7 @@ function TestimonialModal({ modalState, onClose, onSave, isSaving }: Testimonial
 
 // --- MAIN PAGE COMPONENT ---
 export default function TestimonialsManagementPage() {
+    // === State Variables ===
     const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
@@ -147,21 +94,21 @@ export default function TestimonialsManagementPage() {
     const [actionLoading, setActionLoading] = useState<Record<string, 'publish' | 'delete' | 'save' | null>>({});
     const [modalState, setModalState] = useState<ModalState>({ isOpen: false, mode: 'add', data: null });
     const [deleteConfirmState, setDeleteConfirmState] = useState<{ isOpen: boolean; testimonial: Testimonial | null }>({ isOpen: false, testimonial: null });
+    // *** ENSURE isConfirmingDelete is DEFINED ***
+    const [isConfirmingDelete, setIsConfirmingDelete] = useState(false); // State for delete modal loading
     const router = useRouter();
 
+    // Fetch Testimonials
     const fetchTestimonials = useCallback(async (user: User) => {
         setLoading(true); setError(null);
         console.log("Fetching testimonials for user:", user.id);
-        const { data, error: fetchError } = await supabase
-            .from('testimonials').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-        if (fetchError) {
-            console.error('Error fetching testimonials:', fetchError);
-            setError(`Kundenstimmen konnten nicht geladen werden: ${fetchError.message}`); setTestimonials([]);
-        } else {
-            console.log("Fetched testimonials:", data); setTestimonials(data || []);
-        } setLoading(false);
+        const { data, error: fetchError } = await supabase.from('testimonials').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+        if (fetchError) { console.error('Error fetching testimonials:', fetchError); setError(`Kundenstimmen konnten nicht geladen werden: ${fetchError.message}`); setTestimonials([]); }
+        else { console.log("Fetched testimonials:", data); setTestimonials(data || []); }
+        setLoading(false);
     }, []);
 
+    // Initial Load useEffect
     useEffect(() => {
         const getUserAndData = async () => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -171,54 +118,76 @@ export default function TestimonialsManagementPage() {
         getUserAndData();
     }, [router, fetchTestimonials]);
 
+    // Modal Handlers
     const openAddModal = () => setModalState({ isOpen: true, mode: 'add', data: null });
     const openEditModal = (testimonial: Testimonial) => setModalState({ isOpen: true, mode: 'edit', data: testimonial });
-    const closeModal = () => { if (actionLoading.modal === 'save') return; setModalState({ isOpen: false, mode: 'add', data: null }); setError(null); }
+    const closeModal = () => { if (actionLoading.modal === 'save') return; setModalState({ isOpen: false, mode: 'add', data: null }); }
     const setLoadingState = (id: string | 'modal', type: 'publish' | 'delete' | 'save' | null) => { setActionLoading(prev => ({ ...prev, [id]: type })); };
 
+    // Save Handler
     const handleSaveTestimonial = async (formData: TestimonialFormData, id?: string) => {
         if (!currentUser) return;
-        setLoadingState('modal', 'save'); setError(null);
-        const dataToUpsert = { ...formData, user_id: currentUser.id, id: id };
+        setLoadingState('modal', 'save');
+        const dataToUpsert: any = { ...formData, user_id: currentUser.id };
+        if (id) dataToUpsert.id = id;
         console.log("Upserting testimonial:", dataToUpsert);
-        const { error: upsertError } = await supabase.from('testimonials').upsert(dataToUpsert, { onConflict: 'id' });
+
+        const savePromise = async () => {
+            const { error: upsertError } = await supabase.from('testimonials').upsert(dataToUpsert, { onConflict: 'id' });
+            if (upsertError) throw upsertError;
+        };
+
+        await toast.promise(savePromise(), {
+            loading: 'Wird gespeichert...',
+            success: () => { closeModal(); fetchTestimonials(currentUser); return "Kundenstimme erfolgreich gespeichert!"; },
+            error: (err: any) => `Fehler beim Speichern: ${err.message}`
+        });
         setLoadingState('modal', null);
-        if (upsertError) {
-            console.error("Error saving testimonial:", upsertError); setError(`Fehler beim Speichern: ${upsertError.message}`);
-        } else {
-            console.log("Save successful"); closeModal(); await fetchTestimonials(currentUser);
-        }
     };
 
+    // Publish Toggle Handler
     const handlePublishToggle = async (testimonial: Testimonial) => {
         if (!currentUser) return;
-        setLoadingState(testimonial.id, 'publish'); setError(null);
+        setLoadingState(testimonial.id, 'publish');
         const newStatus = !testimonial.is_published;
-        console.log(`Toggling publish status for ${testimonial.id} to ${newStatus}`);
         const { error: updateError } = await supabase.from('testimonials').update({ is_published: newStatus }).eq('id', testimonial.id).eq('user_id', currentUser.id);
         setLoadingState(testimonial.id, null);
-        if (updateError) {
-            console.error("Error toggling publish status:", updateError); setError(`Status konnte nicht geändert werden: ${updateError.message}`);
-        } else {
-            console.log("Publish status updated"); setTestimonials(prev => prev.map(t => t.id === testimonial.id ? { ...t, is_published: newStatus } : t));
-        }
+        if (updateError) toast.error(`Status konnte nicht geändert werden: ${updateError.message}`);
+        else { toast.success("Status erfolgreich geändert!"); setTestimonials(prev => prev.map(t => t.id === testimonial.id ? { ...t, is_published: newStatus } : t)); }
     };
 
-    const handleDeleteRequest = (testimonial: Testimonial) => { setError(null); setDeleteConfirmState({ isOpen: true, testimonial: testimonial }); };
+    // Delete Handlers
+    const handleDeleteRequest = (testimonial: Testimonial) => { setDeleteConfirmState({ isOpen: true, testimonial: testimonial }); };
     const handleConfirmDelete = async () => {
         const testimonialToDelete = deleteConfirmState.testimonial; if (!testimonialToDelete || !currentUser) return;
-        setLoadingState(testimonialToDelete.id, 'delete'); setDeleteConfirmState(prev => ({ ...prev, isOpen: false })); setError(null);
+        // *** Use setIsConfirmingDelete for modal loading state ***
+        setIsConfirmingDelete(true);
+        // setLoadingState(testimonialToDelete.id, 'delete'); // Can optionally remove this if modal loading is enough
         console.log(`Deleting testimonial ${testimonialToDelete.id}`);
-        const { error: deleteError } = await supabase.from('testimonials').delete().eq('id', testimonialToDelete.id).eq('user_id', currentUser.id);
-        setLoadingState(testimonialToDelete.id, null);
-        if (deleteError) {
-            console.error("Error deleting testimonial:", deleteError); setError(`Löschen fehlgeschlagen: ${deleteError.message}`);
-        } else {
-            console.log("Delete successful"); setTestimonials(prev => prev.filter(t => t.id !== testimonialToDelete.id));
-        } setDeleteConfirmState({ isOpen: false, testimonial: null });
-    };
-    const handleCancelDelete = () => { setDeleteConfirmState({ isOpen: false, testimonial: null }); setError(null); };
 
+        const deletePromise = async () => {
+            const { error: deleteError } = await supabase.from('testimonials').delete().eq('id', testimonialToDelete.id).eq('user_id', currentUser.id);
+             if (deleteError) throw deleteError;
+             return testimonialToDelete.id;
+        };
+
+        await toast.promise(deletePromise(), {
+             loading: 'Wird gelöscht...',
+             success: (deletedId) => {
+                 setTestimonials(prev => prev.filter(t => t.id !== deletedId));
+                 return "Kundenstimme gelöscht!";
+             },
+             error: (err: any) => `Löschen fehlgeschlagen: ${err.message}`
+        });
+
+        // *** Reset modal loading state ***
+        setIsConfirmingDelete(false);
+        // setLoadingState(testimonialToDelete.id, null); // Remove if using modal state
+        setDeleteConfirmState({ isOpen: false, testimonial: null }); // Reset state after toast
+    };
+    const handleCancelDelete = () => { setDeleteConfirmState({ isOpen: false, testimonial: null }); };
+
+    // === Render Logic ===
     return (
         <main className="p-8">
             {/* Header */}
@@ -229,7 +198,7 @@ export default function TestimonialsManagementPage() {
 
             {/* Loading */}
             {loading && (<p className="text-slate-400 mt-6 text-center">Lade Kundenstimmen...</p>)}
-            {/* Error */}
+            {/* General Error */}
             {error && !loading && (<p className="text-red-500 mt-6 text-center">{error}</p>)}
 
             {/* List */}
@@ -237,9 +206,11 @@ export default function TestimonialsManagementPage() {
                 <div className="space-y-4">
                     {testimonials.length > 0 ? (
                         testimonials.map((t) => {
-                             const isLoading = actionLoading[t.id]; const isDisabled = !!isLoading || actionLoading.modal === 'save';
+                             const isLoading = actionLoading[t.id];
+                             // *** CORRECTED isDisabled check using isConfirmingDelete ***
+                             const isDisabled = !!isLoading || actionLoading.modal === 'save' || (deleteConfirmState.testimonial?.id === t.id && isConfirmingDelete);
                             return (
-                                <div key={t.id} className={`p-4 bg-slate-800 rounded-lg border border-slate-700 transition-opacity ${isDisabled ? 'opacity-70' : ''}`}>
+                                <div key={t.id} className={`p-4 bg-slate-800 rounded-lg border border-slate-700 transition-opacity ${isDisabled ? 'opacity-70 pointer-events-none' : ''}`}>
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex-1 min-w-0">
                                             <blockquote className="text-slate-300 italic mb-2 text-sm">"{t.body}"</blockquote>
@@ -247,6 +218,7 @@ export default function TestimonialsManagementPage() {
                                             <p className="text-xs text-slate-500 mt-1">Erstellt: {new Date(t.created_at).toLocaleDateString('de-DE')}</p>
                                         </div>
                                         <div className="flex items-center space-x-2 flex-shrink-0">
+                                            {/* Buttons... */}
                                             <button onClick={() => handlePublishToggle(t)} disabled={isDisabled || isLoading === 'publish'} title={t.is_published ? 'Verbergen' : 'Veröffentlichen'} className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isLoading === 'publish' ? 'bg-slate-600 text-slate-400 cursor-wait' : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : t.is_published ? 'bg-yellow-600/20 text-yellow-300 hover:bg-yellow-500/30' : 'bg-green-600/20 text-green-300 hover:bg-green-500/30' }`}> <span className="sr-only">{t.is_published ? 'Verbergen' : 'Veröffentlichen'}</span> {isLoading === 'publish' ? <ArrowPathIcon className="h-4 w-4" /> : t.is_published ? <EyeSlashIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />} </button>
                                             <button onClick={() => openEditModal(t)} disabled={isDisabled} title="Bearbeiten" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600/20 text-blue-300 hover:bg-blue-500/30' }`}> <span className="sr-only">Bearbeiten</span> <PencilIcon className="h-4 w-4" /> </button>
                                             <button onClick={() => handleDeleteRequest(t)} disabled={isDisabled || isLoading === 'delete'} title="Löschen" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isLoading === 'delete' ? 'bg-slate-600 text-slate-400 cursor-wait' : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-red-600/20 text-red-300 hover:bg-red-500/30' }`}> <span className="sr-only">Löschen</span> {isLoading === 'delete' ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />} </button>
@@ -261,7 +233,8 @@ export default function TestimonialsManagementPage() {
 
             {/* Modals */}
             <TestimonialModal modalState={modalState} onClose={closeModal} onSave={handleSaveTestimonial} isSaving={actionLoading.modal === 'save'} />
-            <ConfirmationModal isOpen={deleteConfirmState.isOpen} title="Kundenstimme löschen" message={`Möchten Sie die Kundenstimme von "${deleteConfirmState.testimonial?.author_name || ''}" wirklich unwiderruflich löschen?`} confirmText="Ja, löschen" onConfirm={handleConfirmDelete} onCancel={handleCancelDelete} isConfirming={!!deleteConfirmState.testimonial && actionLoading[deleteConfirmState.testimonial.id] === 'delete'} />
+            {/* *** CORRECTED prop name passed to ConfirmationModal *** */}
+            <ConfirmationModal isOpen={deleteConfirmState.isOpen} title="Kundenstimme löschen" message={`Möchten Sie die Kundenstimme von "${deleteConfirmState.testimonial?.author_name || ''}" wirklich unwiderruflich löschen?`} confirmText="Ja, löschen" onConfirm={handleConfirmDelete} onCancel={handleCancelDelete} isConfirming={isConfirmingDelete} />
         </main>
     );
 }
