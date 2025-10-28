@@ -8,22 +8,30 @@ console.log(`[API Contact - Top Level] Initial RESEND_API_KEY check. Found: ${in
 
 // Use non-prefixed variable name
 const resendApiKey = process.env.RESEND_API_KEY;
-
-// Check if the key exists before initializing (optional during build, crucial at runtime)
 if (!resendApiKey) {
-    console.warn("[API Contact - Top Level] WARNING: RESEND_API_KEY environment variable not found during initial module load. Ensure it's available at runtime.");
-    // Do not throw here to allow build to pass, runtime check is important
+    console.warn("[API Contact - Top Level] WARNING: RESEND_API_KEY missing during initial load.");
 }
+// *** Log Service Key Check ***
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+console.log(`[API Contact - Top Level] Initial SUPABASE_SERVICE_ROLE_KEY check. Found: ${serviceRoleKey ? 'Yes (length: ' + serviceRoleKey.length + ')' : 'No'}`);
+
 
 const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 
-// --- Supabase Clients --- (Keep these here)
+// --- Supabase Admin Client ---
+// Ensure this key is available
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("[API Contact - Top Level] FATAL: SUPABASE_SERVICE_ROLE_KEY environment variable is missing!");
+    // Throwing here might break builds depending on usage, but indicates a critical config error
+    // throw new Error("Server configuration error: Missing SUPABASE_SERVICE_ROLE_KEY.");
+}
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!, // Use the variable
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
-// This client is fine for client-side use, but we'll use supabaseAdmin for inserts in this route
+
+// Regular client (not used for insert in this route)
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -32,18 +40,24 @@ const supabase = createClient(
 export async function POST(request: Request) {
   console.log("Contact API route POST handler started");
 
-  // *** Access the NON-prefixed variable at runtime ***
-  const resendApiKeyRuntime = process.env.RESEND_API_KEY; // Use non-prefixed
+  // Runtime check for keys
+  const resendApiKeyRuntime = process.env.RESEND_API_KEY;
+  const serviceKeyRuntime = process.env.SUPABASE_SERVICE_ROLE_KEY;
   console.log(`[API Contact - POST] Runtime check RESEND_API_KEY: ${resendApiKeyRuntime ? 'Exists' : 'MISSING'}`);
+  console.log(`[API Contact - POST] Runtime check SUPABASE_SERVICE_ROLE_KEY: ${serviceKeyRuntime ? 'Exists' : 'MISSING'}`);
+
 
   if (!resendApiKeyRuntime) {
-      console.error("[API Contact - POST] FATAL: RESEND_API_KEY environment variable is not available at runtime.");
+      console.error("[API Contact - POST] FATAL: RESEND_API_KEY missing at runtime.");
       return NextResponse.json({ error: "Server configuration error: Email service key missing." }, { status: 500 });
   }
+   if (!serviceKeyRuntime) {
+       console.error("[API Contact - POST] FATAL: SUPABASE_SERVICE_ROLE_KEY missing at runtime.");
+       return NextResponse.json({ error: "Server configuration error: Database service key missing." }, { status: 500 });
+   }
 
-  // Initialize Resend using the NON-prefixed key checked at runtime
+  // Initialize Resend
   const resend = new Resend(resendApiKeyRuntime);
-  // *******************************************
 
   let requestData;
   try { requestData = await request.json(); }
@@ -65,31 +79,34 @@ export async function POST(request: Request) {
     const recipientBusinessName = userData.user.user_metadata?.business_name || 'Ihrer Webseite';
     console.log(`Recipient email found: ${recipientEmail}`);
 
-    // *** MODIFIED: 2. Save Submission to DB (use supabaseAdmin) ***
-    console.log("Inserting submission into DB using Admin client...");
-    const { error: insertError } = await supabaseAdmin.from('contact_submissions').insert({ // <-- Use supabaseAdmin
+    // *** 2. Save Submission to DB (with detailed error logging) ***
+    const submissionData = {
         profile_id: profileId,
         sender_name: name,
         sender_email: senderEmail,
         message: message,
         is_read: false
-    });
+    };
+    console.log("Attempting DB insert with data:", JSON.stringify(submissionData, null, 2)); // Log data before insert
+    const { error: insertError } = await supabaseAdmin
+        .from('contact_submissions')
+        .insert(submissionData);
 
-    // *** CRITICAL: Stop if DB insert fails ***
     if (insertError) {
-        console.error("Error saving contact submission to DB:", insertError);
+        // *** LOG THE DETAILED ERROR OBJECT ***
+        console.error("--- DATABASE INSERT FAILED ---");
+        console.error("Supabase Insert Error Code:", insertError.code);
+        console.error("Supabase Insert Error Message:", insertError.message);
+        console.error("Supabase Insert Error Details:", insertError.details);
+        console.error("Supabase Insert Error Hint:", insertError.hint);
+        // ***************************************
         // Return an error to the frontend
         return NextResponse.json({ error: "Failed to save submission to database." }, { status: 500 });
     }
     console.log("Submission saved to DB successfully.");
 
 
-    // 3. Send Email
-    // Check for the NON-prefixed variable before sending
-     if (!process.env.RESEND_API_KEY) {
-        console.error("[API Contact - POST] RESEND_API_KEY is missing just before sending email!");
-        return NextResponse.json({ error: "Server configuration error prevents sending email." }, { status: 500 });
-     }
+    // 3. Send Email (Only if DB insert succeeded)
     console.log(`Sending email via Resend from ${fromEmail} to ${recipientEmail}`);
     const emailHtml = ` <p>Sie haben eine neue Kontaktanfrage erhalten:</p> <ul> <li><strong>Name:</strong> ${name}</li> <li><strong>Email:</strong> ${senderEmail}</li> </ul> <p><strong>Nachricht:</strong></p> <p>${message.replace(/\n/g, '<br>')}</p> `;
     const { data: emailData, error: emailError } = await resend.emails.send({
@@ -106,6 +123,11 @@ export async function POST(request: Request) {
     // Success
     return NextResponse.json({ message: "Nachricht erfolgreich gesendet!" });
 
-  } catch (error) { console.error("Unhandled error in contact API:", error); const message = error instanceof Error ? error.message : "An internal server error occurred."; return NextResponse.json({ error: message }, { status: 500 }); }
+  } catch (error) {
+       // Catch errors from fetching email or other unexpected issues
+      console.error("Unhandled error in contact API:", error);
+      const message = error instanceof Error ? error.message : "An internal server error occurred.";
+      return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 

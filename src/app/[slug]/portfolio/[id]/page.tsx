@@ -9,8 +9,20 @@ import Navbar from '@/components/Navbar'; // Use uppercase N
 import Footer from '@/components/Footer'; // Use uppercase F
 
 // --- TYPE DEFINITIONS ---
-type Project = { id: string; title: string | null; 'project-date': string | null; image_url: string | null; status: 'Published' | 'Draft' | string | null; created_at: string; ai_description: string | null; };
-type Profile = { id: string; business_name: string | null; slug: string | null; };
+type Project = {
+  id: string;
+  title: string | null;
+  'project-date': string | null;
+  image_url: string | null;
+  status: 'Published' | 'Draft' | string | null;
+  created_at: string;
+  ai_description: string | null; // Corrected spelling
+};
+type Profile = {
+    id: string;
+    business_name: string | null;
+    slug: string | null;
+};
 
 // --- MAIN PROJECT DETAIL PAGE COMPONENT ---
 export default function ClientProjectDetailPage() {
@@ -37,40 +49,46 @@ export default function ClientProjectDetailPage() {
 
       try {
         // --- 1. Fetch Profile by Slug ---
-        console.log(`Project Detail: Fetching profile for slug: ${slug}`); // LOGGING
+        console.log(`Project Detail: Fetching profile for slug: ${slug}`);
         const { data: profileResult, error: profileError } = await supabase
           .from('profiles')
           .select('id, business_name, slug')
           .eq('slug', slug) // *** Fetch profile using slug ***
           .maybeSingle();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+            console.error("Project Detail: Error fetching profile:", profileError);
+            throw new Error(`Profil konnte nicht geladen werden: ${profileError.message}`);
+        }
         if (!profileResult) {
-            console.log(`Project Detail: No profile found for slug ${slug}.`); // LOGGING
+            console.log(`Project Detail: No profile found for slug ${slug}.`);
             return notFound(); // 404 if slug invalid
         }
 
         profileData = profileResult as Profile;
         setProfile(profileData);
-        console.log(`Project Detail: Found profile ID: ${profileData.id}`); // LOGGING
+        console.log(`Project Detail: Found profile ID: ${profileData.id}`);
 
         // --- 2. Fetch Project Details by ID AND Profile ID ---
-        console.log(`Project Detail: Fetching project ID ${projectId} for profile ID ${profileData.id}...`); // LOGGING
+        console.log(`Project Detail: Fetching project ID ${projectId} for profile ID ${profileData.id}...`);
         const { data, error: fetchError } = await supabase
           .from('projects')
           .select(`id, title, "project-date", image_url, status, created_at, ai_description`)
           .eq('id', projectId) // *** Match project ID from URL ***
           .eq('user_id', profileData.id) // *** CRITICAL: Match profile ID ***
           .eq('status', 'Published') // Only published
-          .maybeSingle();
+          .maybeSingle(); // Expect one or zero
 
-        if (fetchError) throw fetchError;
+        if (fetchError) {
+             console.error("Project Detail: Error fetching project:", fetchError);
+            throw fetchError;
+        }
         if (!data) {
-            console.log(`Project Detail: Project ${projectId} not found/published/owned by profile ${profileData.id}.`); // LOGGING
+            console.log(`Project Detail: Project ${projectId} not found/published/owned by profile ${profileData.id}.`);
             return notFound(); // 404 if project missing/wrong owner/not published
         }
 
-        console.log("Project Detail: Fetched project data:", data); // LOGGING
+        console.log("Project Detail: Fetched project data:", data);
         setProject(data as Project);
 
       } catch (err: any) {
@@ -85,7 +103,14 @@ export default function ClientProjectDetailPage() {
   }, [slug, projectId]);
 
  // --- Helper function to format date ---
- const formatDate = (dateString: string | null | undefined): string => { /* ... */ if (!dateString) return 'Unbekanntes Datum'; try { const date = new Date(dateString.includes('T') ? dateString : `${dateString}T00:00:00`); if (isNaN(date.getTime())) return 'Ungültiges Datum'; return date.toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' }); } catch (e) { console.error("Error formatting date:", e); return 'Fehler'; } };
+ const formatDate = (dateString: string | null | undefined): string => {
+     if (!dateString) return 'Unbekanntes Datum';
+     try {
+         const date = new Date(dateString.includes('T') ? dateString : `${dateString}T00:00:00`);
+         if (isNaN(date.getTime())) return 'Ungültiges Datum';
+         return date.toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' });
+     } catch (e) { console.error("Error formatting date:", e); return 'Fehler'; }
+ };
 
   // === Render Logic ===
   if (loading) { return <div className="min-h-screen flex items-center justify-center">Lade Projektdetails...</div>; }
@@ -128,7 +153,7 @@ export default function ClientProjectDetailPage() {
                         {project.ai_description && (
                              <div className="mt-10 prose prose-lg prose-slate max-w-none">
                                  <h2>Projektbeschreibung</h2>
-                                 {project.ai_description?.split('\n').map((p, i) => (<p key={i}>{p}</p>))}
+                                 {project.ai_description.split('\n').map((p, i) => (<p key={i}>{p}</p>))}
                             </div>
                         )}
                          {/* Contact CTA */}
