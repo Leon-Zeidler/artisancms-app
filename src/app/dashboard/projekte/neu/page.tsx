@@ -1,16 +1,17 @@
-// Mark as client component for interactivity
+// src/app/dashboard/projekte/neu/page.tsx
 "use client";
 
-// Import necessary hooks and components
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // Standard Next.js import
-import Link from 'next/link'; // Standard Next.js import
-// Reverting to path alias - ensure tsconfig.json is correct
-import { supabase } from '@/lib/supabaseClient'; 
-import { User } from '@supabase/supabase-js'; // Import User type
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabaseClient';
+import { User } from '@supabase/supabase-js';
+import toast from 'react-hot-toast'; // *** NEU: Importieren von toast ***
 
-// Icon for the AI button
+// --- Icons ---
 const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z" /> </svg> );
+// *** NEU: Icon für Ladezustand ***
+const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
 
 
 export default function NewProjectPage() {
@@ -18,11 +19,11 @@ export default function NewProjectPage() {
   const [title, setTitle] = useState('');
   const [projectDate, setProjectDate] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [aiDescription, setAiDescription] = useState(''); 
-  const [publishImmediately, setPublishImmediately] = useState(false); // *** NEW STATE for publish toggle ***
-  const [aiLoading, setAiLoading] = useState(false); 
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false); 
+  const [aiDescription, setAiDescription] = useState('');
+  const [publishImmediately, setPublishImmediately] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  // const [error, setError] = useState<string | null>(null); // *** VERALTET: Wird durch toast ersetzt ***
+  const [loading, setLoading] = useState(false); // 'loading' wird jetzt 'saving'
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function NewProjectPage() {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUser(user);
       if (!user) {
+        toast.error("Nicht eingeloggt."); // Feedback, falls die Sitzung abläuft
         router.push('/login');
       }
     };
@@ -51,120 +53,131 @@ export default function NewProjectPage() {
   // Function to Generate AI Description
   const handleGenerateDescription = async () => {
     if (!title.trim()) {
-      setError("Bitte geben Sie zuerst einen Projekttitel ein.");
+      toast.error("Bitte geben Sie zuerst einen Projekttitel ein."); // *** NEU: Toast-Fehler ***
       return;
     }
     setAiLoading(true);
-    setError(null);
+    // setError(null); // Veraltet
 
-    try {
-      const response = await fetch('/api/generate-description', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: title }), 
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate description');
-      }
-
-      const data = await response.json();
-      setAiDescription(data.description); 
-
-    } catch (err) {
-      console.error("Error calling generation API:", err);
-      const message = err instanceof Error ? err.message : "An unknown error occurred";
-      setError(`Fehler bei der Beschreibungserstellung: ${message}`);
-      setAiDescription(''); 
-    } finally {
-      setAiLoading(false);
-    }
+    // *** NEU: Toast-Promise für KI-Aufruf ***
+    await toast.promise(
+        fetch('/api/generate-description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: title }),
+        }).then(async (response) => {
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Generierung fehlgeschlagen');
+            }
+            return response.json();
+        }),
+        {
+            loading: 'Beschreibung wird generiert...',
+            success: (data) => {
+                setAiDescription(data.description);
+                return 'Beschreibung erfolgreich generiert!';
+            },
+            error: (err: any) => `Fehler: ${err.message}`,
+        }
+    );
+    setAiLoading(false);
   };
 
 
-  // === Handle Form Submission (Updated) ===
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault(); 
+  // === Handle Form Submission (Updated with toast.promise) ===
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); // Verhindert das Neuladen der Seite durch das Formular
 
-    if (!currentUser || !imageFile) {
-        setError("User not loaded or image not selected.");
+    if (!currentUser) {
+        toast.error("Benutzer nicht gefunden. Bitte neu einloggen.");
         return;
     }
-   
-    setLoading(true); 
-    setError(null);
-
-    const userId = currentUser.id;
-    const file = imageFile;
-    const fileExtension = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExtension}`;
-    const filePath = `${userId}/${fileName}`;
-
-    console.log("Form submitted!");
-    console.log("Attempting to upload file:", filePath);
-
-    // Step 1: Upload Image
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('project-images').upload(filePath, file);
-
-    if (uploadError) { 
-        console.error('Error uploading image:', uploadError);
-        setError(`Failed to upload image: ${uploadError.message}`);
-        setLoading(false);
-        return;
-    }
-    console.log("Image uploaded successfully:", uploadData);
-
-    // Step 2: Get Public URL
-    const { data: urlData } = supabase.storage.from('project-images').getPublicUrl(uploadData.path);
-    const imageUrl = urlData?.publicUrl;
-    console.log("Public Image URL:", imageUrl);
-    if (!imageUrl) { 
-        setError("Could not get image URL after upload.");
-        setLoading(false);
-        await supabase.storage.from('project-images').remove([filePath]);
-        return;
+    if (!imageFile) {
+         toast.error("Bitte wählen Sie ein Projektbild aus.");
+         return;
     }
 
-    const projectStatus = publishImmediately ? 'Published' : 'Draft';
+    setLoading(true);
+    // setError(null); // Veraltet
 
-    // Step 3: Insert Project Data
-    console.log("Submitting project data to table:", { 
-        title: title,
-        'project-date': projectDate || null,
-        user_id: userId,
-        image_url: imageUrl,
-        ai_description: aiDescription, 
-        status: projectStatus, 
-    });
-    const { data: insertData, error: insertError } = await supabase
-      .from('projects')
-      .insert([ {
-          title: title,
-          'project-date': projectDate || null,
-          user_id: userId,
-          image_url: imageUrl,
-          ai_description: aiDescription, 
-          status: projectStatus, 
-      }])
-      .select();
+    // Definiere die gesamte Speicher-Logik als Promise
+    const saveProjectPromise = async () => {
+        const userId = currentUser.id;
+        const file = imageFile;
+        const fileExtension = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExtension}`;
+        const filePath = `${userId}/${fileName}`;
 
-    console.log("Supabase insert response:", { insertData, insertError });
-    setLoading(false); 
+        console.log("Attempting to upload file:", filePath);
 
-    if (insertError) { 
-        console.error('Error creating project:', insertError);
-        setError(`Failed to create project: ${insertError.message}`);
-        await supabase.storage.from('project-images').remove([filePath]);
-    } else {
-      console.log('Project created successfully!');
-      router.push('/dashboard'); 
-      router.refresh();
-    }
+        // Step 1: Bild hochladen
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('project-images').upload(filePath, file);
+
+        if (uploadError) {
+            console.error('Error uploading image:', uploadError);
+            throw new Error(`Bild-Upload fehlgeschlagen: ${uploadError.message}`);
+        }
+        console.log("Image uploaded successfully:", uploadData);
+
+        // Step 2: Öffentliche URL holen
+        const { data: urlData } = supabase.storage.from('project-images').getPublicUrl(uploadData.path);
+        const imageUrl = urlData?.publicUrl;
+        console.log("Public Image URL:", imageUrl);
+        if (!imageUrl) {
+            // Rollback: Lösche das gerade hochgeladene Bild, wenn die URL nicht geholt werden kann
+            await supabase.storage.from('project-images').remove([filePath]);
+            throw new Error("Konnte die Bild-URL nach dem Upload nicht abrufen.");
+        }
+
+        const projectStatus = publishImmediately ? 'Published' : 'Draft';
+
+        // Step 3: Projektdaten in DB einfügen
+        console.log("Submitting project data to table...");
+        const { data: insertData, error: insertError } = await supabase
+          .from('projects')
+          .insert([ {
+              title: title,
+              'project-date': projectDate || null,
+              user_id: userId,
+              image_url: imageUrl,
+              ai_description: aiDescription,
+              status: projectStatus,
+          }])
+          .select();
+
+        if (insertError) {
+            console.error('Error creating project:', insertError);
+            // Rollback: Lösche das hochgeladene Bild, wenn der DB-Eintrag fehlschlägt
+            await supabase.storage.from('project-images').remove([filePath]);
+            throw new Error(`Projekt konnte nicht erstellt werden: ${insertError.message}`);
+        }
+
+        return insertData; // Erfolg
+    };
+
+    // Führe das Promise mit toast-Feedback aus
+    await toast.promise(
+        saveProjectPromise(),
+        {
+            loading: 'Projekt wird erstellt...',
+            success: (data) => {
+                console.log('Project created successfully!', data);
+                router.push('/dashboard'); // Weiterleiten nach Erfolg
+                return 'Projekt erfolgreich erstellt!';
+            },
+            error: (err: any) => {
+                console.error("Fehler beim Erstellen des Projekts:", err);
+                return `${err.message}`; // Zeigt die Fehlermeldung (z.B. "Bild-Upload fehlgeschlagen...")
+            }
+        }
+    );
+
+    setLoading(false); // Ladezustand beenden, nachdem der Toast fertig ist
   };
 
-  // === JSX Structure (Updated) ===
+  // === JSX Structure (Updated with <form>) ===
   return (
     <main className="p-8">
       {/* Header */}
@@ -173,8 +186,8 @@ export default function NewProjectPage() {
         <p className="text-slate-400 mt-1">Geben Sie die Details ein, laden Sie ein Bild hoch und generieren Sie die Beschreibung.</p>
       </div>
 
-      {/* Form Section */}
-      <div className="mt-8 max-w-xl space-y-6">
+      {/* *** NEU: <form> Tag umschließt die Eingabefelder *** */}
+      <form onSubmit={handleSubmit} className="mt-8 max-w-xl space-y-6">
 
         {/* Project Title Input */}
         <div>
@@ -201,7 +214,7 @@ export default function NewProjectPage() {
             className="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 focus:ring-offset-slate-800"
             required
           />
-          {imageFile && <p className="mt-2 text-xs text-slate-500">Selected: {imageFile.name}</p>}
+          {imageFile && <p className="mt-2 text-xs text-slate-500">Ausgewählt: {imageFile.name}</p>}
         </div>
 
         {/* AI Description Section */}
@@ -212,16 +225,16 @@ export default function NewProjectPage() {
             <div className="relative">
                 <textarea
                     id="aiDescription"
-                    rows={6} // Increased rows
+                    rows={6}
                     value={aiDescription}
-                    onChange={(e) => setAiDescription(e.target.value)} 
-                    className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28" 
+                    onChange={(e) => setAiDescription(e.target.value)}
+                    className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28"
                     placeholder="Klicken Sie auf 'Generieren', um eine Beschreibung zu erstellen..."
                 />
                 <button
-                    type="button" 
+                    type="button"
                     onClick={handleGenerateDescription}
-                    disabled={aiLoading || !title.trim()} 
+                    disabled={aiLoading || !title.trim()}
                     className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${
                         aiLoading || !title.trim()
                          ? 'bg-slate-600 cursor-not-allowed'
@@ -271,10 +284,8 @@ export default function NewProjectPage() {
         </div>
 
 
-        {/* Error Message Display */}
-        {error && (
-          <p className="text-center text-sm text-red-500">{error}</p>
-        )}
+        {/* *** VERALTET: Error Message Display (wird durch toast ersetzt) *** */}
+        {/* {error && ( <p className="text-center text-sm text-red-500">{error}</p> )} */}
 
         {/* Action Buttons */}
         <div className="flex items-center justify-end gap-4 border-t border-slate-700 pt-6 mt-8">
@@ -282,20 +293,21 @@ export default function NewProjectPage() {
               Abbrechen
            </Link>
            <button
-            type="button" 
-            onClick={(e) => handleSubmit(e as any)} 
-            disabled={loading || !currentUser || !imageFile || aiLoading} 
-            className={`rounded-md px-5 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors ${
-              loading || !currentUser || !imageFile || aiLoading
+            type="submit" // *** NEU: type="submit" ***
+            // *** VERALTET: onClick handler entfernt ***
+            disabled={loading || !currentUser || aiLoading} // Bild-Check passiert jetzt im Handler
+            className={`inline-flex items-center gap-x-2 rounded-md px-5 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors ${
+              loading || !currentUser || aiLoading
                 ? 'bg-orange-300 cursor-not-allowed'
                 : 'bg-orange-600 hover:bg-orange-700 shadow-sm'
             }`}
           >
+            {/* *** NEU: Lade-Icon hier *** */}
+            {loading ? <ArrowPathIcon className="h-4 w-4" /> : null}
             {loading ? 'Speichern...' : 'Projekt erstellen & Speichern'}
           </button>
         </div>
-      </div>
+      </form> {/* *** NEU: <form> Tag geschlossen *** */}
     </main>
   );
 }
-

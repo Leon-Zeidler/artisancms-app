@@ -11,8 +11,8 @@ interface NavbarProps {
 }
 
 // Icons
-const MenuIcon = (props: React.SVGProps<SVGSVGElement>) => ( /* ... icon svg ... */ <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /> </svg> );
-const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( /* ... icon svg ... */ <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg> );
+const MenuIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /> </svg> );
+const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg> );
 
 
 export default function Navbar({ businessName, slug }: NavbarProps) { // Destructure slug
@@ -23,7 +23,6 @@ export default function Navbar({ businessName, slug }: NavbarProps) { // Destruc
   };
 
   // --- Helper to generate base path ---
-  // If slug exists, use /slug, otherwise fallback to / (e.g., for root landing page if used there)
   const basePath = slug ? `/${slug}` : '/';
   const homePath = basePath; // Logo links to client's homepage
   const leistungenPath = `${basePath}/#leistungen`; // Anchor on client homepage
@@ -50,12 +49,8 @@ export default function Navbar({ businessName, slug }: NavbarProps) { // Destruc
             <Link href={kontaktPath} className="font-medium text-gray-600 hover:text-orange-600">Kontakt</Link>
           </div>
 
-          {/* Desktop Login Button - Remains global */}
-          <div className="hidden md:block">
-            <Link href="/login" className="rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700">
-              Kunden-Login
-            </Link>
-          </div>
+          {/* --- Desktop Login Button REMOVED --- */}
+          {/* <div className="hidden md:block"> ... </div> */}
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
@@ -82,12 +77,8 @@ export default function Navbar({ businessName, slug }: NavbarProps) { // Destruc
             <Link href={testimonialsPath} onClick={toggleMobileMenu} className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-orange-600">Kundenstimmen</Link>
             <Link href={kontaktPath} onClick={toggleMobileMenu} className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-orange-600">Kontakt</Link>
           </div>
-          {/* Mobile Login Button - Remains global */}
-          <div className="border-t border-gray-200 pt-4 pb-3 px-4">
-            <Link href="/login" onClick={toggleMobileMenu} className="block w-full text-center rounded-md bg-orange-600 px-4 py-2 text-base font-semibold text-white hover:bg-orange-700">
-              Kunden-Login
-            </Link>
-          </div>
+          {/* --- Mobile Login Button REMOVED --- */}
+          {/* <div className="border-t border-gray-200 pt-4 pb-3 px-4"> ... </div> */}
         </div>
       )}
     </nav>
