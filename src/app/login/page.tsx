@@ -32,27 +32,40 @@ export default function LoginPage() {
 
     if (signInError) {
       console.error('Login error:', signInError.message);
-      setError(`Login failed: ${signInError.message}`);
+      // More specific error handling could be added here (e.g., check for invalid credentials vs. email not confirmed)
+      if (signInError.message.includes('Invalid login credentials')) {
+        setError('Invalid email or password.');
+      } else if (signInError.message.includes('Email not confirmed')) {
+         setError('Please confirm your email address first. Check your inbox (and spam folder) for the confirmation link.');
+         // Optionally add a button here to resend confirmation email
+      }
+       else {
+        setError(`Login failed: ${signInError.message}`);
+      }
     } else {
       console.log('Login successful:', data);
-      router.push('/dashboard');
-      router.refresh();
+      // Successful login will trigger session update,
+      // DashboardLayout's useEffect will handle redirect based on onboarding status
+      router.push('/dashboard'); // Redirect to dashboard area
+      router.refresh(); // Force refresh to ensure layout re-evaluates auth state
     }
   };
 
-  // --- NEW: Handle Password Reset ---
+  // --- Handle Password Reset ---
   const handlePasswordReset = async () => {
     if (!email) {
-      setError("Please enter your email address first to reset the password.");
+      // Use toast for immediate feedback instead of setting error state which might conflict with login errors
+      toast.error("Please enter your email address first to reset the password.");
+      // setError("Please enter your email address first to reset the password.");
       return;
     }
     setResetLoading(true);
-    setError(null);
-    setMessage(null);
+    setError(null); // Clear login errors
+    setMessage(null); // Clear previous messages
 
     const resetPromise = supabase.auth.resetPasswordForEmail(email, {
-      // Optional: Redirect URL after the user clicks the link in the email
-      // redirectTo: `${window.location.origin}/reset-password`, // Example redirect URL
+      // Ensure this matches the page you created to handle the reset token
+      redirectTo: `${window.location.origin}/reset-password`,
     });
 
     await toast.promise(
@@ -60,11 +73,13 @@ export default function LoginPage() {
       {
         loading: 'Sending password reset instructions...',
         success: () => {
+          // Set a message on the page as well for persistence if toast disappears
           setMessage("Password reset instructions sent! Please check your email (including spam folder).");
-          return 'Reset email sent!';
+          return 'Reset email sent!'; // Message for the toast itself
         },
         error: (err) => {
           console.error('Password reset error:', err.message);
+           // Set error state on the page
           setError(`Error sending reset email: ${err.message}`);
           return `Error: ${err.message}`; // Message for the toast itself
         },
@@ -98,7 +113,9 @@ export default function LoginPage() {
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
               placeholder="you@example.com"
               required
+              aria-describedby="email-description" // Good for accessibility, especially with reset
             />
+             <p id="email-description" className="sr-only">Enter the email associated with your account. Use this field also for password reset.</p>
           </div>
 
           {/* Password Section */}
@@ -118,12 +135,12 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* --- NEW: Forgot Password Button --- */}
-          <div className="mb-4 text-right">
+          {/* --- Forgot Password Button --- */}
+          <div className="mb-4 text-right"> {/* Keep margin-bottom here to space before messages/button */}
              <button
-                type="button"
+                type="button" // Important: Prevents form submission
                 onClick={handlePasswordReset}
-                disabled={resetLoading || loading}
+                disabled={resetLoading || loading} // Disable if login or reset is in progress
                 className="text-sm font-medium text-orange-600 hover:text-orange-500 disabled:text-gray-400 disabled:cursor-not-allowed"
              >
                 {resetLoading ? 'Sending...' : 'Forgot Password?'}
@@ -143,7 +160,7 @@ export default function LoginPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading || resetLoading}
+            disabled={loading || resetLoading} // Disable if login or reset is in progress
             className={`w-full rounded-md px-4 py-2 text-lg font-semibold text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors ${
               loading || resetLoading
                 ? 'bg-orange-300 cursor-not-allowed'
@@ -162,8 +179,7 @@ export default function LoginPage() {
           </p>
         </form>
       </div>
-      {/* Ensure Toaster is rendered somewhere in your layout (e.g., RootLayout) */}
-      {/* <Toaster position="bottom-center" /> */}
+      {/* Reminder: Ensure <Toaster /> is included in your main layout (e.g., src/app/layout.tsx or src/app/dashboard/layout.tsx) */}
     </main>
   );
 }
