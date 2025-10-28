@@ -2,7 +2,6 @@
 "use client";
 
 import Link from 'next/link';
-// *** Re-add useState and useEffect ***
 import React, { useState, useEffect } from 'react';
 import { useParams, notFound } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
@@ -12,6 +11,13 @@ import Footer from '@/components/Footer';
 // --- TYPE DEFINITIONS ---
 type Project = { id: string; title: string | null; 'project-date': string | null; image_url: string | null; status: 'Published' | 'Draft' | string | null; created_at: string; ai_description?: string | null; };
 type Profile = { id: string; business_name: string | null; address: string | null; phone: string | null; services_description: string | null; about_text: string | null; updated_at: string | null; onboarding_complete?: boolean | null; slug: string | null; };
+// *** NEW: Add Testimonial type ***
+type Testimonial = {
+  id: string;
+  author_name: string;
+  author_handle: string | null;
+  body: string;
+};
 
 // --- Icons ---
 const Icon = ({ path, className }: { path: string, className?: string }) => ( <svg className={className || "h-6 w-6 text-white"} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true"> <path strokeLinecap="round" strokeLinejoin="round" d={path} /> </svg> );
@@ -21,7 +27,6 @@ const serviceIcons = {
     Fliesenarbeiten: 'M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125V6.375c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.125c0 .621.504 1.125 1.125 1.125z',
     Default: 'M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m18 0h-1.5m-15.75 0h.008v.008H4.25v-.008z'
 };
-const testimonials = [ { body: 'Hervorragende Arbeit! Pünktlich, sauber und sehr professionell. Absolut zu empfehlen.', author: { name: 'Maria S.', handle: 'Privatkundin' } }, { body: 'Schnelle Terminfindung und top Ausführung. Das neue Bad ist ein Traum geworden.', author: { name: 'Thomas L.', handle: 'Hausbesitzer' } }, { body: 'Sehr zuverlässiger Partner für unsere Bauprojekte. Immer wieder gerne.', author: { name: 'Firma Bau GmbH', handle: 'Geschäftskunde' } }, ];
 // Contact Form Icons
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
 const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"> <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> );
@@ -33,6 +38,8 @@ export default function ClientHomepage() {
   // === State Variables ===
   const [profile, setProfile] = useState<Profile | null>(null);
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
+  // *** NEW: State for testimonials ***
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +60,7 @@ export default function ClientHomepage() {
     }
 
     const fetchData = async () => {
-      setLoading(true); setError(null); setProfile(null); setFeaturedProjects([]);
+      setLoading(true); setError(null); setProfile(null); setFeaturedProjects([]); setTestimonials([]);
       let profileData: Profile | null = null;
 
       try {
@@ -80,11 +87,32 @@ export default function ClientHomepage() {
               .order('created_at', { ascending: false })
               .limit(3);
 
-            if (projectsError) throw projectsError;
-            setFeaturedProjects((projects || []) as Project[]);
+            if (projectsError) {
+                console.error("Homepage: Error during projects fetch:", projectsError);
+                // Don't throw, just log. We can still show the rest of the page.
+            } else {
+                setFeaturedProjects((projects || []) as Project[]);
+            }
+
+            // *** NEW: Step 3. Fetch Testimonials using profileData.id ***
+            const { data: testimonialsData, error: testimonialsError } = await supabase
+              .from('testimonials')
+              .select('id, author_name, author_handle, body') // Select only needed fields
+              .eq('user_id', profileData.id) // *** CRITICAL: Filter by profile ID ***
+              .eq('is_published', true) // Only show published
+              .order('created_at', { ascending: false }) // Get the newest
+              .limit(1); // Only fetch one for the homepage showcase
+
+            if (testimonialsError) {
+                console.error("Homepage: Error during testimonials fetch:", testimonialsError);
+            } else {
+                setTestimonials((testimonialsData || []) as Testimonial[]);
+            }
+
         } else {
-             console.warn("Profile loaded but ID missing, cannot fetch projects.");
+             console.warn("Profile loaded but ID missing, cannot fetch projects or testimonials.");
              setFeaturedProjects([]);
+             setTestimonials([]);
         }
 
       } catch (err: any) {
@@ -118,7 +146,7 @@ export default function ClientHomepage() {
   // === Render States ===
   if (loading) { return <div className="min-h-screen flex items-center justify-center">Lade Webseite...</div>; }
   if (error) { return <div className="min-h-screen flex items-center justify-center text-center text-red-600 p-8"><p>Fehler:</p><p className="mt-2 text-sm">{error}</p></div>; }
-  if (!profile) { return null; /* Should be caught by notFound() */ }
+  if (!profile) { return null; /* Handled by notFound */ }
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-gray-900">
@@ -208,34 +236,49 @@ export default function ClientHomepage() {
             </div>
         )}
 
-        {/* ========== TESTIMONIALS SECTION (Restored Full) ========== */}
-        <section id="testimonials" className="relative isolate overflow-hidden bg-white px-6 py-24 sm:py-32 lg:px-8">
-             <div className="absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_top,theme(colors.indigo.100),white)] opacity-20" />
-             <div className="absolute inset-y-0 right-1/2 -z-10 mr-16 w-[200%] origin-bottom-left skew-x-[-30deg] bg-white shadow-xl shadow-indigo-600/10 ring-1 ring-indigo-50 sm:mr-28 lg:mr-0 xl:mr-16 xl:origin-center" />
-             <div className="mx-auto max-w-2xl lg:max-w-4xl">
-                 <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl mb-12">Was unsere Kunden sagen</h2>
-                 <figure className="mt-10">
-                     <blockquote className="text-center text-xl font-semibold leading-8 text-gray-900 sm:text-2xl sm:leading-9">
-                         <p>“{testimonials[0].body}”</p>
-                     </blockquote>
-                     <figcaption className="mt-10">
-                         <img className="mx-auto h-10 w-10 rounded-full" src="https://placehold.co/40x40/E2E8F0/475569?text=MS" alt="" />
-                         <div className="mt-4 flex items-center justify-center space-x-3 text-base">
-                             <div className="font-semibold text-gray-900">{testimonials[0].author.name}</div>
-                             <svg viewBox="0 0 2 2" width={3} height={3} aria-hidden="true" className="fill-gray-900"><circle cx={1} cy={1} r={1} /></svg>
-                             <div className="text-gray-600">{testimonials[0].author.handle}</div>
-                         </div>
-                     </figcaption>
-                 </figure>
-                 {profile.slug && (
-                    <div className="mt-16 text-center">
-                         <Link href={`/${profile.slug}/testimonials`} className="text-base font-semibold leading-6 text-gray-900 hover:text-orange-600">
-                            Mehr Kundenstimmen <span aria-hidden="true">→</span>
-                        </Link>
-                    </div>
-                 )}
-             </div>
-         </section>
+        {/* ========== TESTIMONIALS SECTION (*** UPDATED ***) ========== */}
+        {/* Only show section if we successfully fetched a testimonial */}
+        {testimonials.length > 0 && (
+            <section id="testimonials" className="relative isolate overflow-hidden bg-white px-6 py-24 sm:py-32 lg:px-8">
+                <div className="absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_top,theme(colors.indigo.100),white)] opacity-20" />
+                <div className="absolute inset-y-0 right-1/2 -z-10 mr-16 w-[200%] origin-bottom-left skew-x-[-30deg] bg-white shadow-xl shadow-indigo-600/10 ring-1 ring-indigo-50 sm:mr-28 lg:mr-0 xl:mr-16 xl:origin-center" />
+                <div className="mx-auto max-w-2xl lg:max-w-4xl">
+                    <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl mb-12">Was unsere Kunden sagen</h2>
+                    {/* Map over the testimonials state variable */}
+                    {testimonials.map((testimonial) => (
+                        <figure key={testimonial.id} className="mt-10">
+                            <blockquote className="text-center text-xl font-semibold leading-8 text-gray-900 sm:text-2xl sm:leading-9">
+                                <p>“{testimonial.body}”</p>
+                            </blockquote>
+                            <figcaption className="mt-10">
+                                <img
+                                    className="mx-auto h-10 w-10 rounded-full"
+                                    src={`https://placehold.co/40x40/E2E8F0/475569?text=${testimonial.author_name.charAt(0)}`}
+                                    alt=""
+                                />
+                                <div className="mt-4 flex items-center justify-center space-x-3 text-base">
+                                    <div className="font-semibold text-gray-900">{testimonial.author_name}</div>
+                                    {testimonial.author_handle && (
+                                        <>
+                                            <svg viewBox="0 0 2 2" width={3} height={3} aria-hidden="true" className="fill-gray-900"><circle cx={1} cy={1} r={1} /></svg>
+                                            <div className="text-gray-600">{testimonial.author_handle}</div>
+                                        </>
+                                    )}
+                                </div>
+                            </figcaption>
+                        </figure>
+                    ))}
+                    {/* Link to see all testimonials */}
+                    {profile.slug && (
+                        <div className="mt-16 text-center">
+                            <Link href={`/${profile.slug}/testimonials`} className="text-base font-semibold leading-6 text-gray-900 hover:text-orange-600">
+                                Mehr Kundenstimmen <span aria-hidden="true">→</span>
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            </section>
+        )}
 
         {/* ========== CONTACT SECTION (Restored Full) ========== */}
         <div id="kontakt" className="bg-gray-50 py-24 sm:py-32">
@@ -259,7 +302,6 @@ export default function ClientHomepage() {
                             <a className="hover:text-gray-900 text-base leading-7 text-gray-600" href={`tel:${profile.phone}`}>{profile.phone}</a>
                         </div>
                      )}
-                     {/* Email display - TODO: Fetch email or use a placeholder */}
                      <div className="flex gap-x-4">
                         <svg className="h-6 w-6 text-gray-500 flex-none" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
                          <a className="hover:text-gray-900 text-base leading-7 text-gray-600" href="mailto:info@beispiel.de">info@beispiel.de</a> {/* Replace with dynamic email later */}
@@ -272,72 +314,17 @@ export default function ClientHomepage() {
                     {formStatus === 'success' ? (
                         <div className="rounded-md bg-green-50 p-4 border border-green-200">
                           <div className="flex">
-                            <div className="flex-shrink-0">
-                              <CheckCircleIcon className="h-5 w-5 text-green-400" aria-hidden="true" />
-                            </div>
-                            <div className="ml-3">
-                              <h3 className="text-sm font-medium text-green-800">Nachricht gesendet!</h3>
-                              <div className="mt-2 text-sm text-green-700">
-                                <p>Vielen Dank für Ihre Anfrage. Wir werden uns so schnell wie möglich bei Ihnen melden.</p>
-                              </div>
-                            </div>
+                            <div className="flex-shrink-0"> <CheckCircleIcon className="h-5 w-5 text-green-400" aria-hidden="true" /> </div>
+                            <div className="ml-3"> <h3 className="text-sm font-medium text-green-800">Nachricht gesendet!</h3> <div className="mt-2 text-sm text-green-700"> <p>Vielen Dank für Ihre Anfrage. Wir werden uns so schnell wie möglich bei Ihnen melden.</p> </div> </div>
                           </div>
                         </div>
                     ) : (
                         <form onSubmit={handleContactSubmit} className="space-y-6">
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-semibold leading-6 text-gray-900">Name</label>
-                                <div className="mt-2.5">
-                                <input
-                                    type="text" name="name" id="name" autoComplete="name" required
-                                    value={formName} onChange={(e) => setFormName(e.target.value)}
-                                    className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
-                                />
-                                </div>
-                            </div>
-                            <div>
-                                <label htmlFor="email" className="block text-sm font-semibold leading-6 text-gray-900">Email</label>
-                                <div className="mt-2.5">
-                                <input
-                                    type="email" name="email" id="email" autoComplete="email" required
-                                    value={formEmail} onChange={(e) => setFormEmail(e.target.value)}
-                                    className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
-                                />
-                                </div>
-                            </div>
-                            <div>
-                                <label htmlFor="message" className="block text-sm font-semibold leading-6 text-gray-900">Nachricht</label>
-                                <div className="mt-2.5">
-                                <textarea
-                                    name="message" id="message" rows={4} required
-                                    value={formMessage} onChange={(e) => setFormMessage(e.target.value)}
-                                    className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"
-                                />
-                                </div>
-                            </div>
-                            {formStatus === 'error' && (
-                                <div className="rounded-md bg-red-50 p-4 border border-red-200">
-                                    <div className="flex">
-                                        <div className="flex-shrink-0">
-                                            <ExclamationCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
-                                        </div>
-                                        <div className="ml-3">
-                                            <h3 className="text-sm font-medium text-red-800">Senden fehlgeschlagen</h3>
-                                            <p className="mt-1 text-sm text-red-700">{formError || 'Bitte versuchen Sie es später erneut.'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="mt-8 flex justify-end">
-                                <button
-                                type="submit"
-                                disabled={formStatus === 'loading'}
-                                className={`rounded-md bg-orange-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-x-2`}
-                                >
-                                {formStatus === 'loading' && <ArrowPathIcon />}
-                                {formStatus === 'loading' ? 'Senden...' : 'Nachricht senden'}
-                                </button>
-                            </div>
+                            <div> <label htmlFor="name" className="block text-sm font-semibold leading-6 text-gray-900">Name</label> <div className="mt-2.5"> <input type="text" name="name" id="name" autoComplete="name" required value={formName} onChange={(e) => setFormName(e.target.value)} className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"/> </div> </div>
+                            <div> <label htmlFor="email" className="block text-sm font-semibold leading-6 text-gray-900">Email</label> <div className="mt-2.5"> <input type="email" name="email" id="email" autoComplete="email" required value={formEmail} onChange={(e) => setFormEmail(e.target.value)} className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"/> </div> </div>
+                            <div> <label htmlFor="message" className="block text-sm font-semibold leading-6 text-gray-900">Nachricht</label> <div className="mt-2.5"> <textarea name="message" id="message" rows={4} required value={formMessage} onChange={(e) => setFormMessage(e.target.value)} className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-orange-600 sm:text-sm sm:leading-6"/> </div> </div>
+                            {formStatus === 'error' && ( <div className="rounded-md bg-red-50 p-4 border border-red-200"> <div className="flex"> <div className="flex-shrink-0"> <ExclamationCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" /> </div> <div className="ml-3"> <h3 className="text-sm font-medium text-red-800">Senden fehlgeschlagen</h3> <p className="mt-1 text-sm text-red-700">{formError || 'Bitte versuchen Sie es später erneut.'}</p> </div> </div> </div> )}
+                            <div className="mt-8 flex justify-end"> <button type="submit" disabled={formStatus === 'loading'} className={`rounded-md bg-orange-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-x-2`} > {formStatus === 'loading' && <ArrowPathIcon />} {formStatus === 'loading' ? 'Senden...' : 'Nachricht senden'} </button> </div>
                         </form>
                      )}
                 </div>

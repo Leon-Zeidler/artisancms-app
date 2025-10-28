@@ -16,7 +16,7 @@ type Project = {
   image_url: string | null;
   status: 'Published' | 'Draft' | string | null;
   created_at: string;
-  ai_description: string | null; // Corrected spelling
+  ai_description: string | null;
 };
 type Profile = {
     id: string;
@@ -57,9 +57,9 @@ export default function ClientProjectDetailPage() {
           .maybeSingle();
 
         if (profileError) {
-            console.error("Project Detail: Error fetching profile:", profileError);
-            throw new Error(`Profil konnte nicht geladen werden: ${profileError.message}`);
-        }
+             console.error("Project Detail: Error fetching profile:", profileError);
+             throw new Error(`Profil konnte nicht geladen werden: ${profileError.message}`);
+         }
         if (!profileResult) {
             console.log(`Project Detail: No profile found for slug ${slug}.`);
             return notFound(); // 404 if slug invalid

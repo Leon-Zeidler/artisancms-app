@@ -66,7 +66,7 @@ export default function ClientTestimonialsPage() {
          }
         if (!profileResult) {
             console.log(`Testimonials List: No profile found for slug ${slug}.`);
-            return notFound(); // Show 404
+            return notFound(); // Show 404 if profile slug invalid
         }
 
         profileData = profileResult as Profile;
@@ -168,3 +168,4 @@ export default function ClientTestimonialsPage() {
     </div>
   );
 }
+

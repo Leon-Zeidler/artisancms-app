@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, notFound } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation'; // Import useParams and notFound
 import { supabase } from '@/lib/supabaseClient';
 import Navbar from '@/components/Navbar'; // Use uppercase N
 import Footer from '@/components/Footer'; // Use uppercase F
@@ -28,11 +28,12 @@ type Profile = {
 // --- PORTFOLIO CARD COMPONENT ---
 interface PortfolioCardProps {
   project: Project;
-  slug: string | null;
+  slug: string | null; // Pass slug for link generation
 }
 function PortfolioCard({ project, slug }: PortfolioCardProps) {
   const imageUrl = project.image_url || `https://placehold.co/600x400/A3A3A3/FFF?text=${encodeURIComponent(project.title || 'Project')}`;
-  const projectUrl = slug ? `/${slug}/portfolio/${project.id}` : `/portfolio/${project.id}`;
+  // Use slug in the project detail link
+  const projectUrl = slug ? `/${slug}/portfolio/${project.id}` : `/portfolio/${project.id}`; // Fallback just in case
 
   return (
     <article className="flex flex-col items-start justify-between group">
@@ -58,10 +59,11 @@ function PortfolioCard({ project, slug }: PortfolioCardProps) {
   );
 }
 
+
 // --- MAIN PORTFOLIO PAGE COMPONENT ---
 export default function ClientPortfolioPage() {
   // === State Variables ===
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null); // State for profile
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,8 +81,8 @@ export default function ClientPortfolioPage() {
     const fetchPortfolioData = async () => {
       setLoading(true);
       setError(null);
-      setProfile(null);
-      setProjects([]);
+      setProfile(null); // Reset
+      setProjects([]); // Reset
 
       let profileData: Profile | null = null;
 
