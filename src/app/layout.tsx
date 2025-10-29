@@ -1,3 +1,4 @@
+// src/app/layout.tsx
 import type { Metadata } from "next";
 // *** Corrected Import Path ***
 // Assuming globals.css is directly inside src/app/
@@ -20,4 +21,3 @@ export default function RootLayout({
     </html>
   );
 }
-

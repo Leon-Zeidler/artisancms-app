@@ -190,7 +190,7 @@ export default function ProjektePage() {
   // === Handle Delete Request (Opens Modal) ===
   const handleDeleteRequest = (project: Project) => { setError(null); setDeletingProject(project); setShowDeleteConfirm(true); };
 
-  // === Handle Delete Confirmation (Actual Deletion) ===
+// === Handle Delete Confirmation (Actual Deletion) ===
   const handleConfirmDelete = async () => {
     if (!deletingProject || !currentUser) return;
 
@@ -198,25 +198,41 @@ export default function ProjektePage() {
     setTogglingProjectId(deletingProject.id); // Use toggling state for visual cue
 
     let imagePath: string | null = null;
-    if (deletingProject.image_url) { try { const url = new URL(deletingProject.image_url); imagePath = url.pathname.split('/').slice(4).join('/'); } catch (e) { console.error("Could not parse image URL:", e); } }
+    if (deletingProject.image_url) { 
+        try { 
+            const url = new URL(deletingProject.image_url); 
+            // *** FIX 1: Changed slice(4) to slice(6) ***
+            // The public URL path is /storage/v1/object/public/project-images/[user_id]/[file.png]
+            // We need to extract the part *after* "project-images", which is at index 6.
+            imagePath = url.pathname.split('/').slice(6).join('/'); 
+            if (!imagePath) {
+                console.warn("Could not parse a valid image path from URL:", deletingProject.image_url);
+                // Don't throw, but log. Maybe the DB entry should still be deleted.
+            }
+        } catch (e) { 
+            console.error("Could not parse image URL:", e); 
+        } 
+    }
 
     // Define the promise function for deletion
     const deletePromise = async () => {
         // 1. Delete Image
         if (imagePath) {
-            console.log("Deleting image:", imagePath);
+            console.log("Deleting image from storage:", imagePath);
             const { error: imageError } = await supabase.storage.from('project-images').remove([imagePath]);
+            
+            // *** FIX 2: Throw an error if image deletion fails ***
+            // This stops the promise and prevents the UI from updating incorrectly.
             if (imageError) {
                 console.error("Error deleting image:", imageError);
-                // Throwing here will stop DB delete, maybe just log?
-                 toast.error(`Bild konnte nicht gelöscht werden: ${imageError.message}. Datenbankeintrag wird trotzdem versucht zu löschen.`);
-                // throw new Error(`Bild konnte nicht gelöscht werden: ${imageError.message}.`);
+                toast.error(`Bild konnte nicht gelöscht werden: ${imageError.message}. Löschen abgebrochen.`);
+                throw new Error(`Bild konnte nicht gelöscht werden: ${imageError.message}.`);
             } else {
                  console.log("Image deleted successfully.");
              }
         }
 
-        // 2. Delete Project from DB
+        // 2. Delete Project from DB (only runs if image delete succeeded)
         console.log("Deleting project from DB:", deletingProject.id);
         const { error: dbError } = await supabase
             .from('projects')
@@ -226,15 +242,18 @@ export default function ProjektePage() {
 
         if (dbError) {
             console.error("Error deleting project from DB:", dbError);
+            // This will be caught by toast.promise
             throw new Error(`Projekt konnte nicht gelöscht werden: ${dbError.message}`);
         }
+        
         console.log("Project deleted from DB successfully.");
         return deletingProject.id; // Return ID for success handling
     };
 
-    await toast.promise(deletePromise(), { // Invoke the function
+    await toast.promise(deletePromise(), { 
         loading: `Projekt "${deletingProject.title || ''}" wird gelöscht...`,
         success: (deletedId) => {
+            // This success block now only runs if BOTH image and DB delete were successful
             setProjects(currentProjects => currentProjects.filter(p => p.id !== deletedId));
             setShowDeleteConfirm(false);
             setDeletingProject(null);
@@ -242,16 +261,13 @@ export default function ProjektePage() {
         },
         error: (err: any) => {
             console.error('Deletion failed:', err);
-            // Don't close modal on error, show toast
+            // The modal stays open and shows the error
             return `Löschen fehlgeschlagen: ${err.message}`;
         }
     });
 
     setIsConfirmingDelete(false);
-    setTogglingProjectId(null); // Clear visual cue only after promise settles
-    // Reset modal state only if successful (handled in success callback)
-    // if (!isConfirmingDelete after await) means error happened, keep modal open maybe?
-    // Resetting states after await might be tricky if component unmounts
+    setTogglingProjectId(null); 
   };
 
   // === Handle Cancel Delete ===

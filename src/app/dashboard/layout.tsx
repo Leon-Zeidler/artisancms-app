@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { Toaster } from 'react-hot-toast';
+import FeedbackWidget from '@/components/FeedbackWidget'; // <-- 1. IMPORT THE WIDGET
 
 // --- TYPE DEFINITIONS ---
 type SidebarLinkProps = {
@@ -34,21 +35,19 @@ const InboxIcon = (props: React.SVGProps<SVGSVGElement>) => ( /* ... icon ... */
 
 // --- SIDEBAR COMPONENTS ---
 function SidebarLink({ icon: Icon, text, href, active = false, isExternal = false }: SidebarLinkProps) {
+  // ... (This is the SidebarLink function from your code) ...
   const baseClasses = "flex items-center p-4 text-base font-normal rounded-lg transition duration-75 group w-full";
   const activeClasses = "bg-orange-600 text-white shadow-lg";
   const inactiveClasses = "text-slate-300 hover:bg-slate-700 hover:text-white";
-
-  // If href is empty/null (e.g., slug hasn't loaded), disable the link
   const isDisabled = !href;
-
   if (isExternal) {
     return (
       <a
-        href={isDisabled ? '#' : href} // Use '#' if disabled
-        target={isDisabled ? '_self' : '_blank'} // Avoid opening blank tab if disabled
+        href={isDisabled ? '#' : href}
+        target={isDisabled ? '_self' : '_blank'}
         rel="noopener noreferrer"
         aria-disabled={isDisabled}
-        onClick={(e) => { if (isDisabled) e.preventDefault(); }} // Prevent navigation if disabled
+        onClick={(e) => { if (isDisabled) e.preventDefault(); }}
         className={`${baseClasses} ${inactiveClasses} justify-between ${isDisabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
       >
         <span className="flex items-center">
@@ -59,7 +58,6 @@ function SidebarLink({ icon: Icon, text, href, active = false, isExternal = fals
       </a>
     );
   }
-
   return (
     <Link
       href={isDisabled ? '#' : href}
@@ -75,11 +73,9 @@ function SidebarLink({ icon: Icon, text, href, active = false, isExternal = fals
 
 // *** Update Sidebar to accept userSlug prop ***
 function Sidebar({ user, userSlug }: { user: User | null, userSlug: string | null }) {
+  // ... (This is the Sidebar function from your code) ...
   const pathname = usePathname();
-
-  // Determine the correct href for "Meine Webseite"
-  const websiteHref = userSlug ? `/${userSlug}` : '#'; // Fallback to '#' if slug isn't loaded/available
-
+  const websiteHref = userSlug ? `/${userSlug}` : '#';
   return (
     <aside className="w-64 flex-shrink-0 bg-slate-800 p-4 relative">
       {/* Logo Section */}
@@ -87,7 +83,6 @@ function Sidebar({ user, userSlug }: { user: User | null, userSlug: string | nul
         <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md"> <ProjectsIcon className="h-6 w-6 text-white"/> </div>
         <div className="ml-3"> <h1 className="text-lg font-bold text-white">ArtisanCMS</h1> <p className="text-xs text-slate-400">Projektverwaltung</p> </div>
       </div>
-
       {/* Navigation Links */}
       <nav className="space-y-2">
         <SidebarLink icon={DashboardIcon} text="Dashboard" href="/dashboard" active={pathname === '/dashboard'} />
@@ -105,7 +100,6 @@ function Sidebar({ user, userSlug }: { user: User | null, userSlug: string | nul
              />
          </div>
       </nav>
-
       {/* User Profile Section */}
       {user && (
           <div className="absolute bottom-0 left-0 w-64 p-4">
@@ -134,62 +128,46 @@ export default function DashboardLayout({
   const pathname = usePathname();
 
   useEffect(() => {
+    // ... (This is the useEffect from your code) ...
     let isMounted = true;
     const checkAuthAndOnboarding = async () => {
-      // console.log("DashboardLayout: Checking Auth and Onboarding...");
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
       if (!isMounted || sessionError || !session?.user) {
         if (isMounted) router.push('/login');
         return;
       }
-
       const currentUser = session.user;
       if (isMounted) setUser(currentUser);
-
-      // --- Fetch profile including slug ---
-      // console.log("DashboardLayout: Checking profile for onboarding and slug:", currentUser.id);
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('onboarding_complete, slug') // Fetch slug here
+        .select('onboarding_complete, slug')
         .eq('id', currentUser.id)
-        .maybeSingle(); // Use maybeSingle
-
-      // console.log("DashboardLayout: Profile fetch result:", { profile, profileError });
-
-      if (profileError && profileError.code !== 'PGRST116') { // Ignore "0 rows" error
+        .maybeSingle();
+      if (profileError && profileError.code !== 'PGRST116') {
         console.error("DashboardLayout: Error checking profile:", profileError);
-        // Maybe show an error, but continue loading for now
       } else if (profile) {
           if (isMounted) {
-              setUserSlug(profile.slug); // *** Store the slug in state ***
-              // Redirect logic based on onboarding status
+              setUserSlug(profile.slug);
               const onboardingCompleteValue = profile?.onboarding_complete;
               const needsOnboarding = !profile || onboardingCompleteValue !== true;
               const isOnboardingPage = pathname === '/onboarding';
               if (needsOnboarding && !isOnboardingPage) {
                   router.push('/onboarding');
-                  return; // Stop further processing if redirecting
+                  return;
               }
           }
       } else {
-          // Profile doesn't exist, likely needs onboarding
           if (isMounted && pathname !== '/onboarding') {
               router.push('/onboarding');
-              return; // Stop further processing if redirecting
+              return;
           }
       }
-
-      // If we reach here, either onboarding is complete or we are on the onboarding page
       if (isMounted) {
           setLoadingProfile(false);
       }
     };
-
     checkAuthAndOnboarding();
-
     return () => { isMounted = false; };
-
   }, [router, pathname]);
 
   if (loadingProfile) {
@@ -199,6 +177,10 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen bg-slate-900 text-white">
       <Toaster position="bottom-right" toastOptions={{ /* ... toast options ... */ className: '', duration: 5000, style: { background: '#334155', color: '#fff', border: '1px solid #475569', }, success: { duration: 3000, iconTheme: { primary: '#22c55e', secondary: '#fff' }, }, error: { duration: 6000, iconTheme: { primary: '#ef4444', secondary: '#fff' }, }, }} />
+      
+      {/* --- THIS IS THE ONLY CHANGE --- */}
+      <FeedbackWidget /> {/* <-- 2. ADD THE WIDGET HERE */}
+      
       {/* *** Pass userSlug to Sidebar *** */}
       <Sidebar user={user} userSlug={userSlug} />
       <div className="flex-1 overflow-y-auto">
@@ -207,4 +189,3 @@ export default function DashboardLayout({
     </div>
   );
 }
-

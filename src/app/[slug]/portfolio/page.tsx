@@ -23,6 +23,25 @@ type Profile = {
     id: string;
     business_name: string | null;
     slug: string | null;
+    logo_url: string | null;        // <-- New
+    primary_color: string | null;   // <-- New
+    secondary_color: string | null; // <-- New
+};
+
+// --- Constants ---
+const DEFAULT_PRIMARY = '#ea580c'; // orange-600
+const DEFAULT_SECONDARY = '#475569'; // slate-600
+
+// --- Helper Function to Darken Color (Simple Approximation) ---
+const darkenColor = (hex: string, amount: number = 20): string => {
+    try {
+      let color = hex.startsWith('#') ? hex.slice(1) : hex;
+      let r = parseInt(color.substring(0, 2), 16);
+      let g = parseInt(color.substring(2, 4), 16);
+      let b = parseInt(color.substring(4, 6), 16);
+      r = Math.max(0, r - amount); g = Math.max(0, g - amount); b = Math.max(0, b - amount);
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    } catch (e) { console.error("Failed to darken color:", hex, e); return hex; }
 };
 
 // --- PORTFOLIO CARD COMPONENT ---
@@ -32,8 +51,7 @@ interface PortfolioCardProps {
 }
 function PortfolioCard({ project, slug }: PortfolioCardProps) {
   const imageUrl = project.image_url || `https://placehold.co/600x400/A3A3A3/FFF?text=${encodeURIComponent(project.title || 'Project')}`;
-  // Use slug in the project detail link
-  const projectUrl = slug ? `/${slug}/portfolio/${project.id}` : `/portfolio/${project.id}`; // Fallback just in case
+  const projectUrl = slug ? `/${slug}/portfolio/${project.id}` : `/portfolio/${project.id}`;
 
   return (
     <article className="flex flex-col items-start justify-between group">
@@ -49,7 +67,8 @@ function PortfolioCard({ project, slug }: PortfolioCardProps) {
         </div>
         <div className="max-w-xl mt-4">
             <div className="relative">
-            <h3 className="text-lg font-semibold leading-6 text-gray-900 group-hover:text-orange-600">
+            {/* --- Apply brand hover color --- */}
+            <h3 className="text-lg font-semibold leading-6 text-gray-900 group-hover:text-brand transition-colors">
                 {project.title || 'Untitled Project'}
             </h3>
             </div>
@@ -63,37 +82,32 @@ function PortfolioCard({ project, slug }: PortfolioCardProps) {
 // --- MAIN PORTFOLIO PAGE COMPONENT ---
 export default function ClientPortfolioPage() {
   // === State Variables ===
-  const [profile, setProfile] = useState<Profile | null>(null); // State for profile
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // === Get Slug from URL ===
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
 
-  // === Data Fetching ===
+  // === Data Fetching (Updated) ===
   useEffect(() => {
     if (!slug) {
         setError("Seitenpfad (Slug) fehlt in der URL."); setLoading(false); return;
     }
 
     const fetchPortfolioData = async () => {
-      setLoading(true);
-      setError(null);
-      setProfile(null); // Reset
-      setProjects([]); // Reset
-
+      setLoading(true); setError(null); setProfile(null); setProjects([]);
       let profileData: Profile | null = null;
 
       try {
-        // --- 1. Fetch Profile by Slug ---
+        // --- 1. Fetch Profile by Slug (including new fields) ---
         console.log(`Portfolio List: Fetching profile for slug: ${slug}...`);
         const { data: profileResult, error: profileError } = await supabase
           .from('profiles')
-          .select('id, business_name, slug') // Fetch fields needed
+          .select('id, business_name, slug, logo_url, primary_color, secondary_color') // <-- Fetch new fields
           .eq('slug', slug)
-          .maybeSingle(); // Handles 0 or 1 result
+          .maybeSingle();
 
         if (profileError) {
              console.error("Portfolio List: Error fetching profile:", profileError);
@@ -101,10 +115,13 @@ export default function ClientPortfolioPage() {
          }
         if (!profileResult) {
             console.log(`Portfolio List: No profile found for slug ${slug}.`);
-            return notFound(); // Show 404 if profile slug invalid
+            return notFound();
         }
 
         profileData = profileResult as Profile;
+        // Assign defaults
+        profileData.primary_color = profileData.primary_color || DEFAULT_PRIMARY;
+        profileData.secondary_color = profileData.secondary_color || DEFAULT_SECONDARY;
         setProfile(profileData);
         console.log(`Portfolio List: Found profile ID: ${profileData.id}`);
 
@@ -113,14 +130,14 @@ export default function ClientPortfolioPage() {
         const { data, error: fetchError } = await supabase
           .from('projects')
           .select(`id, title, "project-date", image_url, status, created_at, ai_description`)
-          .eq('user_id', profileData.id) // *** CRITICAL: Filter by profile ID ***
-          .eq('status', 'Published') // Only show published
+          .eq('user_id', profileData.id)
+          .eq('status', 'Published')
           .order('project-date', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false });
 
         if (fetchError) {
           console.error('Error fetching published projects:', fetchError);
-          setError(`Projekte konnten nicht geladen werden: ${fetchError.message}`); // Show error but continue
+          setError(`Projekte konnten nicht geladen werden: ${fetchError.message}`);
         } else {
            console.log("Fetched published projects data:", data);
           setProjects(data || []);
@@ -128,30 +145,40 @@ export default function ClientPortfolioPage() {
 
       } catch (err: any) {
         console.error("Error fetching portfolio data:", err);
-         if (!error) { // Don't overwrite notFound state
-           setError(err.message || "Ein Fehler ist aufgetreten.");
-         }
-         setProfile(null); // Clear data on error
-         setProjects([]);
+         if (!error) { setError(err.message || "Ein Fehler ist aufgetreten."); }
+         setProfile(null); setProjects([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPortfolioData();
-  }, [slug]); // Re-run if slug changes
+  }, [slug]);
 
   // === Render Logic ===
   if (loading) { return <div className="min-h-screen flex items-center justify-center">Lade Portfolio...</div>; }
   if (error && !profile) { return <div className="min-h-screen flex items-center justify-center text-center text-red-600 p-8"><p>Fehler:</p><p className="mt-2 text-sm">{error}</p></div>; }
   if (!profile) { return null; /* Handled by notFound */ }
 
-  // If profile loaded but projects failed, error will be shown below
+  // --- Define CSS Variables ---
+  const primaryColor = profile.primary_color || DEFAULT_PRIMARY;
+  const secondaryColor = profile.secondary_color || DEFAULT_SECONDARY;
+  const primaryColorDark = darkenColor(primaryColor);
+  const colorStyles = `
+    :root {
+      --color-brand-primary: ${primaryColor};
+      --color-brand-secondary: ${secondaryColor};
+      --color-brand-primary-dark: ${primaryColorDark};
+    }
+  `;
+
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col">
-       <Navbar businessName={profile?.business_name} slug={profile?.slug}/>
+       <style>{colorStyles}</style> {/* Inject CSS variables */}
+       {/* --- Pass logoUrl to Navbar --- */}
+       <Navbar businessName={profile?.business_name} slug={profile?.slug} logoUrl={profile?.logo_url} />
 
-        <main className="py-24 sm:py-32 flex-grow"> {/* Renamed main tag */}
+        <main className="py-24 sm:py-32 flex-grow">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 {/* Header */}
                 <div className="mx-auto max-w-2xl lg:mx-0">
@@ -161,10 +188,9 @@ export default function ClientPortfolioPage() {
                     </p>
                 </div>
 
-                {/* Show project specific error if profile loaded fine */}
                 {error && <p className="text-red-600 mt-16 text-center">{error}</p>}
 
-                {/* Project Grid - Render only if no error */}
+                {/* Project Grid */}
                 {!error && (
                     <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
                         {projects.length > 0 ? (
@@ -178,9 +204,9 @@ export default function ClientPortfolioPage() {
                         )}
                     </div>
                 )}
-                 {/* Link back to homepage */}
+                 {/* Link back to homepage - Apply brand hover color */}
                  <div className="mt-16 text-center">
-                    <Link href={`/${profile.slug}`} className="text-sm font-semibold leading-6 text-orange-600 hover:text-orange-500">
+                    <Link href={`/${profile.slug}`} className="text-sm font-semibold leading-6 text-brand hover:text-brand-dark transition-colors">
                         <span aria-hidden="true">←</span> Zurück zur Startseite
                     </Link>
                 </div>
@@ -191,4 +217,3 @@ export default function ClientPortfolioPage() {
     </div>
   );
 }
-

@@ -151,11 +151,13 @@ export default function EditProjectPage() {
             finalImageUrl = urlData.publicUrl; // Update finalImageUrl to the new one
             console.log("New Public Image URL:", finalImageUrl);
 
+            // ... inside handleSubmit ...
             // --- Step 1b: Delete OLD Image (if it exists) ---
             if (currentImageUrl) {
                  try {
                     const url = new URL(currentImageUrl);
-                    oldImagePath = url.pathname.split('/').slice(4).join('/'); // Extract path
+                    // *** APPLY THE SAME FIX HERE: slice(4) -> slice(6) ***
+                    oldImagePath = url.pathname.split('/').slice(6).join('/'); // Extract path
                     if (oldImagePath) {
                          console.log("Attempting to delete old image:", oldImagePath);
                          const { error: deleteError } = await supabase.storage.from('project-images').remove([oldImagePath]);

@@ -1,9 +1,9 @@
+// src/app/api/generate-description/route.ts
 import { NextResponse } from 'next/server';
 
 // This function handles POST requests made to /api/generate-description
 export async function POST(request: Request) {
-  // --- 1. Extract Project Title ---
-  // Get the data sent from the frontend (expecting { title: '...' })
+  // --- 1. Extract Project Title & Notes ---
   let requestData;
   try {
     requestData = await request.json();
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { title } = requestData;
+  const { title, notes } = requestData; // <-- 1. GET NOTES
 
   if (!title) {
     return NextResponse.json({ error: "Project title is required" }, { status: 400 });
@@ -26,11 +26,16 @@ export async function POST(request: Request) {
   }
 
   // --- 3. Construct the Prompt ---
-  // Craft a clear prompt for the AI
-  const prompt = `Write a short, professional project description (max 2-3 sentences) in German for a portfolio, based on the following project title: "${title}". Focus on the work performed and the quality. Use keywords relevant for a German trade business.`;
+  // <-- 2. UPDATE PROMPT TO USE NOTES -->
+  let prompt = `Write a short, professional project description (max 2-3 sentences) in German for a portfolio, based on the following project title: "${title}". Focus on the work performed and the quality. Use keywords relevant for a German trade business.`;
+
+  // Add the notes to the prompt if they exist and are not empty
+  if (notes && notes.trim() !== '') {
+    prompt += `\n\nIncorporate these additional notes from the tradesperson to add specific detail (e.g., materials, special techniques): "${notes}"`;
+  }
 
   // --- 4. Call OpenAI API ---
-  const apiUrl = 'https://api.openai.com/v1/chat/completions'; // Using chat completions endpoint
+  const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
   try {
     const response = await fetch(apiUrl, {
@@ -40,13 +45,13 @@ export async function POST(request: Request) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo", // Or use "gpt-4" if you have access
+        model: "gpt-3.5-turbo",
         messages: [
           { role: "system", content: "You are a helpful assistant writing portfolio descriptions for German trade businesses." },
           { role: "user", content: prompt }
         ],
-        max_tokens: 100, // Limit the length of the response
-        temperature: 0.7, // Controls creativity (0.7 is a good balance)
+        max_tokens: 150, // Increased slightly to allow for notes
+        temperature: 0.7, 
       }),
     });
 
@@ -59,7 +64,6 @@ export async function POST(request: Request) {
     const data = await response.json();
 
     // --- 5. Extract and Return Description ---
-    // Extract the generated text from the response structure
     const description = data.choices?.[0]?.message?.content?.trim();
 
     if (!description) {
@@ -68,7 +72,6 @@ export async function POST(request: Request) {
     }
 
     console.log("Generated Description:", description);
-    // Send the description back to the frontend
     return NextResponse.json({ description });
 
   } catch (error) {
