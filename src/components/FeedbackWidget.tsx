@@ -1,9 +1,10 @@
-// src/components/FeedbackWidget.tsx
 "use client";
 
-import React, { useState } from 'react'; // Import React
+import React, { useState, useEffect } from 'react'; // Import React
 import { usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { supabase } from '@/lib/supabaseClient'; // <-- 1. Import Supabase client
+import { User } from '@supabase/supabase-js'; // <-- 2. Import User type
 
 // --- Icons ---
 const ChatBubbleLeftRightIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -30,10 +31,26 @@ export default function FeedbackWidget() {
   const [category, setCategory] = useState<FeedbackCategory>('Bug Report');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null); // <-- 3. Add state for user
   const pathname = usePathname();
+
+  // <-- 4. Get the authenticated user when the component loads -->
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    getUser();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // <-- 5. Check for user in the handler -->
+    if (!currentUser) {
+      toast.error("User not found. Please try refreshing the page.");
+      return;
+    }
     if (!message.trim()) {
       toast.error("Please enter a message.");
       return;
@@ -41,32 +58,27 @@ export default function FeedbackWidget() {
 
     setIsLoading(true);
 
-    try {
-      const response = await fetch('/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          category,
-          message,
-          page_url: pathname
-        }),
+    // <-- 6. Change from fetch() to supabase.from().insert() -->
+    const { error } = await supabase
+      .from('feedback')
+      .insert({
+        user_id: currentUser.id,
+        category,
+        message,
+        page_url: pathname
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit feedback');
-      }
-
+    if (error) {
+      console.error("Error submitting feedback:", error);
+      toast.error(`Error: ${error.message}`);
+    } else {
       toast.success("Thank you for your feedback!");
       setMessage('');
       setCategory('Bug Report');
       setIsOpen(false);
-    } catch (err: any) {
-      toast.error(`Error: ${err.message}`);
-    } finally {
-      setIsLoading(false);
     }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -136,7 +148,7 @@ export default function FeedbackWidget() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !currentUser} // <-- 7. Disable button if user isn't loaded
                   className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 disabled:bg-orange-800 disabled:cursor-not-allowed"
                 >
                   {isLoading && <ArrowPathIcon className="h-4 w-4" />}
