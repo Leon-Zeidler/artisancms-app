@@ -6,13 +6,11 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
-import toast from 'react-hot-toast'; // Import toast for feedback
+import toast from 'react-hot-toast';
 
-// --- Icon for AI Button ---
-const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( /* ... icon svg ... */ <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z" /> </svg> );
-// --- Icon for Check ---
+// --- Icons (SparklesIcon, CheckIcon, ArrowPathIcon) ---
+const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z" /> </svg> );
 const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>);
-// --- Icon for Loading ---
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
 
 
@@ -25,13 +23,13 @@ const createSlug = (name: string): string => {
   return name
     .toLowerCase()
     .trim()
-    .replace(/ä/g, 'ae') // Handle German umlauts
+    .replace(/ä/g, 'ae') 
     .replace(/ö/g, 'oe')
     .replace(/ü/g, 'ue')
     .replace(/ß/g, 'ss')
-    .replace(/[^\w\s-]/g, '') // Remove non-word characters (excluding space, hyphen)
-    .replace(/[\s_]+/g, '-') // Replace spaces and underscores with hyphens
-    .replace(/^-+|-+$/g, ''); // Trim leading/trailing hyphens
+    .replace(/[^\w\s-]/g, '') 
+    .replace(/[\s_]+/g, '-') 
+    .replace(/^-+|-+$/g, '');
 };
 
 export default function OnboardingPage() {
@@ -42,13 +40,13 @@ export default function OnboardingPage() {
   const [phone, setPhone] = useState('');
   const [servicesDescription, setServicesDescription] = useState('');
   const [aboutText, setAboutText] = useState('');
-  const [slug, setSlug] = useState(''); // Slug state
-  const [slugStatus, setSlugStatus] = useState<SlugStatus>('idle'); // Slug validation status
-  const [slugCheckTimeout, setSlugCheckTimeout] = useState<NodeJS.Timeout | null>(null); // For debouncing check
+  const [slug, setSlug] = useState(''); 
+  const [slugStatus, setSlugStatus] = useState<SlugStatus>('idle'); 
+  const [slugCheckTimeout, setSlugCheckTimeout] = useState<NodeJS.Timeout | null>(null); 
 
-  const [loading, setLoading] = useState(false); // Main form saving state
+  const [loading, setLoading] = useState(false); 
   const [aiLoading, setAiLoading] = useState<AIGenerationType | null>(null);
-  const [error, setError] = useState<string | null>(null); // For displaying general/slug validation errors
+  const [error, setError] = useState<string | null>(null); 
   const [initialLoading, setInitialLoading] = useState(true);
 
   const router = useRouter();
@@ -61,7 +59,9 @@ export default function OnboardingPage() {
         setCurrentUser(user);
         console.log("Checking profile for user:", user.id);
         const { data: profile, error: profileError } = await supabase
-            .from('profiles').select('business_name, address, phone, services_description, about_text, onboarding_complete, slug')
+            .from('profiles')
+            // <-- 1. ADD 'email' TO THE SELECT STATEMENT -->
+            .select('business_name, address, phone, services_description, about_text, onboarding_complete, slug, email')
             .eq('id', user.id).single();
 
         if (profileError && profileError.code !== 'PGRST116') {
@@ -127,8 +127,8 @@ export default function OnboardingPage() {
     }
   };
 
-  // Handle AI Text Generation (remains the same)
-  const handleGenerateProfileText = async (type: AIGenerationType) => { /* ... */ const context = businessName || 'Handwerksbetrieb'; if (!context) { setError("Bitte geben Sie zuerst den Namen des Betriebs ein."); return; } setAiLoading(type); setError(null); try { const response = await fetch('/api/generate-profile-text', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ context: context, type: type }), }); if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error || `Failed to generate ${type} text`); } const data = await response.json(); if (type === 'services') { setServicesDescription(data.text); } else if (type === 'about') { setAboutText(data.text); } } catch (err) { console.error(`Error calling ${type} generation API:`, err); const message = err instanceof Error ? err.message : "An unknown error occurred"; setError(`Fehler bei der Textgenerierung: ${message}`); } finally { setAiLoading(null); } };
+  // Handle AI Text Generation
+  const handleGenerateProfileText = async (type: AIGenerationType) => { const context = businessName || 'Handwerksbetrieb'; if (!context) { setError("Bitte geben Sie zuerst den Namen des Betriebs ein."); return; } setAiLoading(type); setError(null); try { const response = await fetch('/api/generate-profile-text', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ context: context, type: type }), }); if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error || `Failed to generate ${type} text`); } const data = await response.json(); if (type === 'services') { setServicesDescription(data.text); } else if (type === 'about') { setAboutText(data.text); } } catch (err) { console.error(`Error calling ${type} generation API:`, err); const message = err instanceof Error ? err.message : "An unknown error occurred"; setError(`Fehler bei der Textgenerierung: ${message}`); } finally { setAiLoading(null); } };
 
 
   // === Handle Form Submission ===
@@ -145,14 +145,19 @@ export default function OnboardingPage() {
     console.log("Submitting onboarding data for user:", currentUser.id);
 
     const profileData = {
-        'id': currentUser.id, 'business_name': businessName, 'address': address,
-        'phone': phone, 'services_description': servicesDescription, 'about_text': aboutText,
-        'slug': slug, 'onboarding_complete': true, 'updated_at': new Date().toISOString(),
+        'id': currentUser.id, 
+        'business_name': businessName, 
+        'address': address,
+        'phone': phone, 
+        'services_description': servicesDescription, 
+        'about_text': aboutText,
+        'slug': slug, 
+        'onboarding_complete': true, 
+        'updated_at': new Date().toISOString(),
+        'email': currentUser.email // <-- 2. ADD THE EMAIL TO THE SAVE OBJECT
      };
     console.log("Data being sent to upsert:", profileData);
 
-    // *** CORRECTED toast.promise SYNTAX AGAIN ***
-    // Define the async function separately for clarity
     const upsertProfile = async () => {
         const { data, error } = await supabase
             .from('profiles')
@@ -172,9 +177,8 @@ export default function OnboardingPage() {
         return data;
     };
 
-    // Pass the async function reference to toast.promise
     await toast.promise(
-        upsertProfile(), // Call the async function here
+        upsertProfile(), 
         {
             loading: 'Profil wird gespeichert...',
             success: (data) => {
@@ -183,16 +187,15 @@ export default function OnboardingPage() {
             },
             error: (err: any) => {
                 console.error('Error saving profile (toast):', err);
-                // Ensure slugStatus is updated if it was a duplicate key error
                 if (err.message.includes("bereits vergeben")) {
-                   setSlugStatus('taken'); // Keep UI consistent
+                   setSlugStatus('taken'); 
                 }
                 return `Fehler beim Speichern: ${err.message}`;
             }
         }
     );
 
-    setLoading(false); // Set loading false after toast is handled
+    setLoading(false); 
   };
 
   // === Render Logic (JSX) ===
@@ -224,8 +227,7 @@ export default function OnboardingPage() {
                     onChange={handleSlugChange}
                     required
                     aria-describedby="slug-description slug-status"
-                    // Basic estimation for padding based on typical character widths
-                    style={{ paddingLeft: `${Math.max(60, 'IhreDomain.de/'.length * 7 + 12)}px` }} // Adjust 7 and 12 as needed
+                    style={{ paddingLeft: `${Math.max(60, 'IhreDomain.de/'.length * 7 + 12)}px` }} 
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
                     placeholder="z.b. tischlerei-mustermann"
                  />
@@ -276,7 +278,7 @@ export default function OnboardingPage() {
              </div>
           </div>
 
-          {/* General Error Message Display (mainly for slug validation) */}
+          {/* General Error Message Display */}
           {error && ( <p className="text-center text-sm text-red-600">{error}</p> )}
 
           {/* Submit Button */}
@@ -290,4 +292,3 @@ export default function OnboardingPage() {
     </main>
   );
 }
-

@@ -9,8 +9,8 @@ interface NavbarProps {
   businessName?: string | null;
   slug?: string | null;
   logoUrl?: string | null;
-  primaryColor?: string; // <-- Ensure this exists
-  primaryColorDark?: string; // <-- Ensure this exists
+  primaryColor?: string; // <-- Prop for the main color
+  primaryColorDark?: string; // <-- Prop for the hover color
 }
 
 // Icons
@@ -21,14 +21,46 @@ const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} xm
 const DEFAULT_PRIMARY = '#ea580c'; // orange-600
 const DEFAULT_PRIMARY_DARK = '#c2410c'; // A darker shade
 
+// Simple function to slightly darken a hex color for hover states
+// This is a utility function to calculate hover color if not provided.
+const darkenColor = (hex: string, amount: number = 20): string => {
+  if (!hex) return DEFAULT_PRIMARY_DARK;
+  try {
+    let color = hex.startsWith('#') ? hex.slice(1) : hex;
+    if (color.length === 3) {
+      color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
+    }
+    let r = parseInt(color.substring(0, 2), 16);
+    let g = parseInt(color.substring(2, 4), 16);
+    let b = parseInt(color.substring(4, 6), 16);
+
+    r = Math.max(0, r - amount);
+    g = Math.max(0, g - amount);
+    b = Math.max(0, b - amount);
+
+    const newHex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    return newHex;
+  } catch (e) {
+    console.error("Failed to darken color:", hex, e);
+    return DEFAULT_PRIMARY_DARK; // Return default dark on error
+  }
+};
+
+
 export default function Navbar({
     businessName,
     slug,
     logoUrl,
-    primaryColor = DEFAULT_PRIMARY, // Destructure with default
-    primaryColorDark = DEFAULT_PRIMARY_DARK // Destructure with default
+    primaryColor: initialPrimaryColor, // Rename prop to avoid conflict
+    primaryColorDark: initialPrimaryColorDark // Rename prop
 }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [logoHasError, setLogoHasError] = useState(false); // State to track logo loading error
+
+  // Use provided colors, or fall back to defaults
+  const primaryColor = initialPrimaryColor || DEFAULT_PRIMARY;
+  // Calculate dark color if not provided, or use the one from props
+  const primaryColorDark = initialPrimaryColorDark || darkenColor(primaryColor);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -46,7 +78,7 @@ export default function Navbar({
     event.currentTarget.style.color = primaryColor;
   };
   const handleMouseOut = (event: React.MouseEvent<HTMLElement>) => {
-    event.currentTarget.style.color = ''; // Revert to CSS default
+    event.currentTarget.style.color = ''; // Revert to CSS default (text-gray-600)
   };
    const handleButtonMouseOver = (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.currentTarget.style.backgroundColor = primaryColorDark;
@@ -62,18 +94,20 @@ export default function Navbar({
           {/* Logo/Brand Name */}
           <div className="flex-shrink-0">
             <Link href={homePath} className="text-xl font-bold text-gray-900 flex items-center">
-              {logoUrl ? (
+              {/* Show logo if it exists AND hasn't failed to load */}
+              {logoUrl && !logoHasError ? (
                 <img
                   src={logoUrl}
                   alt={businessName || 'Logo'}
                   className="h-8 w-auto" // Adjust height
-                  // ADDED console log on error
+                  // ADDED console log on error and state update
                   onError={(e) => {
                     console.error("Error loading logo image:", logoUrl, e);
-                    e.currentTarget.style.display = 'none'; // Hide broken image
+                    setLogoHasError(true); // Hide broken image and show name
                   }}
                 />
               ) : (
+                // Fallback to business name
                 businessName || 'ArtisanCMS'
               )}
             </Link>
@@ -92,7 +126,7 @@ export default function Navbar({
             <Link
                 href="/login"
                 className="rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors"
-                style={{ backgroundColor: primaryColor }}
+                style={{ backgroundColor: primaryColor }} // Apply dynamic color
                 onMouseOver={handleButtonMouseOver}
                 onMouseOut={handleButtonMouseOut}
             >
@@ -102,7 +136,7 @@ export default function Navbar({
 
           {/* Mobile Menu Button - Apply focus ring color */}
           <div className="md:hidden">
-            {/* Using inline style for focus ring color might be less reliable; consider CSS variable if needed */}
+             {/* Use CSS variable to set focus ring color */}
              <style>{`:root { --focus-ring-color-nav: ${primaryColor}; }`}</style>
             <button
               type="button"
@@ -132,7 +166,7 @@ export default function Navbar({
                 href="/login"
                 onClick={toggleMobileMenu}
                 className="block w-full text-center rounded-md px-4 py-2 text-base font-semibold text-white transition-colors"
-                style={{ backgroundColor: primaryColor }}
+                style={{ backgroundColor: primaryColor }} // Apply dynamic color
                 onMouseOver={handleButtonMouseOver}
                 onMouseOut={handleButtonMouseOut}
              >
@@ -144,4 +178,3 @@ export default function Navbar({
     </nav>
   );
 }
-
