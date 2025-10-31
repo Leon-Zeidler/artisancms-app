@@ -30,6 +30,13 @@ export default function HomePage() {
           </Link>
         </div>
 
+        {/* <-- ADD LEGAL LINKS TO FOOTER --> */}
+        <div className="mt-8 text-center text-xs text-gray-500">
+          <Link href="/impressum" className="hover:underline">Impressum</Link>
+          {' · '}
+          <Link href="/datenschutz" className="hover:underline">Datenschutz</Link>
+        </div>
+
       </div>
     </main>
   );

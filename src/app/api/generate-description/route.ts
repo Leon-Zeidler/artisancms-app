@@ -1,9 +1,21 @@
-// src/app/api/generate-description/route.ts
 import { NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 // This function handles POST requests made to /api/generate-description
 export async function POST(request: Request) {
-  // --- 1. Extract Project Title & Notes ---
+  
+  // --- 1. ADD AUTHENTICATION CHECK ---
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return NextResponse.json({ error: 'You must be authenticated to use this service.' }, { status: 401 });
+  }
+  // --- END OF AUTH CHECK ---
+
+  // --- 2. Extract Project Title & Notes ---
   let requestData;
   try {
     requestData = await request.json();
@@ -12,30 +24,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { title, notes } = requestData; // <-- 1. GET NOTES
+  const { title, notes } = requestData;
 
   if (!title) {
     return NextResponse.json({ error: "Project title is required" }, { status: 400 });
   }
 
-  // --- 2. Get OpenAI API Key (Securely) ---
+  // --- 3. Get OpenAI API Key (Securely) ---
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     console.error("OpenAI API key not found in environment variables.");
     return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
   }
 
-  // --- 3. Construct the Prompt ---
-  // <-- 2. UPDATE PROMPT TO USE NOTES -->
+  // --- 4. Construct the Prompt ---
   let prompt = `Write a short, professional project description (max 2-3 sentences) in German for a portfolio, based on the following project title: "${title}". Focus on the work performed and the quality. Use keywords relevant for a German trade business.`;
 
-  // Add the notes to the prompt if they exist and are not empty
   if (notes && notes.trim() !== '') {
     prompt += `\n\nIncorporate these additional notes from the tradesperson to add specific detail (e.g., materials, special techniques): "${notes}"`;
   }
 
-  // --- 4. Call OpenAI API ---
-  const apiUrl = 'https://api.openai.com/v1/chat/completions';
+  // --- 5. Call OpenAI API ---
+  const apiUrl = 'https://api.openai.com/v1/chat/completions'; 
 
   try {
     const response = await fetch(apiUrl, {
@@ -50,7 +60,7 @@ export async function POST(request: Request) {
           { role: "system", content: "You are a helpful assistant writing portfolio descriptions for German trade businesses." },
           { role: "user", content: prompt }
         ],
-        max_tokens: 150, // Increased slightly to allow for notes
+        max_tokens: 150, 
         temperature: 0.7, 
       }),
     });
@@ -63,7 +73,7 @@ export async function POST(request: Request) {
 
     const data = await response.json();
 
-    // --- 5. Extract and Return Description ---
+    // --- 6. Extract and Return Description ---
     const description = data.choices?.[0]?.message?.content?.trim();
 
     if (!description) {

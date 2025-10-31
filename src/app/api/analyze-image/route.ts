@@ -1,8 +1,22 @@
 // src/app/api/analyze-image/route.ts
 import { NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export async function POST(request: Request) {
-  // --- 1. Get Image Data and API Key ---
+  
+  // --- 1. ADD AUTHENTICATION CHECK ---
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return NextResponse.json({ error: 'You must be authenticated to use this service.' }, { status: 401 });
+  }
+  // --- END OF AUTH CHECK ---
+
+
+  // --- 2. Get Image Data and API Key ---
   let requestData;
   try {
     requestData = await request.json();
@@ -22,16 +36,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
   }
 
-  // --- 2. Construct the Image URL for the API ---
+  // --- 3. Construct the Image URL for the API ---
   const imageUrl = `data:${mimeType};base64,${imageData}`;
 
-  // --- 3. Construct the Prompt ---
+  // --- 4. Construct the Prompt ---
   const prompt = `You are an expert Handwerker (German tradesperson). This is a photo from a completed project. 
   Briefly describe the key materials, items, and work visible in the image.
   Focus on facts, not marketing. Be concise. Respond in German.
   Example: "Modernes Badezimmer mit weißen, großformatigen Fliesen, einer ebenerdigen Glasdusche und Chrom-Armaturen."`;
 
-  // --- 4. Call OpenAI API (gpt-4o) ---
+  // --- 5. Call OpenAI API (gpt-4o) ---
   const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
   try {
@@ -67,7 +81,7 @@ export async function POST(request: Request) {
 
     const data = await response.json();
 
-    // --- 5. Extract and Return Description ---
+    // --- 6. Extract and Return Description ---
     const description = data.choices?.[0]?.message?.content?.trim();
 
     if (!description) {
@@ -84,3 +98,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Failed to generate description: ${errorMessage}` }, { status: 500 });
   }
 }
+

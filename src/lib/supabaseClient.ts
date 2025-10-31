@@ -1,11 +1,14 @@
-import { createClient } from '@supabase/supabase-js'
+// src/lib/supabaseClient.ts
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
-// Get the Supabase URL and anon key from your environment variables
-// These MUST be set in your .env.local file
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// IMPORTANT: We are no longer creating a "singleton" client here.
+// Instead, we are exporting a function that creates a new client
+// every time it's needed in a component. This is the modern
+// Next.js App Router pattern for Supabase.
 
-// Create and export the Supabase client instance
-// This 'supabase' object is what you'll use to interact with Supabase
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// We can also just export the function directly
+export const supabase = createClientComponentClient();
 
+// If you want to be more explicit, you can do this:
+// const createClient = () => createClientComponentClient();
+// export const supabase = createClient();

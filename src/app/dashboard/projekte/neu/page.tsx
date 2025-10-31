@@ -200,6 +200,8 @@ export default function NewProjectPage() {
         const fileName = `${Date.now()}.${fileExtension}`;
         const filePath = `${userId}/${fileName}`;
 
+        console.log("Attempting to upload file:", filePath);
+
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('project-images').upload(filePath, file);
 
@@ -207,9 +209,11 @@ export default function NewProjectPage() {
             console.error('Error uploading image:', uploadError);
             throw new Error(`Bild-Upload fehlgeschlagen: ${uploadError.message}`);
         }
+        console.log("Image uploaded successfully:", uploadData);
 
         const { data: urlData } = supabase.storage.from('project-images').getPublicUrl(uploadData.path);
         const imageUrl = urlData?.publicUrl;
+        console.log("Public Image URL:", imageUrl);
         if (!imageUrl) {
             await supabase.storage.from('project-images').remove([filePath]);
             throw new Error("Konnte die Bild-URL nach dem Upload nicht abrufen.");
@@ -217,6 +221,8 @@ export default function NewProjectPage() {
 
         const projectStatus = publishImmediately ? 'Published' : 'Draft';
 
+        // Step 3: Projektdaten in DB einfügen
+        console.log("Submitting project data to table...");
         const { data: insertData, error: insertError } = await supabase
           .from('projects')
           .insert([ {
@@ -226,6 +232,7 @@ export default function NewProjectPage() {
               image_url: imageUrl,
               ai_description: aiDescription,
               status: projectStatus,
+              notes: notes // <-- THIS IS THE ONLY CHANGE IN THIS FILE
           }])
           .select()
           .single(); 
@@ -340,7 +347,6 @@ export default function NewProjectPage() {
             className="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 focus:ring-offset-slate-800"
             required
           />
-          {/* --- NEW: Image Preview & Analyze Button --- */}
           {imagePreview && (
             <div className="mt-4 relative group">
               <img src={imagePreview} alt="Projekt-Vorschau" className="rounded-lg w-full max-h-60 object-cover border border-slate-700" />
@@ -462,3 +468,4 @@ export default function NewProjectPage() {
     </main>
   );
 }
+
