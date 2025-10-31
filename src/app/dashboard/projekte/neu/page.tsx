@@ -93,7 +93,7 @@ export default function NewProjectPage() {
     }
   };
 
-  // --- NEW: Handler for Image Analysis ---
+  // --- Handler for Image Analysis ---
   const handleImageAnalysis = async () => {
     if (!imageFile) {
       toast.error("Bitte wählen Sie zuerst ein Bild aus.");
@@ -221,8 +221,9 @@ export default function NewProjectPage() {
 
         const projectStatus = publishImmediately ? 'Published' : 'Draft';
 
-        // Step 3: Projektdaten in DB einfügen
-        console.log("Submitting project data to table...");
+        //
+        // --- THIS IS THE CHANGE ---
+        //
         const { data: insertData, error: insertError } = await supabase
           .from('projects')
           .insert([ {
@@ -232,10 +233,13 @@ export default function NewProjectPage() {
               image_url: imageUrl,
               ai_description: aiDescription,
               status: projectStatus,
-              notes: notes // <-- THIS IS THE ONLY CHANGE IN THIS FILE
+              notes: notes // <-- ADDED THIS LINE
           }])
           .select()
           .single(); 
+        //
+        // --- END OF CHANGE ---
+        //
 
         if (insertError) {
             console.error('Error creating project:', insertError);
@@ -252,7 +256,6 @@ export default function NewProjectPage() {
             loading: 'Projekt wird erstellt...',
             success: (data) => {
                 const { newProject, status } = data;
-                console.log('Project created successfully!', newProject);
                 
                 if (status === 'Published' && userSlug && newProject?.id) {
                     const liveUrl = `/${userSlug}/portfolio/${newProject.id}`;
@@ -468,4 +471,3 @@ export default function NewProjectPage() {
     </main>
   );
 }
-

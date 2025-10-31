@@ -3,10 +3,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
-import ConfirmationModal from '@/components/ConfirmationModal'; // <-- Import modal
+import ConfirmationModal from '@/components/ConfirmationModal'; // <-- Import reusable modal
 
 // --- Icons ---
 const ArrowRightStartOnRectangleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /> </svg> );
@@ -16,7 +16,7 @@ const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props
 const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /> </svg> );
 const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /> </svg> );
 
-// Type for profile data including new appearance fields
+// Type for profile data
 type ProfileData = {
   business_name: string;
   address: string;
@@ -34,16 +34,10 @@ type ProfileData = {
 type AIGenerationType = 'services' | 'about';
 type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 
-const DATENSCHUTZ_TEMPLATE = `Verantwortlicher im Sinne der Datenschutzgesetze, insbesondere der EU-Datenschutzgrundverordnung (DSGVO), ist:
+const DATENSCHUTZ_TEMPLATE = `Verantwortlicher im Sinne der Datenschutzgesetze...`; // (Shortened)
 
-[IHREN NAMEN UND ADRESSE HIER EINFÜGEN]
-
-[... TEXT ... HINZUFÜGEN ...]
-`; // Shortened for brevity
-
-// --- Constants ---
-const DEFAULT_PRIMARY_COLOR = '#ea580c'; // orange-600
-const DEFAULT_SECONDARY_COLOR = '#475569'; // slate-600
+const DEFAULT_PRIMARY_COLOR = '#ea580c';
+const DEFAULT_SECONDARY_COLOR = '#475569';
 
 export default function EinstellungenPage() {
   // === State Variables ===
@@ -68,7 +62,6 @@ export default function EinstellungenPage() {
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
   
-  // --- STATE FOR ACCOUNT MANAGEMENT (WAS MISSING) ---
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
@@ -78,7 +71,7 @@ export default function EinstellungenPage() {
 
   const router = useRouter();
 
-  // === Get Current User & Profile Data on Load (Updated) ===
+  // === Get Current User & Profile Data on Load ===
   useEffect(() => {
     let isMounted = true;
     const fetchData = async () => {
@@ -87,8 +80,7 @@ export default function EinstellungenPage() {
       if (!isMounted || userError || !user) { if (isMounted) router.push('/login'); return; }
       if (isMounted) setCurrentUser(user);
 
-      console.log("Fetching profile data for settings...");
-      const selectColumns = 'business_name, address, phone, services_description, about_text, slug, impressum_text, datenschutz_text, logo_url, primary_color, secondary_color';
+      const selectColumns = 'business_name, address, phone, services_description, about_text, slug, impressum_text, datenschutz_text, logo_url, primary_color, secondary_color, email';
       
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -96,19 +88,9 @@ export default function EinstellungenPage() {
         .eq('id', user.id)
         .single();
 
-      console.log("Profile fetch raw result:", { profile, profileError });
-      if (profileError) {
-         console.error("Supabase Profile Fetch Error Details:", {
-              message: profileError.message,
-              details: profileError.details,
-              hint: profileError.hint,
-              code: profileError.code,
-         });
-      }
-
       if (isMounted) {
           if (profileError && profileError.code !== 'PGRST116') {
-              setGeneralError(`Profildaten konnten nicht geladen werden: ${profileError.message} (Code: ${profileError.code})`);
+              setGeneralError(`Profildaten konnten nicht geladen werden: ${profileError.message}`);
           } else if (profile) {
             const datenschutzText = profile.datenschutz_text || DATENSCHUTZ_TEMPLATE;
             setProfileData({
@@ -125,8 +107,8 @@ export default function EinstellungenPage() {
             setSlugStatus(profile.slug ? 'available' : 'invalid');
             setLogoPreviewUrl(profile.logo_url || null);
           } else {
-              console.warn("Profile fetch returned no data, but user is past onboarding. Setting default values.");
-              setGeneralError("Profil nicht gefunden, aber Benutzer ist an Bord. Standardwerte werden verwendet.");
+              console.warn("Profile fetch returned no data, but user is past onboarding.");
+              setGeneralError("Profil nicht gefunden. Bitte versuchen Sie, sich neu anzumelden.");
           }
            setLoading(false);
       }
@@ -223,7 +205,10 @@ export default function EinstellungenPage() {
 
         if (isRemovingLogo && profileData.logo_url) {
             finalLogoUrl = null;
-            try { oldLogoPath = new URL(profileData.logo_url).pathname.split('/').slice(6).join('/'); } catch {} // Use slice(6)
+            try { 
+              // --- FIX: Use slice(6) ---
+              oldLogoPath = new URL(profileData.logo_url).pathname.split('/').slice(6).join('/'); 
+            } catch {}
         }
         else if (logoFile) {
             const file = logoFile;
@@ -237,21 +222,30 @@ export default function EinstellungenPage() {
             if (!urlData?.publicUrl) { throw new Error("Konnte die URL des neuen Logos nicht abrufen."); }
             finalLogoUrl = urlData.publicUrl;
             if (profileData.logo_url && profileData.logo_url !== finalLogoUrl) {
-                try { oldLogoPath = new URL(profileData.logo_url).pathname.split('/').slice(6).join('/'); } catch {} // Use slice(6)
+                try { 
+                  // --- FIX: Use slice(6) ---
+                  oldLogoPath = new URL(profileData.logo_url).pathname.split('/').slice(6).join('/'); 
+                } catch {}
             }
         }
 
+        //
+        // --- THIS IS THE FIX ---
+        //
         const profileUpdates = {
           business_name: profileData.business_name, address: profileData.address, phone: profileData.phone,
           services_description: profileData.services_description, about_text: profileData.about_text,
           slug: profileData.slug,
-          impressum_text: profileData.impressum_text || null,
-          datenschutz_text: profileData.datenschutz_text || null,
+          impressum_text: profileData.impressum_text || null, // <-- ADDED
+          datenschutz_text: profileData.datenschutz_text || null, // <-- ADDED
           updated_at: new Date().toISOString(),
           logo_url: finalLogoUrl,
           primary_color: profileData.primary_color,
           secondary_color: profileData.secondary_color,
         };
+        //
+        // --- END OF FIX ---
+        //
 
         const { data: updatedProfile, error: updateError } = await supabase
             .from('profiles').update(profileUpdates).eq('id', currentUser.id).select().single();
@@ -275,8 +269,13 @@ export default function EinstellungenPage() {
 
     await toast.promise(savePromise(), {
         loading: 'Änderungen werden gespeichert...',
-        success: (updatedData: any) => { // Use any to avoid type conflict on partial return
-            setProfileData(prev => ({ ...prev, logo_url: updatedData.logo_url, primary_color: updatedData.primary_color, secondary_color: updatedData.secondary_color }));
+        success: (updatedData: any) => { // Use 'any' to avoid type conflict on partial return
+            setProfileData(prev => ({ 
+              ...prev, 
+              logo_url: updatedData.logo_url, 
+              primary_color: updatedData.primary_color, 
+              secondary_color: updatedData.secondary_color 
+            }));
             setLogoFile(null);
             setLogoPreviewUrl(updatedData.logo_url);
             setIsRemovingLogo(false);
@@ -301,8 +300,8 @@ export default function EinstellungenPage() {
           error: (err) => { console.error("Logout error:", err); setLogoutLoading(false); return `Abmeldung fehlgeschlagen: ${err.message}`; } }
     );
   };
-  
-  // --- 3. FUNCTIONS FOR ACCOUNT MANAGEMENT (FROM YOUR CANVAS) ---
+
+  // --- Functions for Account Management ---
   const handleChangePassword = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (newPassword.length < 6) {
@@ -349,40 +348,28 @@ export default function EinstellungenPage() {
       if (!response.ok) {
         throw new Error(result.error || 'Fehler beim Löschen des Kontos.');
       }
-      // Don't return anything, just let it succeed
     };
 
     try {
-      // --- THIS IS THE FIX ---
-      // We await the toast.promise to complete
       await toast.promise(
-        deletePromise(), // Call the promise
+        deletePromise(),
         {
           loading: 'Konto wird unwiderruflich gelöscht...',
-          success: 'Konto erfolgreich gelöscht. Sie werden weitergeleitet.', // Return the success string
+          success: 'Konto erfolgreich gelöscht. Sie werden weitergeleitet.',
           error: (err: any) => {
-            // Return the error string
             return `Fehler: ${err.message}`; 
           }
         }
       );
-
-      // If the promise above succeeds (doesn't throw an error),
-      // we then execute the redirect.
       window.location.href = '/'; 
-
     } catch (error) {
-      // This catch block will run if the promise fails
       console.error("Delete account failed:", error);
       setIsDeletingAccount(false);
       setShowDeleteModal(false);
-      // The toast will have already shown the error message
     }
-    // No need to set isDeletingAccount to false on success,
-    // as the page will be redirecting.
   };
-  
-  
+
+
   // === Render Logic ===
   return (
     <main className="p-8">
@@ -400,53 +387,60 @@ export default function EinstellungenPage() {
       {/* Settings Content */}
       {!loading && currentUser && (
         <div className="mt-8 max-w-2xl space-y-8 divide-y divide-slate-700">
-
+          
            {/* --- Profile Information Form --- */}
+           {/* We wrap all profile/design/legal sections in one form */}
            <form onSubmit={handleSaveProfile} className="space-y-8">
+             
+             {/* Profile Section */}
              <section className="pt-8 first:pt-0">
                 <h2 className="text-xl font-semibold text-white mb-6">Unternehmensprofil</h2>
-                {/* Business Name */}
-                <div>
-                  <label htmlFor="business_name" className="mb-2 block text-sm font-medium text-slate-300"> Name des Betriebs * </label>
-                  <input type="text" id="business_name" name="business_name" value={profileData.business_name} onChange={handleInputChange} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"/>
-                </div>
-                {/* Slug */}
-                <div>
-                  <label htmlFor="slug" className="mb-2 block text-sm font-medium text-slate-300"> Ihr Webseiten-Pfad (Slug) * </label>
-                   <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 sm:text-sm"> IhreDomain.de/ </span>
-                      <input type="text" id="slug" name="slug" value={profileData.slug} onChange={handleInputChange} required aria-describedby="slug-description slug-status-settings" style={{ paddingLeft: `${Math.max(60, 'IhreDomain.de/'.length * 7 + 12)}px` }} className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="z.b. tischlerei-mustermann"/>
-                      <div id="slug-status-settings" className="absolute inset-y-0 right-0 flex items-center pr-3"> {slugStatus === 'checking' && <ArrowPathIcon className="h-5 w-5 text-gray-400" />} {slugStatus === 'available' && <CheckIcon className="h-5 w-5 text-green-500" />} {(slugStatus === 'taken' || slugStatus === 'invalid') && <span className="text-red-500 text-xl font-bold">!</span>} </div>
+                <div className="space-y-6">
+                  {/* Business Name */}
+                  <div>
+                    <label htmlFor="business_name" className="mb-2 block text-sm font-medium text-slate-300"> Name des Betriebs * </label>
+                    <input type="text" id="business_name" name="business_name" value={profileData.business_name} onChange={handleInputChange} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"/>
                   </div>
-                  <p id="slug-description" className="mt-1 text-xs text-slate-500"> Dies wird Teil Ihrer Webseiten-URL (nur Kleinbuchstaben, Zahlen und Bindestriche). Muss eindeutig sein. </p>
-                  {slugStatus === 'taken' && <p className="mt-1 text-xs text-red-600">Dieser Pfad ist leider schon vergeben.</p>}
-                  {slugStatus === 'invalid' && <p className="mt-1 text-xs text-red-600">Ungültige Zeichen oder leer. Nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt. Darf nicht mit '-' beginnen/enden.</p>}
-                </div>
-                {/* Address */}
-                <div>
-                  <label htmlFor="address" className="mb-2 block text-sm font-medium text-slate-300"> Adresse * </label>
-                  <textarea id="address" name="address" value={profileData.address} onChange={handleInputChange} rows={3} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"/>
-                </div>
-                {/* Phone */}
-                <div>
-                  <label htmlFor="phone" className="mb-2 block text-sm font-medium text-slate-300"> Telefonnummer * </label>
-                  <input type="tel" id="phone" name="phone" value={profileData.phone} onChange={handleInputChange} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"/>
-                </div>
-                {/* Services */}
-                <div>
-                  <label htmlFor="services_description" className="mb-2 block text-sm font-medium text-slate-300"> Kurze Beschreibung Ihrer Leistungen * </label>
-                  <div className="relative"> <textarea id="services_description" name="services_description" value={profileData.services_description} onChange={handleInputChange} rows={4} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28"/> <button type="button" onClick={() => handleGenerateProfileText('services')} disabled={aiLoading === 'services' || !profileData.business_name} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'services' || !profileData.business_name ? 'bg-slate-600 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} > <SparklesIcon className={`h-4 w-4 ${aiLoading === 'services' ? 'animate-spin' : ''}`} /> {aiLoading === 'services' ? 'Generiere...' : 'Generieren'} </button> </div>
-                  <p className="mt-1 text-xs text-slate-500">Tipp: Jede Leistung in eine neue Zeile (z.B. "Service A: Beschreibung A").</p>
-                </div>
-                {/* About */}
-                <div>
-                  <label htmlFor="about_text" className="mb-2 block text-sm font-medium text-slate-300"> Über Ihren Betrieb * </label>
-                   <div className="relative"> <textarea id="about_text" name="about_text" value={profileData.about_text} onChange={handleInputChange} rows={5} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28"/> <button type="button" onClick={() => handleGenerateProfileText('about')} disabled={aiLoading === 'about' || !profileData.business_name} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'about' || !profileData.business_name ? 'bg-slate-600 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} > <SparklesIcon className={`h-4 w-4 ${aiLoading === 'about' ? 'animate-spin' : ''}`} /> {aiLoading === 'about' ? 'Generiere...' : 'Generieren'} </button> </div>
+                  {/* Slug */}
+                  <div>
+                    <label htmlFor="slug" className="mb-2 block text-sm font-medium text-slate-300"> Ihr Webseiten-Pfad (Slug) * </label>
+                    <div className="relative">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 sm:text-sm"> IhreDomain.de/ </span>
+                        <input type="text" id="slug" name="slug" value={profileData.slug} onChange={handleInputChange} required aria-describedby="slug-description slug-status-settings" style={{ paddingLeft: `${Math.max(60, 'IhreDomain.de/'.length * 7 + 12)}px` }} className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="z.b. tischlerei-mustermann"/>
+                        <div id="slug-status-settings" className="absolute inset-y-0 right-0 flex items-center pr-3"> {slugStatus === 'checking' && <ArrowPathIcon className="h-5 w-5 text-gray-400" />} {slugStatus === 'available' && <CheckIcon className="h-5 w-5 text-green-500" />} {(slugStatus === 'taken' || slugStatus === 'invalid') && <span className="text-red-500 text-xl font-bold">!</span>} </div>
+                    </div>
+                    <p id="slug-description" className="mt-1 text-xs text-slate-500"> Dies wird Teil Ihrer Webseiten-URL (nur Kleinbuchstaben, Zahlen und Bindestriche). Muss eindeutig sein. </p>
+                    {slugStatus === 'taken' && <p className="mt-1 text-xs text-red-600">Dieser Pfad ist leider schon vergeben.</p>}
+                    {slugStatus === 'invalid' && <p className="mt-1 text-xs text-red-600">Ungültige Zeichen oder leer. Nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt. Darf nicht mit '-' beginnen/enden.</p>}
+                  </div>
+                  {/* Address */}
+                  <div>
+                    <label htmlFor="address" className="mb-2 block text-sm font-medium text-slate-300"> Adresse * </label>
+                    <textarea id="address" name="address" value={profileData.address} onChange={handleInputChange} rows={3} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"/>
+                  </div>
+                  {/* Phone */}
+                  <div>
+                    <label htmlFor="phone" className="mb-2 block text-sm font-medium text-slate-300"> Telefonnummer * </label>
+                    <input type="tel" id="phone" name="phone" value={profileData.phone} onChange={handleInputChange} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"/>
+                  </div>
+                  {/* Services */}
+                  <div>
+                    <label htmlFor="services_description" className="mb-2 block text-sm font-medium text-slate-300"> Kurze Beschreibung Ihrer Leistungen * </label>
+                    <div className="relative"> <textarea id="services_description" name="services_description" value={profileData.services_description} onChange={handleInputChange} rows={4} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28"/> <button type="button" onClick={() => handleGenerateProfileText('services')} disabled={aiLoading === 'services' || !profileData.business_name} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'services' || !profileData.business_name ? 'bg-slate-600 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} > <SparklesIcon className={`h-4 w-4 ${aiLoading === 'services' ? 'animate-spin' : ''}`} /> {aiLoading === 'services' ? 'Generiere...' : 'Generieren'} </button> </div>
+                    <p className="mt-1 text-xs text-slate-500">Tipp: Jede Leistung in eine neue Zeile (z.B. "Service A: Beschreibung A").</p>
+                  </div>
+                  {/* About */}
+                  <div>
+                    <label htmlFor="about_text" className="mb-2 block text-sm font-medium text-slate-300"> Über Ihren Betrieb * </label>
+                    <div className="relative"> <textarea id="about_text" name="about_text" value={profileData.about_text} onChange={handleInputChange} rows={5} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28"/> <button type="button" onClick={() => handleGenerateProfileText('about')} disabled={aiLoading === 'about' || !profileData.business_name} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'about' || !profileData.business_name ? 'bg-slate-600 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} > <SparklesIcon className={`h-4 w-4 ${aiLoading === 'about' ? 'animate-spin' : ''}`} /> {aiLoading === 'about' ? 'Generiere...' : 'Generieren'} </button> </div>
+                  </div>
                 </div>
              </section>
 
+             {/* Website Appearance Section */}
              <section className="pt-8">
-                 <h2 className="text-xl font-semibold text-white mb-6">Webseiten-Design</h2>
+               <h2 className="text-xl font-semibold text-white mb-6">Webseiten-Design</h2>
+               <div className="space-y-6">
                  {/* Logo */}
                  <div>
                     <label className="mb-2 block text-sm font-medium text-slate-300">Logo</label>
@@ -468,35 +462,41 @@ export default function EinstellungenPage() {
                     <div className="flex items-center gap-3"> <input type="color" id="secondary_color" name="secondary_color" value={profileData.secondary_color} onChange={handleInputChange} className="h-10 w-10 p-0 border-0 rounded-md cursor-pointer bg-slate-800 focus:ring-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800"/> <input type="text" value={profileData.secondary_color} onChange={handleInputChange} name="secondary_color" className="w-24 rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="#475569"/> </div>
                     <p className="mt-1 text-xs text-slate-500">Wird für Hintergründe oder weniger prominente Elemente verwendet.</p>
                  </div>
+               </div>
              </section>
 
+             {/* --- Legal Texts Section --- */}
+             {/* This section is part of the SAME form */}
              <section className="pt-8">
                 <h2 className="text-xl font-semibold text-white mb-6">Rechtstexte</h2>
-                {/* Impressum */}
-                 <div>
-                    <label htmlFor="impressum_text" className="mb-2 block text-sm font-medium text-slate-300"> Impressum Text </label>
-                    <textarea id="impressum_text" name="impressum_text" value={profileData.impressum_text || ''} onChange={handleInputChange} rows={10} className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="Fügen Sie hier den vollständigen Text Ihres Impressums ein..."/>
-                    <p className="mt-1 text-xs text-slate-500">Dieser Text wird auf Ihrer /impressum Seite angezeigt.</p>
-                 </div>
-                 {/* Datenschutz */}
-                 <div className="mt-6">
-                    <label htmlFor="datenschutz_text" className="mb-2 block text-sm font-medium text-slate-300"> Datenschutzerklärung Text </label>
-                     <div className="rounded-md bg-yellow-900/50 border border-yellow-700 p-3 mb-2"> <p className="text-xs text-yellow-200"> <strong>Hinweis:</strong> Die folgende Vorlage deckt nur die von ArtisanCMS bereitgestellten Dienste (Hosting, E-Mail) ab. Sie sind **rechtlich verpflichtet**, diese Vorlage zu prüfen und alle zusätzlichen Dienste (z.B. Google Maps, YouTube, Calendly, Analyse-Tools) hinzuzufügen, die Sie selbst einbetten. </p> </div>
-                    <textarea id="datenschutz_text" name="datenschutz_text" value={profileData.datenschutz_text || ''} onChange={handleInputChange} rows={10} className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="Fügen Sie hier den vollständigen Text Ihrer Datenschutzerklärung ein..."/>
-                    <p className="mt-1 text-xs text-slate-500">Dieser Text wird auf Ihrer /datenschutz Seite angezeigt.</p>
-                 </div>
+                <div className="space-y-6">
+                  {/* Impressum Text Area */}
+                   <div>
+                      <label htmlFor="impressum_text" className="mb-2 block text-sm font-medium text-slate-300"> Impressum Text </label>
+                      <textarea id="impressum_text" name="impressum_text" value={profileData.impressum_text || ''} onChange={handleInputChange} rows={10} className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="Fügen Sie hier den vollständigen Text Ihres Impressums ein..."/>
+                      <p className="mt-1 text-xs text-slate-500">Dieser Text wird auf Ihrer /impressum Seite angezeigt.</p>
+                   </div>
+                   {/* Datenschutz Text Area */}
+                   <div>
+                      <label htmlFor="datenschutz_text" className="mb-2 block text-sm font-medium text-slate-300"> Datenschutzerklärung Text </label>
+                       <div className="rounded-md bg-yellow-900/50 border border-yellow-700 p-3 mb-2"> <p className="text-xs text-yellow-200"> <strong>Hinweis:</strong> Die folgende Vorlage deckt nur die von ArtisanCMS bereitgestellten Dienste (Hosting, E-Mail) ab. Sie sind **rechtlich verpflichtet**, diese Vorlage zu prüfen und alle zusätzlichen Dienste (z.B. Google Maps, YouTube, Calendly, Analyse-Tools) hinzuzufügen, die Sie selbst einbetten. </p> </div>
+                      <textarea id="datenschutz_text" name="datenschutz_text" value={profileData.datenschutz_text || ''} onChange={handleInputChange} rows={10} className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="Fügen Sie hier den vollständigen Text Ihrer Datenschutzerklärung ein..."/>
+                      <p className="mt-1 text-xs text-slate-500">Dieser Text wird auf Ihrer /datenschutz Seite angezeigt.</p>
+                   </div>
+                </div>
              </section>
-             
-             {/* Save Profile Button */}
+
+             {/* Combined Save Button for All Settings */}
              <div className="pt-8 flex justify-end">
                  <button type="submit" disabled={saving || !!aiLoading || slugStatus !== 'available'} className={`inline-flex items-center gap-x-2 rounded-md px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors ${ saving || !!aiLoading || slugStatus !== 'available' ? 'bg-orange-300 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} >
                       {saving ? <ArrowPathIcon className="h-5 w-5" /> : <CheckIcon className="h-5 w-5" />}
-                      {saving ? 'Wird gespeichert...' : 'Profil & Design speichern'}
+                      {saving ? 'Wird gespeichert...' : 'Alle Einstellungen speichern'}
                  </button>
              </div>
            </form>
            
-           {/* --- ACCOUNT SECURITY SECTION --- */}
+           {/* --- Account Security Section --- */}
+           {/* These are separate forms, so they are outside the main <form> */}
            <section className="pt-8">
               <h2 className="text-xl font-semibold text-white mb-6">Konto & Sicherheit</h2>
               {/* Change Password Form */}
@@ -567,18 +567,18 @@ export default function EinstellungenPage() {
               </div>
            </section>
 
-           {/* --- Subscription Section (No Changes) --- */}
+           {/* Subscription Section (Placeholder) */}
             <section className="pt-8">
               <h2 className="text-xl font-semibold text-white mb-4">Abonnement</h2>
               <div className="p-6 bg-slate-800 rounded-lg border border-slate-700">
-                <p className="text-sm text-slate-400">Aktueller Plan: <span className="text-white font-medium">Free / Pro (Platzhalter)</span></p>
+                <p className="text-sm text-slate-400">Aktueller Plan: <span className="text-white font-medium">Beta-Test</span></p>
                 <p className="mt-4 text-xs text-slate-500">Die Abonnementverwaltung wird in Kürze verfügbar sein.</p>
               </div>
             </section>
         </div>
       )}
       
-      {/* --- RENDER THE CONFIRMATION MODAL --- */}
+      {/* Confirmation Modal for Account Deletion */}
       <ConfirmationModal
         isOpen={showDeleteModal}
         title="Konto unwiderruflich löschen?"
@@ -592,4 +592,3 @@ export default function EinstellungenPage() {
     </main>
   );
 }
-
