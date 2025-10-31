@@ -5,8 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabaseClient';
-import toast from 'react-hot-toast'; // Import react-hot-toast
-// Removed Provider import as OAuth is removed
+import toast from 'react-hot-toast';
 
 // --- Icons ---
 const EyeIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -21,22 +20,19 @@ const EyeSlashIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
   </svg>
 );
-
-// Removed GoogleIcon and GithubIcon
 // --- End Icons ---
 
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // <-- Feature 1: Show/Hide State
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [showResendButton, setShowResendButton] = useState(false); // <-- Feature 2: Resend State
+  const [showResendButton, setShowResendButton] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false); // <-- Feature 2: Resend Loading
-  // Removed oauthLoading state
+  const [resendLoading, setResendLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -44,7 +40,7 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     setMessage(null);
-    setShowResendButton(false); // Reset resend button visibility
+    setShowResendButton(false);
     console.log("Attempting login...");
 
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -60,7 +56,7 @@ export default function LoginPage() {
         setError('Invalid email or password.');
       } else if (signInError.message.includes('Email not confirmed')) {
          setError('Please confirm your email address first. Check your inbox (and spam folder) for the confirmation link.');
-         setShowResendButton(true); // <-- Feature 2: Show resend button on this specific error
+         setShowResendButton(true);
       } else {
         setError(`Login failed: ${signInError.message}`);
       }
@@ -78,13 +74,23 @@ export default function LoginPage() {
       return;
     }
     setResetLoading(true);
-    setError(null); // Clear login errors
+    setError(null);
     setMessage(null);
-    setShowResendButton(false); // Hide resend button
+    setShowResendButton(false);
+
+    //
+    // --- THIS IS THE FIX ---
+    //
+    // Get the site URL from the environment variable we just set
+    const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`;
+    console.log("Sending password reset, redirecting to:", redirectUrl);
 
     const resetPromise = supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: redirectUrl, // Use the environment variable
     });
+    //
+    // --- END OF FIX ---
+    //
 
     await toast.promise(
       resetPromise,
@@ -105,14 +111,14 @@ export default function LoginPage() {
     setResetLoading(false);
   };
 
-  // --- Feature 2: Resend Confirmation Email ---
+  // --- Resend Confirmation Email ---
   const handleResendConfirmation = async () => {
      if (!email) {
        toast.error("Please enter the email address again to resend confirmation.");
        return;
      }
      setResendLoading(true);
-     setError(null); // Clear previous errors
+     setError(null);
      setMessage(null);
 
      const resendPromise = supabase.auth.resend({
@@ -126,15 +132,14 @@ export default function LoginPage() {
          loading: 'Resending confirmation email...',
          success: (data) => {
            if (data.error) {
-             throw data.error; // Throw error to be caught by the error handler
+             throw data.error;
            }
            setMessage("Confirmation email resent! Please check your inbox (and spam folder).");
-           setShowResendButton(false); // Hide button after success
+           setShowResendButton(false);
            return 'Confirmation email resent!';
          },
          error: (err) => {
            console.error('Resend confirmation error:', err.message);
-           // Keep the error message and the button visible
            setError(`Error resending email: ${err.message}`);
            return `Error: ${err.message}`;
          },
@@ -143,8 +148,6 @@ export default function LoginPage() {
 
      setResendLoading(false);
    };
-
-   // Removed handleOAuthLogin function
 
 
   return (
@@ -155,9 +158,9 @@ export default function LoginPage() {
           Login
         </h1>
 
-        <form onSubmit={handleLogin} className="space-y-4"> {/* Added space-y-4 for consistent spacing */}
+        <form onSubmit={handleLogin} className="space-y-4">
           {/* Email Address Section */}
-          <div> {/* Wrapped in div for spacing */}
+          <div>
             <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-700">
               Email Address
             </label>
@@ -176,23 +179,21 @@ export default function LoginPage() {
           </div>
 
           {/* Password Section */}
-          <div> {/* Wrapped in div for spacing */}
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700"> {/* Further reduced margin */}
+          <div>
+            <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
               Password
             </label>
-            {/* Feature 1: Added relative positioning container */}
             <div className="relative">
               <input
-                type={showPassword ? 'text' : 'password'} // <-- Feature 1: Toggle type
+                type={showPassword ? 'text' : 'password'}
                 id="password"
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500" // Added pr-10 for icon space
+                className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
                 placeholder="••••••••"
                 required
               />
-              {/* Feature 1: Show/Hide Button */}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -202,12 +203,11 @@ export default function LoginPage() {
                 {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
               </button>
             </div>
-             {/* Forgot Password Button - Moved under the input div */}
-             <div className="mt-1 text-right"> {/* Added margin-top */}
+             <div className="mt-1 text-right">
                <button
                   type="button"
                   onClick={handlePasswordReset}
-                  disabled={resetLoading || loading || resendLoading } // Removed oauthLoading
+                  disabled={resetLoading || loading || resendLoading }
                   className="text-sm font-medium text-orange-600 hover:text-orange-500 disabled:text-gray-400 disabled:cursor-not-allowed"
                >
                   {resetLoading ? 'Sending...' : 'Forgot Password?'}
@@ -222,12 +222,11 @@ export default function LoginPage() {
                 <div className="flex items-start">
                   <div className={`text-sm ${showResendButton ? 'text-yellow-700' : 'text-red-700'}`}>
                     <p>{error}</p>
-                    {/* Feature 2: Conditionally render Resend Button */}
                     {showResendButton && (
                       <button
                         type="button"
                         onClick={handleResendConfirmation}
-                        disabled={resendLoading || loading || resetLoading } // Removed oauthLoading
+                        disabled={resendLoading || loading || resetLoading }
                         className="mt-2 text-sm font-medium text-orange-600 hover:text-orange-500 disabled:text-gray-400 disabled:cursor-not-allowed underline"
                       >
                         {resendLoading ? 'Resending...' : 'Resend Confirmation Email'}
@@ -245,17 +244,15 @@ export default function LoginPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading || resetLoading || resendLoading } // Removed oauthLoading
+            disabled={loading || resetLoading || resendLoading }
             className={`w-full rounded-md px-4 py-2 text-lg font-semibold text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors ${
-              loading || resetLoading || resendLoading // Removed oauthLoading
+              loading || resetLoading || resendLoading
                 ? 'bg-orange-300 cursor-not-allowed'
                 : 'bg-orange-600 hover:bg-orange-700'
             }`}
           >
             {loading ? 'Logging In...' : 'Log In'}
           </button>
-
-           {/* Removed Social Login Buttons and Divider */}
 
           {/* Sign Up Link */}
           <p className="mt-6 text-center text-sm text-gray-600">
@@ -266,8 +263,6 @@ export default function LoginPage() {
           </p>
         </form>
       </div>
-      {/* Reminder: Ensure <Toaster /> is included somewhere */}
     </main>
   );
 }
-
