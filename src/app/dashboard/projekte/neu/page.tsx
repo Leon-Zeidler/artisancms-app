@@ -12,6 +12,21 @@ import toast from 'react-hot-toast';
 const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z" /> </svg> );
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
 const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /> </svg> );
+const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /> </svg> );
+
+
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      // Result is 'data:image/jpeg;base64,L2[...]'. We need to split off the prefix.
+      const base64String = (reader.result as string).split(',')[1];
+      resolve(base64String);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
 
 
 export default function NewProjectPage() {
@@ -19,12 +34,14 @@ export default function NewProjectPage() {
   const [title, setTitle] = useState('');
   const [projectDate, setProjectDate] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [notes, setNotes] = useState(''); 
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [notes, setNotes] = useState('');
   const [aiDescription, setAiDescription] = useState('');
   const [publishImmediately, setPublishImmediately] = useState(false);
   
-  const [aiLoading, setAiLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false); // For text generation
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+  const [loading, setLoading] = useState(false); // For saving
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userSlug, setUserSlug] = useState<string | null>(null);
 
@@ -41,7 +58,6 @@ export default function NewProjectPage() {
         return;
       }
       
-      console.log("Fetching profile slug for user:", user.id);
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('slug')
@@ -52,7 +68,6 @@ export default function NewProjectPage() {
          console.error("Error fetching profile slug:", error);
          toast.error("Profil-Daten konnten nicht geladen werden.");
       } else if (profile && profile.slug) {
-        console.log("Found slug:", profile.slug);
         setUserSlug(profile.slug);
       } else {
         console.warn("User has no slug. 'View Live' link will not work.");
@@ -65,10 +80,65 @@ export default function NewProjectPage() {
   // === Handle File Selection ===
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      setImageFile(event.target.files[0]);
+      const file = event.target.files[0];
+      setImageFile(file);
+      // Create a URL for image preview
+      setImagePreview(URL.createObjectURL(file));
+      // Clear old notes when a new image is selected
+      setNotes("");
+      setAiDescription("");
     } else {
       setImageFile(null);
+      setImagePreview(null);
     }
+  };
+
+  // --- NEW: Handler for Image Analysis ---
+  const handleImageAnalysis = async () => {
+    if (!imageFile) {
+      toast.error("Bitte wählen Sie zuerst ein Bild aus.");
+      return;
+    }
+
+    setIsAnalyzingImage(true);
+    setNotes("Analysiere Bild..."); // Placeholder
+
+    const analysisPromise = async () => {
+      // Convert file to base64
+      const imageData = await fileToBase64(imageFile);
+      const mimeType = imageFile.type;
+
+      // Call our new API route
+      const response = await fetch('/api/analyze-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageData, mimeType }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to analyze image');
+      }
+      
+      return result.description; // This is the text from the AI
+    };
+
+    await toast.promise(
+      analysisPromise(),
+      {
+        loading: 'Analysiere Bild mit AI...',
+        success: (description) => {
+          setNotes(description); // Set the notes field with the result
+          setIsAnalyzingImage(false);
+          return 'Bildanalyse erfolgreich!';
+        },
+        error: (err: any) => {
+          setNotes(""); // Clear notes on error
+          setIsAnalyzingImage(false);
+          return `Fehler: ${err.message}`;
+        }
+      }
+    );
   };
 
   // Function to Generate AI Description
@@ -169,14 +239,10 @@ export default function NewProjectPage() {
         return { newProject: insertData, status: projectStatus };
     };
 
-    // Führe das Promise mit toast-Feedback aus
     await toast.promise(
         saveProjectPromise(),
         {
             loading: 'Projekt wird erstellt...',
-            //
-            // --- THIS IS THE FIX ---
-            //
             success: (data) => {
                 const { newProject, status } = data;
                 console.log('Project created successfully!', newProject);
@@ -184,7 +250,6 @@ export default function NewProjectPage() {
                 if (status === 'Published' && userSlug && newProject?.id) {
                     const liveUrl = `/${userSlug}/portfolio/${newProject.id}`;
                     
-                    // Show the custom toast
                     toast.custom((t) => (
                         <div
                             className={`${
@@ -223,18 +288,12 @@ export default function NewProjectPage() {
                     ), { duration: 10000 }); 
 
                     router.push('/dashboard/projekte');
-                    // We *return* an empty string to satisfy TypeScript,
-                    // but the custom toast will be what the user sees.
                     return ""; 
                 } else {
-                    // This is the default success message for draft projects
                     router.push('/dashboard/projekte'); 
                     return 'Projekt erfolgreich als Entwurf gespeichert!';
                 }
             },
-            //
-            // --- END OF FIX ---
-            //
             error: (err: any) => {
                 console.error("Fehler beim Erstellen des Projekts:", err);
                 return `${err.message}`;
@@ -245,7 +304,7 @@ export default function NewProjectPage() {
     setLoading(false);
   };
 
-  // === JSX Structure (Updated with <form>) ===
+  // === JSX Structure ===
   return (
     <main className="p-8">
       {/* Header */}
@@ -281,13 +340,27 @@ export default function NewProjectPage() {
             className="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 focus:ring-offset-slate-800"
             required
           />
-          {imageFile && <p className="mt-2 text-xs text-slate-500">Ausgewählt: {imageFile.name}</p>}
+          {/* --- NEW: Image Preview & Analyze Button --- */}
+          {imagePreview && (
+            <div className="mt-4 relative group">
+              <img src={imagePreview} alt="Projekt-Vorschau" className="rounded-lg w-full max-h-60 object-cover border border-slate-700" />
+              <button
+                type="button"
+                onClick={handleImageAnalysis}
+                disabled={!imageFile || isAnalyzingImage || aiLoading || loading}
+                className="absolute top-3 right-3 inline-flex items-center gap-x-1.5 rounded-md bg-slate-900/70 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-slate-900/90 backdrop-blur-sm border border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <PhotoIcon className={`h-4 w-4 ${isAnalyzingImage ? 'animate-spin' : ''}`} />
+                {isAnalyzingImage ? 'Analysiere...' : 'Bild analysieren'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Notes Field */}
         <div>
           <label htmlFor="notes" className="mb-2 block text-sm font-medium text-slate-300">
-            Materialien / Notizen (Optional)
+            Materialien / Notizen (AI-generiert)
           </label>
           <textarea
             id="notes"
@@ -295,15 +368,15 @@ export default function NewProjectPage() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
-            placeholder="z.B. Verwendete Materialien: Eiche, Edelstahl..."
+            placeholder="Klicken Sie auf 'Bild analysieren', um dieses Feld automatisch auszufüllen..."
           />
-          <p className="mt-1 text-xs text-slate-500">Diese Notizen helfen der AI, die Beschreibung zu verbessern.</p>
+          <p className="mt-1 text-xs text-slate-500">Diese Notizen helfen der AI, die Projektbeschreibung zu verbessern.</p>
         </div>
 
         {/* AI Description Section */}
         <div>
             <label htmlFor="aiDescription" className="mb-2 block text-sm font-medium text-slate-300">
-                Projektbeschreibung (AI generiert)
+                Projektbeschreibung (AI-generiert)
             </label>
             <div className="relative">
                 <textarea
@@ -312,14 +385,14 @@ export default function NewProjectPage() {
                     value={aiDescription}
                     onChange={(e) => setAiDescription(e.target.value)}
                     className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28"
-                    placeholder="Titel eingeben & 'Generieren' klicken..."
+                    placeholder="Klicken Sie auf 'Generieren', um eine Beschreibung zu erstellen..."
                 />
                 <button
                     type="button"
                     onClick={handleGenerateDescription}
-                    disabled={aiLoading || !title.trim()}
+                    disabled={aiLoading || isAnalyzingImage || !title.trim()}
                     className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${
-                        aiLoading || !title.trim()
+                        aiLoading || isAnalyzingImage || !title.trim()
                          ? 'bg-slate-600 cursor-not-allowed'
                          : 'bg-orange-600 hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500'
                     }`}
@@ -374,9 +447,9 @@ export default function NewProjectPage() {
            </Link>
            <button
             type="submit"
-            disabled={loading || !currentUser || aiLoading}
+            disabled={loading || !currentUser || aiLoading || isAnalyzingImage}
             className={`inline-flex items-center gap-x-2 rounded-md px-5 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors ${
-              loading || !currentUser || aiLoading
+              loading || !currentUser || aiLoading || isAnalyzingImage
                 ? 'bg-orange-300 cursor-not-allowed'
                 : 'bg-orange-600 hover:bg-orange-700 shadow-sm'
             }`}

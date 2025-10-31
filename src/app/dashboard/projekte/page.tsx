@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'; // Added useRouter for potential re
 import { supabase } from '../../../lib/supabaseClient';
 import { User } from '@supabase/supabase-js'; // Added User type
 import toast from 'react-hot-toast'; // Import toast
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 // --- TYPE DEFINITIONS ---
 type Project = {
@@ -54,35 +55,6 @@ function ProjectListItem({ project, onStatusToggle, onDeleteRequest, isToggling,
          <button onClick={() => onStatusToggle(project.id, project.status)} disabled={isToggling || isDeleting} title={isPublished ? 'Projekt verbergen' : 'Projekt veröffentlichen'} className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isToggling ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : isPublished ? 'bg-yellow-600/20 text-yellow-300 hover:bg-yellow-500/30' : 'bg-green-600/20 text-green-300 hover:bg-green-500/30' }`}> <span className="sr-only">{isPublished ? 'Verbergen' : 'Veröffentlichen'}</span> {isToggling ? <ArrowPathIcon className="h-4 w-4" /> : isPublished ? <EyeSlashIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />} </button>
          <Link href={editUrl} title="Projekt bearbeiten" aria-disabled={isDeleting || isToggling} onClick={(e) => { if (isDeleting || isToggling) e.preventDefault(); }} className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDeleting || isToggling ? 'bg-slate-700 text-slate-500 cursor-not-allowed pointer-events-none' : 'bg-blue-600/20 text-blue-300 hover:bg-blue-500/30' }`}> <span className="sr-only">Bearbeiten</span> <PencilIcon className="h-4 w-4" /> </Link>
          <button onClick={() => onDeleteRequest(project)} disabled={isDeleting || isToggling} title="Projekt löschen" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDeleting ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : isToggling ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-red-600/20 text-red-300 hover:bg-red-500/30' }`}> <span className="sr-only">Löschen</span> {isDeleting ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />} </button>
-      </div>
-    </div>
-  );
-}
-
-// --- CONFIRMATION MODAL COMPONENT ---
-interface ConfirmationModalProps { isOpen: boolean; title: string; message: string; confirmText?: string; cancelText?: string; onConfirm: () => void; onCancel: () => void; isConfirming: boolean; }
-function ConfirmationModal({ isOpen, title, message, confirmText = "Löschen", cancelText = "Abbrechen", onConfirm, onCancel, isConfirming }: ConfirmationModalProps) {
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog">
-      <div className="bg-slate-800 rounded-lg shadow-xl p-6 max-w-sm w-full border border-slate-700">
-        <div className="flex items-start">
-          <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-900/50 sm:mx-0 sm:h-10 sm:w-10">
-            <ExclamationTriangleIcon className="h-6 w-6 text-red-400" aria-hidden="true" />
-          </div>
-          <div className="ml-4 text-left">
-            <h3 className="text-base font-semibold leading-6 text-white" id="modal-title">{title}</h3>
-            <div className="mt-2"> <p className="text-sm text-slate-400">{message}</p> </div>
-          </div>
-        </div>
-        <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse sm:gap-x-3">
-          <button type="button" disabled={isConfirming} className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:w-auto transition-colors ${ isConfirming ? 'bg-red-800 text-red-300 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700' }`} onClick={onConfirm} >
-            {isConfirming ? ( <> <ArrowPathIcon className="-ml-1 mr-2 h-5 w-5 animate-spin" /> Wird gelöscht... </> ) : confirmText}
-          </button>
-          <button type="button" disabled={isConfirming} className="mt-3 inline-flex w-full justify-center rounded-md bg-slate-700 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-slate-600 hover:bg-slate-600 sm:mt-0 sm:w-auto disabled:opacity-50" onClick={onCancel} >
-            {cancelText}
-          </button>
-        </div>
       </div>
     </div>
   );

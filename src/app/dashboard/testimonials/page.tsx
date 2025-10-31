@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 // --- Icons ---
 const PlusIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /> </svg> );
@@ -36,13 +37,6 @@ type ModalState = {
     mode: 'add' | 'edit';
     data: Testimonial | null;
 };
-
-// --- Confirmation Modal ---
-interface ConfirmationModalProps { isOpen: boolean; title: string; message: string; confirmText?: string; cancelText?: string; onConfirm: () => void; onCancel: () => void; isConfirming: boolean;}
-function ConfirmationModal({ isOpen, title, message, confirmText = "Bestätigen", cancelText = "Abbrechen", onConfirm, onCancel, isConfirming }: ConfirmationModalProps) {
-    if (!isOpen) return null;
-    return ( <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog"> <div className="bg-slate-800 rounded-lg shadow-xl p-6 max-w-sm w-full border border-slate-700"> <div className="flex items-start"> <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-900/50 sm:mx-0 sm:h-10 sm:w-10"> <ExclamationTriangleIcon className="h-6 w-6 text-red-400" aria-hidden="true" /> </div> <div className="ml-4 text-left"> <h3 className="text-base font-semibold leading-6 text-white" id="modal-title">{title}</h3> <div className="mt-2"> <p className="text-sm text-slate-400">{message}</p> </div> </div> </div> <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse sm:gap-x-3"> <button type="button" disabled={isConfirming} onClick={onConfirm} className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:w-auto transition-colors ${ isConfirming ? 'bg-red-800 text-red-300 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700'}`}> {isConfirming ? (<><ArrowPathIcon className="-ml-1 mr-2 h-5 w-5 animate-spin" /> Wird ausgeführt...</>) : confirmText} </button> <button type="button" disabled={isConfirming} onClick={onCancel} className="mt-3 inline-flex w-full justify-center rounded-md bg-slate-700 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-slate-600 hover:bg-slate-600 sm:mt-0 sm:w-auto disabled:opacity-50"> {cancelText} </button> </div> </div> </div> );
-}
 
 // --- ADD/EDIT MODAL ---
 interface TestimonialModalProps {
