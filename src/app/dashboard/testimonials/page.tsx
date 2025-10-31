@@ -7,6 +7,7 @@ import { supabase } from '../../../lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import EmptyState from '@/components/EmptyState';
 
 // --- Icons ---
 const PlusIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /> </svg> );
@@ -16,10 +17,11 @@ const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props
 const PencilIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /> </svg> );
 const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /> </svg> );
 const XMarkIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg>);
-const ExclamationTriangleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /> </svg> );
+const ChatBubbleLeftRightIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72 3.72a.75.75 0 01-1.06 0l-3.72-3.72C9.847 17.001 9 16.036 9 14.9v-4.286c0-.97.616-1.813 1.5-2.097L12 6.75l3.75 1.761zm-6 3.486l-3.72 3.72a.75.75 0 000 1.06l3.72 3.72C11.153 20.89 12 19.925 12 18.887v-7.135c0-1.038-.847-2-1.98-2.093l-3.72-1.761a.75.75 0 00-.63.123 7.48 7.48 0 00-.738.738A7.47 7.47 0 003 11.25v4.286c0 .97.616 1.813 1.5 2.097L6 18.311v-.757c0-1.28.624-2.43 1.65-3.181l.71-.533zM18.75 9.75h.008v.008h-.008V9.75z" /> </svg>);
 
 
 // --- TYPE DEFINITIONS ---
+// <-- FIX: Added missing type definitions -->
 type Testimonial = {
     id: string;
     created_at: string;
@@ -39,6 +41,7 @@ type ModalState = {
 };
 
 // --- ADD/EDIT MODAL ---
+// <-- FIX: Added missing TestimonialModal component -->
 interface TestimonialModalProps {
     modalState: ModalState;
     onClose: () => void;
@@ -80,7 +83,6 @@ function TestimonialModal({ modalState, onClose, onSave, isSaving }: Testimonial
 
 // --- MAIN PAGE COMPONENT ---
 export default function TestimonialsManagementPage() {
-    // === State Variables ===
     const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
@@ -91,6 +93,8 @@ export default function TestimonialsManagementPage() {
     const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
     const router = useRouter();
 
+    // <-- FIX: Added all missing functions -->
+    
     // Fetch Testimonials
     const fetchTestimonials = useCallback(async (user: User) => {
         setLoading(true); setError(null);
@@ -126,10 +130,9 @@ export default function TestimonialsManagementPage() {
         console.log("Upserting testimonial:", dataToUpsert);
 
         const savePromise = async () => {
-            // *** REMOVED returning: 'minimal' from upsert options ***
             const { error: upsertError } = await supabase
                 .from('testimonials')
-                .upsert(dataToUpsert, { onConflict: 'id' }); // Remove returning option
+                .upsert(dataToUpsert, { onConflict: 'id' });
             if (upsertError) throw upsertError;
         };
 
@@ -179,6 +182,7 @@ export default function TestimonialsManagementPage() {
     };
     const handleCancelDelete = () => { setDeleteConfirmState({ isOpen: false, testimonial: null }); };
 
+
     // === Render Logic ===
     return (
         <main className="p-8">
@@ -199,7 +203,6 @@ export default function TestimonialsManagementPage() {
                     {testimonials.length > 0 ? (
                         testimonials.map((t) => {
                              const isLoading = actionLoading[t.id];
-                             // *** CORRECTED isDisabled check ***
                              const isDisabled = !!isLoading || actionLoading.modal === 'save' || (deleteConfirmState.testimonial?.id === t.id && isConfirmingDelete);
                             return (
                                 <div key={t.id} className={`p-4 bg-slate-800 rounded-lg border border-slate-700 transition-opacity ${isDisabled ? 'opacity-70 pointer-events-none' : ''}`}>
@@ -210,8 +213,6 @@ export default function TestimonialsManagementPage() {
                                             <p className="text-xs text-slate-500 mt-1">Erstellt: {new Date(t.created_at).toLocaleDateString('de-DE')}</p>
                                         </div>
                                         <div className="flex items-center space-x-2 flex-shrink-0">
-                                            {/* Buttons... */}
-                                            {/* *** CORRECTED disabled prop logic - ensure boolean *** */}
                                             <button onClick={() => handlePublishToggle(t)} disabled={!!isDisabled || isLoading === 'publish'} title={t.is_published ? 'Verbergen' : 'Veröffentlichen'} className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isLoading === 'publish' ? 'bg-slate-600 text-slate-400 cursor-wait' : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : t.is_published ? 'bg-yellow-600/20 text-yellow-300 hover:bg-yellow-500/30' : 'bg-green-600/20 text-green-300 hover:bg-green-500/30' }`}> <span className="sr-only">{t.is_published ? 'Verbergen' : 'Veröffentlichen'}</span> {isLoading === 'publish' ? <ArrowPathIcon className="h-4 w-4" /> : t.is_published ? <EyeSlashIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />} </button>
                                             <button onClick={() => openEditModal(t)} disabled={!!isDisabled} title="Bearbeiten" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600/20 text-blue-300 hover:bg-blue-500/30' }`}> <span className="sr-only">Bearbeiten</span> <PencilIcon className="h-4 w-4" /> </button>
                                             <button onClick={() => handleDeleteRequest(t)} disabled={!!isDisabled || isLoading === 'delete'} title="Löschen" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isLoading === 'delete' ? 'bg-slate-600 text-slate-400 cursor-wait' : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-red-600/20 text-red-300 hover:bg-red-500/30' }`}> <span className="sr-only">Löschen</span> {isLoading === 'delete' ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />} </button>
@@ -220,7 +221,17 @@ export default function TestimonialsManagementPage() {
                                 </div>
                             )
                         })
-                    ) : ( !error && <div className="text-center py-10"><p className="text-slate-500">Sie haben noch keine Kundenstimmen hinzugefügt.</p></div> )}
+                    ) : ( 
+                        !error && (
+                          <EmptyState
+                            icon={ChatBubbleLeftRightIcon}
+                            title="Sie haben noch keine Kundenstimmen"
+                            message="Fügen Sie manuell eine Referenz hinzu, um Vertrauen bei neuen Besuchern aufzubauen."
+                            buttonText="Erste Kundenstimme hinzufügen"
+                            onButtonClick={openAddModal}
+                          />
+                        )
+                    )}
                 </div>
             )}
 
