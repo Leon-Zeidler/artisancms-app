@@ -37,15 +37,15 @@ export default function DatenschutzPage() {
               EU-Datenschutzgrundverordnung (DSGVO), ist:
             </p>
             <p>
-              <strong>[Leon Zeidler]</strong>
+              <strong>Leon Zeidler</strong>
               <br />
-              [Alter Dorfrand 50]
+              Alter Dorfrand 50
               <br />
-              [01454 Radeberg]
+              01454 Radeberg
               <br />
-              Telefon: [+49 174 194 1609]
+              Telefon: +49 174 194 1609
               <br />
-              E-Mail: [leon@northcoded.com]
+              E-Mail: leon@northcoded.com
             </p>
             
             <h2>2. Datenerfassung auf dieser Website</h2>
@@ -55,6 +55,8 @@ export default function DatenschutzPage() {
               listen wir die von uns genutzten Dienste und den 
               Zweck der Datenverarbeitung auf.
             </p>
+
+            <hr className="my-12" />
 
             <h3>Hosting, Server-Log-Dateien & Analytics (Vercel)</h3>
             <p>
@@ -75,6 +77,8 @@ export default function DatenschutzPage() {
               abgeschlossen.
             </p>
 
+            <hr className="my-12" />
+
             <h3>Cookies und Lokaler Speicher (LocalStorage)</h3>
             <p>
               Diese Website verwendet technisch notwendige Cookies und 
@@ -87,6 +91,8 @@ export default function DatenschutzPage() {
               Cookies (z.B. `sb-auth-token`), um Ihren Login-Status zu 
               speichern. Diese sind für die Funktion der App unerlässlich.
             </p>
+
+            <hr className="my-12" />
 
             <h3>Registrierung, Datenbank & Speicherung (Supabase)</h3>
             <p>
@@ -114,6 +120,8 @@ export default function DatenschutzPage() {
               abgeschlossen.
             </p>
 
+            <hr className="my-12" />
+
             <h3>E-Mail-Versand (Resend)</h3>
             <p>
               Wir nutzen Resend Inc., 548 Market St, PMB 98417, 
@@ -129,6 +137,21 @@ export default function DatenschutzPage() {
               Wir haben mit Resend einen Auftragsverarbeitungsvertrag (AVV/DPA) 
               abgeschlossen.
             </p>
+
+            <hr className="my-12" />
+
+            <h3>E-Mail-Kommunikation und Office (Google Workspace)</h3>
+            <p>
+            Zur Abwicklung unserer internen und externen Geschäftskommunikation (z.B. den E-Mail-Verkehr über leon@northcoded.com) sowie zur Verwaltung von Dokumenten nutzen wir die Dienste von Google Workspace. Anbieter ist Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland.
+            </p>
+            <p>
+            Bei einer Kontaktaufnahme per E-Mail mit uns werden die von Ihnen übermittelten Daten (z.B. E-Mail-Adresse, Name, Inhalt Ihrer Anfrage) auf den Servern von Google verarbeitet und gespeichert.
+            </p>
+            <p>
+            Grundlage hierfür ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO) an einer effizienten, zuverlässigen und sicheren Geschäftskommunikation. Wir haben mit Google einen Auftragsverarbeitungsvertrag (AVV / DPA) gemäß Art. 28 DSGVO abgeschlossen. 
+            </p>
+
+            <hr className="my-12" />
 
             <h3>AI-Funktionen (OpenAI)</h3>
             <p>
@@ -157,6 +180,8 @@ export default function DatenschutzPage() {
               abgeschlossen.
             </p>
             
+            <hr className="my-12" />
+            
             <h3>Fehler-Tracking (Sentry)</h3>
             <p>
               Wir nutzen den Dienst Sentry (Functional Software, Inc., 
@@ -173,6 +198,8 @@ export default function DatenschutzPage() {
               Wir haben mit Sentry einen Auftragsverarbeitungsvertrag (AVV/DPA) 
               abgeschlossen.
             </p>
+
+            <hr className="my-12" />
 
             <h2>4. Löschung Ihrer Daten (Recht auf Vergessenwerden)</h2>
             <p>

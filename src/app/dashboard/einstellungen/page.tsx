@@ -15,6 +15,8 @@ const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="htt
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
 const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /> </svg> );
 const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /> </svg> );
+// --- ADDED ICON ---
+const ExclamationTriangleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /> </svg> );
 
 // Type for profile data
 type ProfileData = {
@@ -34,7 +36,65 @@ type ProfileData = {
 type AIGenerationType = 'services' | 'about';
 type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 
-const DATENSCHUTZ_TEMPLATE = `Verantwortlicher im Sinne der Datenschutzgesetze...`; // (Shortened)
+// --- THIS IS THE TEMPLATE YOU PASTE ---
+const DATENSCHUTZ_TEMPLATE = `
+HINWEIS: Dies ist eine automatisch generierte Vorlage. Sie als Webseitenbetreiber sind rechtlich dafür verantwortlich, diese Angaben zu prüfen, zu vervollständigen (insbesondere Ihre eigenen Kontaktdaten unter "Verantwortlicher") und anwaltlich prüfen zu lassen. Sie müssen ebenfalls alle Dienste hinzufügen, die Sie selbst einbetten (z.B. Google Maps, YouTube, Calendly, etc.).
+
+---
+
+## Verantwortlicher
+
+[BITTE HIER IHREN FIRMENNAMEN UND KONTAKTADATEN EINGEBEN]
+[Max Mustermann]
+[Musterstraße 1]
+[12345 Musterstadt]
+[Deutschland]
+E-Mail: [ihre-email@beispiel.de]
+Telefon: [Ihre Telefonnummer]
+Impressum: [Link zu Ihrer /impressum Seite]
+
+## Allgemeine Hinweise
+
+Wir nehmen den Schutz Ihrer persönlichen Daten sehr ernst. Wir behandeln Ihre personenbezogenen Daten vertraulich und entsprechend der gesetzlichen Datenschutzvorschriften sowie dieser Datenschutzerklärung.
+
+## Hosting und Bereitstellung der Webseite (Auftragsverarbeitung)
+
+Diese Website wird im Rahmen einer Auftragsverarbeitung (AVV) durch den Dienst ArtisanCMS (Leon Zeidler, Alter Dorfrand 50, 01454 Radeberg) bereitgestellt. ArtisanCMS nutzt die folgende technische Infrastruktur, die zur Bereitstellung der Webseite und zur Verarbeitung von Daten notwendig ist:
+
+### 1. Hosting & Web-Analyse durch Vercel
+
+Unser Hoster ist Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA.
+Vercel erhebt beim Besuch der Webseite technische Daten (Server-Log-Dateien), die für den stabilen Betrieb notwendig sind (IP-Adresse, Browsertyp, Betriebssystem, Referrer URL, Uhrzeit).
+
+Wir nutzen zudem Vercel Analytics, einen datenschutzfreundlichen Analysedienst, um die Nutzung unserer Webseite zu verstehen und zu verbessern. Vercel Analytics erfasst keine personenbezogenen Daten (wie IP-Adressen) und verwendet keine Cookies. Es werden anonymisierte Daten wie besuchte Seiten und Herkunftsland erfasst.
+
+Grundlage für die Datenverarbeitung ist Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse an einer fehlerfreien und optimierten Darstellung unserer Webseite). Wir haben mit Vercel einen Auftragsverarbeitungsvertrag (AVV / DPA) abgeschlossen.
+
+### 2. Datenbank & Speicherung durch Supabase
+
+Die Inhalte dieser Webseite (z.B. Projektbilder, Texte) werden in einer Datenbank bei Supabase Inc., 970 Toa Payoh North #07-04, Singapur 318992, gespeichert. Dies ist für die Anzeige der Inhalte technisch notwendig. Wir haben mit Supabase einen AVV/DPA abgeschlossen.
+
+### 3. Kontaktformular
+
+Wenn Sie uns per Kontaktformular Anfragen zukommen lassen, werden Ihre Angaben aus dem Anfrageformular inklusive der von Ihnen dort angegebenen Kontaktdaten (Name, E-Mail, Nachricht) zwecks Bearbeitung der Anfrage und für den Fall von Anschlussfragen bei uns gespeichert und verarbeitet.
+
+Die Verarbeitung dieser Daten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO, sofern Ihre Anfrage mit der Erfüllung eines Vertrags zusammenhängt oder zur Durchführung vorvertraglicher Maßnahmen erforderlich ist. In allen übrigen Fällen beruht die Verarbeitung auf unserem berechtigten Interesse an der effektiven Bearbeitung der an uns gerichteten Anfragen (Art. 6 Abs. 1 lit. f DSGVO).
+
+Ihre Daten werden zur Speicherung an unsere Datenbank (Supabase, siehe oben) und zur Benachrichtigung an unseren E-Mail-Dienstleister weitergeleitet.
+
+### 4. E-Mail-Versand (Kontaktformular) durch Resend
+
+Zum Versand der Benachrichtigung über Ihre Kontaktanfrage nutzen wir den Dienst Resend Inc., 548 Market St, PMB 98417, San Francisco, CA 94104-5401, USA. Resend verarbeitet Ihre E-Mail-Adresse und Ihren Namen, um diese Benachrichtigung an uns zuzustellen. Wir haben mit Resend einen AVV/DPA abgeschlossen.
+
+## Cookies & LocalStorage
+
+Unsere Webseite verwendet ein Cookie-Banner, um Ihre Zustimmung zur Datennutzung zu verwalten. Ihre Entscheidung (Akzeptieren oder Ablehnen) wird in Ihrem Browser im "LocalStorage" (in einem Eintrag namens \`cookie_consent\`) gespeichert. Dies ist technisch notwendig, um Ihre Auswahl bei zukünftigen Besuchen zu respektieren.
+
+## Ihre Rechte als Betroffener
+
+Sie haben im Rahmen der geltenden gesetzlichen Bestimmungen jederzeit das Recht auf unentgeltliche Auskunft über Ihre bei uns gespeicherten personenbezogenen Daten, deren Herkunft und Empfänger und den Zweck der Datenverarbeitung und ggf. ein Recht auf Berichtigung oder Löschung dieser Daten. Hierzu sowie zu weiteren Fragen zum Thema personenbezogene Daten können Sie sich jederzeit unter der im Impressum angegebenen Adresse an uns wenden.
+`;
+// --- END OF TEMPLATE ---
 
 const DEFAULT_PRIMARY_COLOR = '#ea580c';
 const DEFAULT_SECONDARY_COLOR = '#475569';
@@ -92,13 +152,14 @@ export default function EinstellungenPage() {
           if (profileError && profileError.code !== 'PGRST116') {
               setGeneralError(`Profildaten konnten nicht geladen werden: ${profileError.message}`);
           } else if (profile) {
+            // --- UPDATED: Use the template ONLY if the user's text is null/empty ---
             const datenschutzText = profile.datenschutz_text || DATENSCHUTZ_TEMPLATE;
             setProfileData({
                 business_name: profile.business_name || '', address: profile.address || '', phone: profile.phone || '',
                 services_description: profile.services_description || '', about_text: profile.about_text || '',
                 slug: profile.slug || '',
                 impressum_text: profile.impressum_text || '',
-                datenschutz_text: datenschutzText,
+                datenschutz_text: datenschutzText, // Use the template if empty
                 logo_url: profile.logo_url || null,
                 primary_color: profile.primary_color || DEFAULT_PRIMARY_COLOR,
                 secondary_color: profile.secondary_color || DEFAULT_SECONDARY_COLOR,
@@ -206,7 +267,6 @@ export default function EinstellungenPage() {
         if (isRemovingLogo && profileData.logo_url) {
             finalLogoUrl = null;
             try { 
-              // --- FIX: Use slice(6) ---
               oldLogoPath = new URL(profileData.logo_url).pathname.split('/').slice(6).join('/'); 
             } catch {}
         }
@@ -223,29 +283,22 @@ export default function EinstellungenPage() {
             finalLogoUrl = urlData.publicUrl;
             if (profileData.logo_url && profileData.logo_url !== finalLogoUrl) {
                 try { 
-                  // --- FIX: Use slice(6) ---
                   oldLogoPath = new URL(profileData.logo_url).pathname.split('/').slice(6).join('/'); 
                 } catch {}
             }
         }
 
-        //
-        // --- THIS IS THE FIX ---
-        //
         const profileUpdates = {
           business_name: profileData.business_name, address: profileData.address, phone: profileData.phone,
           services_description: profileData.services_description, about_text: profileData.about_text,
           slug: profileData.slug,
-          impressum_text: profileData.impressum_text || null, // <-- ADDED
-          datenschutz_text: profileData.datenschutz_text || null, // <-- ADDED
+          impressum_text: profileData.impressum_text || null,
+          datenschutz_text: profileData.datenschutz_text || null,
           updated_at: new Date().toISOString(),
           logo_url: finalLogoUrl,
           primary_color: profileData.primary_color,
           secondary_color: profileData.secondary_color,
         };
-        //
-        // --- END OF FIX ---
-        //
 
         const { data: updatedProfile, error: updateError } = await supabase
             .from('profiles').update(profileUpdates).eq('id', currentUser.id).select().single();
@@ -269,7 +322,7 @@ export default function EinstellungenPage() {
 
     await toast.promise(savePromise(), {
         loading: 'Änderungen werden gespeichert...',
-        success: (updatedData: any) => { // Use 'any' to avoid type conflict on partial return
+        success: (updatedData: any) => { 
             setProfileData(prev => ({ 
               ...prev, 
               logo_url: updatedData.logo_url, 
@@ -466,10 +519,28 @@ export default function EinstellungenPage() {
              </section>
 
              {/* --- Legal Texts Section --- */}
-             {/* This section is part of the SAME form */}
              <section className="pt-8">
                 <h2 className="text-xl font-semibold text-white mb-6">Rechtstexte</h2>
                 <div className="space-y-6">
+                  
+                  {/* --- ADDED LEGAL WARNING (Step B) --- */}
+                  <div className="rounded-md bg-red-900/20 border border-red-500/30 p-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <ExclamationTriangleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-red-300">Rechtlicher Hinweis (Impressumspflicht)</h3>
+                        <div className="mt-2 text-sm text-red-300/80">
+                          <p>
+                            WARNUNG: Sie sind gesetzlich verpflichtet, ein vollständiges Impressum anzugeben. Falsche oder fehlende Angaben können zu Abmahnungen führen. Bitte lassen Sie diesen Text rechtlich prüfen.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* --- END OF WARNING --- */}
+
                   {/* Impressum Text Area */}
                    <div>
                       <label htmlFor="impressum_text" className="mb-2 block text-sm font-medium text-slate-300"> Impressum Text </label>
