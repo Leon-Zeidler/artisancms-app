@@ -9,58 +9,22 @@ interface NavbarProps {
   businessName?: string | null;
   slug?: string | null;
   logoUrl?: string | null;
-  primaryColor?: string; // <-- Prop for the main color
-  primaryColorDark?: string; // <-- Prop for the hover color
+  // primaryColor?: string; // <-- No longer needed
+  // primaryColorDark?: string; // <-- No longer needed
 }
 
 // Icons
 const MenuIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /> </svg> );
 const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg> );
 
-// Default colors if none are provided
-const DEFAULT_PRIMARY = '#ea580c'; // orange-600
-const DEFAULT_PRIMARY_DARK = '#c2410c'; // A darker shade
-
-// Simple function to slightly darken a hex color for hover states
-// This is a utility function to calculate hover color if not provided.
-const darkenColor = (hex: string, amount: number = 20): string => {
-  if (!hex) return DEFAULT_PRIMARY_DARK;
-  try {
-    let color = hex.startsWith('#') ? hex.slice(1) : hex;
-    if (color.length === 3) {
-      color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
-    }
-    let r = parseInt(color.substring(0, 2), 16);
-    let g = parseInt(color.substring(2, 4), 16);
-    let b = parseInt(color.substring(4, 6), 16);
-
-    r = Math.max(0, r - amount);
-    g = Math.max(0, g - amount);
-    b = Math.max(0, b - amount);
-
-    const newHex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-    return newHex;
-  } catch (e) {
-    console.error("Failed to darken color:", hex, e);
-    return DEFAULT_PRIMARY_DARK; // Return default dark on error
-  }
-};
-
 
 export default function Navbar({
     businessName,
     slug,
     logoUrl,
-    primaryColor: initialPrimaryColor, // Rename prop to avoid conflict
-    primaryColorDark: initialPrimaryColorDark // Rename prop
 }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [logoHasError, setLogoHasError] = useState(false); // State to track logo loading error
-
-  // Use provided colors, or fall back to defaults
-  const primaryColor = initialPrimaryColor || DEFAULT_PRIMARY;
-  // Calculate dark color if not provided, or use the one from props
-  const primaryColorDark = initialPrimaryColorDark || darkenColor(primaryColor);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -72,20 +36,6 @@ export default function Navbar({
   const portfolioPath = `${basePath}/portfolio`;
   const kontaktPath = `${basePath}/#kontakt`;
   const testimonialsPath = `${basePath}/testimonials`;
-
-  // --- Style Helper for Hover Effects ---
-  const handleMouseOver = (event: React.MouseEvent<HTMLElement>) => {
-    event.currentTarget.style.color = primaryColor;
-  };
-  const handleMouseOut = (event: React.MouseEvent<HTMLElement>) => {
-    event.currentTarget.style.color = ''; // Revert to CSS default (text-gray-600)
-  };
-   const handleButtonMouseOver = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    event.currentTarget.style.backgroundColor = primaryColorDark;
-  };
-  const handleButtonMouseOut = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    event.currentTarget.style.backgroundColor = primaryColor;
-  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm">
@@ -113,35 +63,30 @@ export default function Navbar({
             </Link>
           </div>
 
-          {/* Desktop Menu Links - Apply hover via JS */}
+          {/* Desktop Menu Links - Use hover:text-brand */}
           <div className="hidden space-x-8 md:flex">
-            <Link href={leistungenPath} className="font-medium text-gray-600 transition-colors" onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}>Leistungen</Link>
-            <Link href={portfolioPath} className="font-medium text-gray-600 transition-colors" onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}>Projekte</Link>
-            <Link href={testimonialsPath} className="font-medium text-gray-600 transition-colors" onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}>Kundenstimmen</Link>
-            <Link href={kontaktPath} className="font-medium text-gray-600 transition-colors" onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}>Kontakt</Link>
+            <Link href={leistungenPath} className="font-medium text-gray-600 transition-colors hover:text-brand">Leistungen</Link>
+            <Link href={portfolioPath} className="font-medium text-gray-600 transition-colors hover:text-brand">Projekte</Link>
+            <Link href={testimonialsPath} className="font-medium text-gray-600 transition-colors hover:text-brand">Kundenstimmen</Link>
+            <Link href={kontaktPath} className="font-medium text-gray-600 transition-colors hover:text-brand">Kontakt</Link>
           </div>
 
-          {/* Desktop Login Button - Apply inline style + JS hover */}
+          {/* Desktop Login Button - Use bg-brand and hover:bg-brand-dark */}
           <div className="hidden md:block">
             <Link
                 href="/login"
-                className="rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors"
-                style={{ backgroundColor: primaryColor }} // Apply dynamic color
-                onMouseOver={handleButtonMouseOver}
-                onMouseOut={handleButtonMouseOut}
+                className="rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
               Kunden-Login
             </Link>
           </div>
 
-          {/* Mobile Menu Button - Apply focus ring color */}
+          {/* Mobile Menu Button - Use focus:ring-brand */}
           <div className="md:hidden">
-             {/* Use CSS variable to set focus ring color */}
-             <style>{`:root { --focus-ring-color-nav: ${primaryColor}; }`}</style>
             <button
               type="button"
               onClick={toggleMobileMenu}
-              className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--focus-ring-color-nav)]"
+              className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand"
               aria-controls="mobile-menu"
               aria-expanded={isMobileMenuOpen}
             >
@@ -152,23 +97,20 @@ export default function Navbar({
         </div>
       </div>
 
-      {/* Mobile Menu Panel - Apply hover via JS */}
+      {/* Mobile Menu Panel - Use hover:text-brand */}
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-16 left-0 w-full bg-white border-t border-b border-gray-200 shadow-md" id="mobile-menu">
           <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
-            <Link href={leistungenPath} onClick={toggleMobileMenu} className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors" onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}>Leistungen</Link>
-            <Link href={portfolioPath} onClick={toggleMobileMenu} className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors" onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}>Projekte</Link>
-            <Link href={testimonialsPath} onClick={toggleMobileMenu} className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors" onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}>Kundenstimmen</Link>
-            <Link href={kontaktPath} onClick={toggleMobileMenu} className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors" onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}>Kontakt</Link>
+            <Link href={leistungenPath} onClick={toggleMobileMenu} className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-brand">Leistungen</Link>
+            <Link href={portfolioPath} onClick={toggleMobileMenu} className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-brand">Projekte</Link>
+            <Link href={testimonialsPath} onClick={toggleMobileMenu} className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-brand">Kundenstimmen</Link>
+            <Link href={kontaktPath} onClick={toggleMobileMenu} className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-brand">Kontakt</Link>
           </div>
           <div className="border-t border-gray-200 pt-4 pb-3 px-4">
              <Link
                 href="/login"
                 onClick={toggleMobileMenu}
-                className="block w-full text-center rounded-md px-4 py-2 text-base font-semibold text-white transition-colors"
-                style={{ backgroundColor: primaryColor }} // Apply dynamic color
-                onMouseOver={handleButtonMouseOver}
-                onMouseOut={handleButtonMouseOut}
+                className="block w-full text-center rounded-md bg-brand px-4 py-2 text-base font-semibold text-white transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
              >
               Kunden-Login
             </Link>

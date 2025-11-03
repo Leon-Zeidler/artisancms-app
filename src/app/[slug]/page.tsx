@@ -23,6 +23,7 @@ type Profile = {
   logo_url: string | null;
   primary_color: string | null;
   secondary_color: string | null;
+  email: string | null; // <-- Added email field
 };
 type Testimonial = {
   id: string;
@@ -124,7 +125,7 @@ export default function ClientHomepage() {
       try {
         const { data: profileResult, error: profileError } = await supabase
           .from('profiles')
-          .select('*, logo_url, primary_color, secondary_color') 
+          .select('*, logo_url, primary_color, secondary_color, email') // <-- Fetched email
           .eq('slug', slug)
           .maybeSingle();
 
@@ -192,28 +193,26 @@ export default function ClientHomepage() {
   const servicesHeadingColor = isServicesDark ? "text-white" : "text-gray-900";
   const servicesTextColor = isServicesDark ? "text-gray-300" : "text-gray-600";
 
-  // --- Style Helper for Hover Effects ---
-  const handleMouseOver = (event: React.MouseEvent<HTMLElement>) => {
-    event.currentTarget.style.color = primaryColor;
-  };
-  const handleMouseOut = (event: React.MouseEvent<HTMLElement>) => {
-    event.currentTarget.style.color = ''; // Revert to CSS default
-  };
-  const handleButtonMouseOver = (event: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
-    event.currentTarget.style.backgroundColor = primaryColorDark;
-  };
-  const handleButtonMouseOut = (event: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
-    event.currentTarget.style.backgroundColor = primaryColor;
-  };
-
   return (
-    <div className="flex min-h-screen flex-col bg-white text-gray-900">
+    //
+    // --- THIS IS THE FIX (Part 1) ---
+    // Inject CSS variables for Tailwind to use
+    //
+    <div 
+      className="flex min-h-screen flex-col bg-white text-gray-900"
+      style={{
+        '--color-brand-primary': primaryColor,
+        '--color-brand-primary-dark': primaryColorDark,
+        '--color-brand-secondary': secondaryColor,
+      } as React.CSSProperties}
+    >
       <Navbar
         businessName={profile.business_name}
         slug={profile.slug}
         logoUrl={profile.logo_url}
-        primaryColor={primaryColor}
-        primaryColorDark={primaryColorDark}
+        // We no longer need to pass colors to Navbar/Footer
+        // primaryColor={primaryColor}
+        // primaryColorDark={primaryColorDark}
       />
 
       <main className="isolate flex-grow">
@@ -229,20 +228,19 @@ export default function ClientHomepage() {
                         {profile.about_text?.substring(0, 150) + (profile.about_text && profile.about_text.length > 150 ? '...' : '') || 'Präzision, Qualität und Zuverlässigkeit für Ihr nächstes Projekt.'}
                     </p>
                     <div className="mt-10 flex items-center justify-center gap-x-6">
+                        {/* --- THIS IS THE FIX (Part 2) ---
+                        Use Tailwind classes bg-brand and hover:bg-brand-dark
+                        Remove inline styles and JS event handlers
+                        */}
                         <Link
                           href="#kontakt"
-                          className="rounded-md px-5 py-3 text-base font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 transition-colors"
-                          style={{ backgroundColor: primaryColor, outlineColor: primaryColor }}
-                          onMouseOver={handleButtonMouseOver}
-                          onMouseOut={handleButtonMouseOut}
+                          className="rounded-md bg-brand px-5 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                         >
                             Angebot anfordern
                         </Link>
                          <Link
                           href={`/${profile.slug}/portfolio`}
-                          className="text-base font-semibold leading-6 text-gray-900"
-                          onMouseOver={handleMouseOver}
-                          onMouseOut={handleMouseOut}
+                          className="text-base font-semibold leading-6 text-gray-900 transition-colors hover:text-brand"
                         >
                              Unsere Projekte ansehen <span aria-hidden="true">→</span>
                         </Link>
@@ -252,17 +250,13 @@ export default function ClientHomepage() {
         </div>
 
         {/* ========== SERVICES SECTION ========== */}
-        {/*
-          ---
-          THE FIX IS HERE
-          ---
-        */}
         {parsedServices.length > 0 && (
-            <div id="leistungen" className="py-24 sm:py-32" style={{ backgroundColor: secondaryColor }}>
+            // Use bg-brandsec (which reads the CSS variable)
+            <div id="leistungen" className="py-24 sm:py-32 bg-brandsec">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl lg:text-center">
-                        <h2 className="text-base font-semibold leading-7" style={{ color: primaryColor }}>Leistungen</h2>
-                        {/* 3. APPLY DYNAMIC TEXT COLORS */}
+                        <h2 className="text-base font-semibold leading-7 text-brand">Leistungen</h2>
+                        {/* Apply dynamic text colors based on brightness */}
                         <p className={`mt-2 text-3xl font-bold tracking-tight sm:text-4xl ${servicesHeadingColor}`}> Unsere Kernkompetenzen </p>
                     </div>
                     <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
@@ -270,7 +264,7 @@ export default function ClientHomepage() {
                             {parsedServices.map((service) => (
                                 <div key={service.name} className="flex flex-col">
                                     <dt className={`flex items-center gap-x-3 text-base font-semibold leading-7 ${servicesHeadingColor}`}>
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: primaryColor }}>
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand">
                                             <Icon path={service.icon} />
                                         </div>
                                         {service.name}
@@ -291,7 +285,7 @@ export default function ClientHomepage() {
             <div id="projekte" className="py-24 sm:py-32">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="mx-auto max-w-2xl lg:text-center">
-                        <h2 className="text-base font-semibold leading-7" style={{ color: primaryColor }}>Referenzen</h2>
+                        <h2 className="text-base font-semibold leading-7 text-brand">Referenzen</h2>
                         <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"> Ein Einblick in unsere Arbeit </p>
                         <p className="mt-6 text-lg leading-8 text-gray-600"> Sehen Sie sich einige unserer kürzlich abgeschlossenen Projekte an. </p>
                     </div>
@@ -306,9 +300,7 @@ export default function ClientHomepage() {
                                     <div className="max-w-xl mt-4">
                                         <div className="relative">
                                              <h3
-                                               className="mt-3 text-lg font-semibold leading-6 text-gray-900 transition-colors group-hover:text-orange-600"
-                                               onMouseOver={(e) => e.currentTarget.style.color = primaryColor}
-                                               onMouseOut={(e) => e.currentTarget.style.color = ''}
+                                               className="mt-3 text-lg font-semibold leading-6 text-gray-900 transition-colors group-hover:text-brand"
                                             >
                                                 {project.title || 'Unbenanntes Projekt'}
                                             </h3>
@@ -321,10 +313,7 @@ export default function ClientHomepage() {
                     <div className="mt-16 text-center">
                         <Link
                           href={`/${profile.slug}/portfolio`}
-                          className="rounded-md px-5 py-3 text-base font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 transition-colors"
-                          style={{ backgroundColor: primaryColor, outlineColor: primaryColor }}
-                          onMouseOver={handleButtonMouseOver}
-                          onMouseOut={handleButtonMouseOut}
+                          className="rounded-md bg-brand px-5 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                          >
                              Alle Projekte ansehen
                         </Link>
@@ -363,9 +352,7 @@ export default function ClientHomepage() {
                         <div className="mt-16 text-center">
                             <Link
                               href={`/${profile.slug}/testimonials`}
-                              className="text-base font-semibold leading-6 text-gray-900 transition-colors"
-                              onMouseOver={handleMouseOver}
-                              onMouseOut={handleMouseOut}
+                              className="text-base font-semibold leading-6 text-gray-900 transition-colors hover:text-brand"
                             >
                                 Mehr Kundenstimmen <span aria-hidden="true">→</span>
                             </Link>
@@ -399,7 +386,9 @@ export default function ClientHomepage() {
                         )}
                         <div className="flex gap-x-4">
                             <svg className="h-6 w-6 text-gray-500 flex-none" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-                            <a className="hover:text-gray-900 text-base leading-7 text-gray-600" href="mailto:info@beispiel.de">info@beispiel.de</a>
+                            <a className="hover:text-gray-900 text-base leading-7 text-gray-600" href={`mailto:${profile.email || ''}`}>
+                              {profile.email || 'E-Mail nicht hinterlegt'}
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -407,22 +396,19 @@ export default function ClientHomepage() {
                 <div className="lg:col-span-3">
                     {formStatus === 'success' ? ( <div className="rounded-md bg-green-50 p-4 border border-green-200"><div className="flex"> <div className="flex-shrink-0"> <CheckCircleIcon className="h-5 w-5 text-green-400" aria-hidden="true" /> </div> <div className="ml-3"> <h3 className="text-sm font-medium text-green-800">Nachricht gesendet!</h3> <div className="mt-2 text-sm text-green-700"> <p>Vielen Dank für Ihre Anfrage. Wir werden uns so schnell wie möglich bei Ihnen melden.</p> </div> </div> </div> </div> )
                     : ( <form onSubmit={handleContactSubmit} className="space-y-6">
+                            {/* --- THIS IS THE FIX (Part 3) ---
+                            Use Tailwind's focus:ring-brand class
+                            */}
                             <style>{`:root { --dynamic-ring-color: ${primaryColor}; }`}</style>
-                            <div> <label htmlFor="name" className="block text-sm font-semibold leading-6 text-gray-900">Name</label> <div className="mt-2.5"> <input type="text" name="name" id="name" required value={formName} onChange={(e) => setFormName(e.target.value)} className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-[var(--dynamic-ring-color)] sm:text-sm"/> </div> </div>
-                            <div> <label htmlFor="email" className="block text-sm font-semibold leading-6 text-gray-900">Email</label> <div className="mt-2.5"> <input type="email" name="email" id="email" required value={formEmail} onChange={(e) => setFormEmail(e.target.value)} className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-[var(--dynamic-ring-color)] sm:text-sm"/> </div> </div>
-                            <div> <label htmlFor="message" className="block text-sm font-semibold leading-6 text-gray-900">Nachricht</label> <div className="mt-2.5"> <textarea name="message" id="message" rows={4} required value={formMessage} onChange={(e) => setFormMessage(e.target.value)} className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-[var(--dynamic-ring-color)] sm:text-sm"/> </div> </div>
+                            <div> <label htmlFor="name" className="block text-sm font-semibold leading-6 text-gray-900">Name</label> <div className="mt-2.5"> <input type="text" name="name" id="name" required value={formName} onChange={(e) => setFormName(e.target.value)} className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand sm:text-sm"/> </div> </div>
+                            <div> <label htmlFor="email" className="block text-sm font-semibold leading-6 text-gray-900">Email</label> <div className="mt-2.5"> <input type="email" name="email" id="email" required value={formEmail} onChange={(e) => setFormEmail(e.target.value)} className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand sm:text-sm"/> </div> </div>
+                            <div> <label htmlFor="message" className="block text-sm font-semibold leading-6 text-gray-900">Nachricht</label> <div className="mt-2.5"> <textarea name="message" id="message" rows={4} required value={formMessage} onChange={(e) => setFormMessage(e.target.value)} className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand sm:text-sm"/> </div> </div>
                             {formStatus === 'error' && ( <div className="rounded-md bg-red-50 p-4 border border-red-200"><div className="flex"> <div className="flex-shrink-0"> <ExclamationCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" /> </div> <div className="ml-3"> <h3 className="text-sm font-medium text-red-800">Senden fehlgeschlagen</h3> <p className="mt-1 text-sm text-red-700">{formError || 'Bitte versuchen Sie es später erneut.'}</p> </div> </div> </div> )}
                             <div className="mt-8 flex justify-end">
                                 <button
                                     type="submit"
                                     disabled={formStatus === 'loading'}
-                                    className={`rounded-md px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-x-2 transition-colors`}
-                                    style={{ 
-                                        backgroundColor: formStatus === 'loading' ? darkenColor(primaryColor, 40) : primaryColor, 
-                                        outlineColor: primaryColor 
-                                    }}
-                                    onMouseOver={(e) => { if(formStatus !== 'loading') e.currentTarget.style.backgroundColor = primaryColorDark }}
-                          			onMouseOut={(e) => { if(formStatus !== 'loading') e.currentTarget.style.backgroundColor = primaryColor }}
+                                    className={`rounded-md bg-brand px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-x-2`}
                                 >
                                     {formStatus === 'loading' && <ArrowPathIcon />}
                                     {formStatus === 'loading' ? 'Senden...' : 'Nachricht senden'}
@@ -440,9 +426,11 @@ export default function ClientHomepage() {
       <Footer 
         businessName={profile.business_name} 
         slug={profile.slug} 
-        primaryColor={primaryColor} 
-        secondaryColor={secondaryColor}
+        // No longer need to pass colors
+        // primaryColor={primaryColor} 
+        // secondaryColor={secondaryColor}
       />
     </div>
   );
 }
+

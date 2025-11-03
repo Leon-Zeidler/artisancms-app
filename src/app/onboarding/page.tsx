@@ -219,7 +219,7 @@ export default function OnboardingPage() {
             <label htmlFor="slug" className="mb-2 block text-sm font-medium text-gray-700"> Ihr Webseiten-Pfad (Slug) * </label>
             <div className="relative">
                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 sm:text-sm">
-                   IhreDomain.de/
+                   artisancms.app/
                  </span>
                 <input
                     type="text" id="slug" name="slug"
@@ -227,7 +227,7 @@ export default function OnboardingPage() {
                     onChange={handleSlugChange}
                     required
                     aria-describedby="slug-description slug-status"
-                    style={{ paddingLeft: `${Math.max(60, 'IhreDomain.de/'.length * 7 + 12)}px` }} 
+                    style={{ paddingLeft: `${Math.max(60, 'artisancms.app/'.length * 7 + 12)}px` }} 
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
                     placeholder="z.b. tischlerei-mustermann"
                  />
@@ -258,13 +258,19 @@ export default function OnboardingPage() {
            <div>
             <label htmlFor="servicesDescription" className="mb-2 block text-sm font-medium text-gray-700"> Leistungen * </label>
              <div className="relative">
-                <textarea id="servicesDescription" value={servicesDescription} rows={4} onChange={(e) => setServicesDescription(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28" placeholder="z.B. Badsanierung, Heizungsinstallation..."/>
+                <textarea id="servicesDescription" value={servicesDescription} rows={4} onChange={(e) => setServicesDescription(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28" placeholder="z.B. Badsanierung: Kompletterneuerung Ihres Badezimmers."/>
                  <button type="button" onClick={() => handleGenerateProfileText('services')} disabled={aiLoading === 'services' || !businessName} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'services' || !businessName ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} >
                    <SparklesIcon className={`h-4 w-4 ${aiLoading === 'services' ? 'animate-spin' : ''}`} />
                    {aiLoading === 'services' ? 'Generiere...' : 'Generieren'}
                  </button>
              </div>
-             <p className="mt-1 text-xs text-gray-500">Tipp: Jede Leistung in eine neue Zeile (z.B. "Service A: Beschreibung A")</p>
+             {/* --- START OF CHANGE --- */}
+             <p className="mt-1 text-xs text-gray-500">
+               Tipp: Formatieren Sie jede Leistung in einer neuen Zeile als: <strong>Titel: Beschreibung</strong>
+               <br/>
+               (z.B. Heizungstechnik: Installation und Wartung von Heizsystemen.)
+             </p>
+             {/* --- END OF CHANGE --- */}
           </div>
            {/* About Text with AI */}
            <div>

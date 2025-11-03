@@ -12,6 +12,7 @@ import SubmissionModal from '@/components/SubmissionModal';
 // --- Icons ---
 const InboxIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.121-1.58H6.881a2.25 2.25 0 00-2.121 1.58L2.35 13.177a2.25 2.25 0 00-.1.661z" /> </svg>);
 const EnvelopeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /> </svg>);
+// --- No longer used, but fine to keep ---
 const EnvelopeOpenIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 9v.906a2.25 2.25 0 01-1.183 1.981l-6.47 3.791a2.25 2.25 0 01-2.18 0l-6.47-3.791A2.25 2.25 0 012.25 9.906V9m19.5 0a2.25 2.25 0 00-2.25-2.25H4.5A2.25 2.25 0 002.25 9m19.5 0v.906a2.25 2.25 0 01-1.183 1.981l-6.47 3.791a2.25 2.25 0 01-2.18 0l-6.47-3.791A2.25 2.25 0 012.25 9.906V9m0 0a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 9V6.75a2.25 2.25 0 00-2.25-2.25H4.5A2.25 2.25 0 002.25 6.75v2.25z" /> </svg>);
 
 
@@ -19,20 +20,24 @@ const EnvelopeOpenIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...pr
 export type ContactSubmission = {
   id: string;
   created_at: string;
-  profile_id: string;
-  name: string;
-  email: string;
+  profile_id: string; // This is the user's ID
+  sender_name: string; // Renamed from 'name'
+  sender_email: string; // Renamed from 'email'
   message: string;
 };
 
 export default function ContactInboxPage() {
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [userSlug, setUserSlug] = useState<string | null>(null); // <-- 1. Add state for slug
+  const [userSlug, setUserSlug] = useState<string | null>(null); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmission | null>(null);
+  
+  // --- 1. Add new state for AI drafting ---
+  const [isDrafting, setIsDrafting] = useState(false);
+  const [aiDraft, setAiDraft] = useState<string | null>(null);
   
   const router = useRouter();
 
@@ -50,7 +55,6 @@ export default function ContactInboxPage() {
       }
       setCurrentUser(user);
       
-      // --- 2. Fetch the user's slug from their profile ---
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('slug')
@@ -63,7 +67,6 @@ export default function ContactInboxPage() {
       } else if (profile) {
         setUserSlug(profile.slug);
       }
-      // --- End of new fetch ---
 
       console.log(`Fetching submissions for profile ${user.id}`);
       const { data, error: fetchError } = await supabase
@@ -78,7 +81,13 @@ export default function ContactInboxPage() {
         setSubmissions([]);
       } else {
         console.log("Fetched submissions:", data);
-        setSubmissions(data || []);
+        // --- FIX: Map the DB columns to the component's expected type ---
+        const mappedData = (data || []).map(item => ({
+          ...item,
+          name: item.sender_name, // Map sender_name to name
+          email: item.sender_email // Map sender_email to email
+        }));
+        setSubmissions(mappedData);
       }
       setLoading(false);
     };
@@ -87,13 +96,60 @@ export default function ContactInboxPage() {
   
   const handleOpenModal = (submission: ContactSubmission) => {
     setSelectedSubmission(submission);
+    setAiDraft(null); // Clear old draft when opening
+    setIsDrafting(false);
   };
 
   const handleCloseModal = () => {
+    if (isDrafting) return; // Don't close while loading
     setSelectedSubmission(null);
+    setAiDraft(null);
   };
   
-  // --- 3. Create the dynamic href for the button ---
+  // --- 2. Add handler to call the new API route ---
+  const handleDraftReply = async (message: string) => {
+    if (!currentUser) {
+      toast.error("User not found");
+      return;
+    }
+    
+    setIsDrafting(true);
+    setAiDraft(null); // Clear previous draft
+    
+    const draftPromise = async () => {
+      const response = await fetch('/api/draft-reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerMessage: message,
+          profileId: currentUser.id, // Send the user's ID
+        }),
+      });
+      
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate draft');
+      }
+      return result.draft;
+    };
+
+    await toast.promise(
+      draftPromise(),
+      {
+        loading: 'AI entwirft eine Antwort...',
+        success: (draft) => {
+          setAiDraft(draft);
+          setIsDrafting(false);
+          return 'Entwurf erstellt!';
+        },
+        error: (err: any) => {
+          setIsDrafting(false);
+          return `Fehler: ${err.message}`;
+        }
+      }
+    );
+  };
+  
   const homepageHref = userSlug ? `/${userSlug}` : '/';
 
   // --- Render Logic ---
@@ -126,14 +182,14 @@ export default function ContactInboxPage() {
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-semibold text-white flex items-center gap-2">
                     <EnvelopeIcon className="h-4 w-4 text-slate-400" />
-                    {item.name}
+                    {item.sender_name}
                   </span>
                   <span className="text-xs text-slate-500">
                     {new Date(item.created_at).toLocaleDateString('de-DE')}
                   </span>
                 </div>
                 <p className="text-sm text-slate-300 mb-2 truncate">{item.message}</p>
-                <p className="text-xs text-orange-400 hover:underline">{item.email}</p>
+                <p className="text-xs text-orange-400 hover:underline">{item.sender_email}</p>
               </button>
             ))
           ) : (
@@ -142,16 +198,19 @@ export default function ContactInboxPage() {
               title="Keine Kontaktanfragen"
               message="Sobald ein Besucher Ihrer Webseite das Kontaktformular ausfüllt, erscheint die Nachricht hier."
               buttonText="Zur Webseite"
-              buttonHref={homepageHref} // <-- 4. Use the dynamic href here
+              buttonHref={homepageHref} 
             />
           )}
         </div>
       )}
       
-      {/* Render the Modal */}
+      {/* --- 3. Pass new props to the Modal --- */}
       <SubmissionModal
         item={selectedSubmission}
         onClose={handleCloseModal}
+        onDraftReply={handleDraftReply}
+        isDrafting={isDrafting}
+        aiDraft={aiDraft}
       />
     </main>
   );

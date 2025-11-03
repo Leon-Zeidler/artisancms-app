@@ -15,8 +15,8 @@ const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="htt
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
 const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /> </svg> );
 const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /> </svg> );
-// --- ADDED ICON ---
 const ExclamationTriangleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /> </svg> );
+
 
 // Type for profile data
 type ProfileData = {
@@ -36,7 +36,6 @@ type ProfileData = {
 type AIGenerationType = 'services' | 'about';
 type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 
-// --- THIS IS THE TEMPLATE YOU PASTE ---
 const DATENSCHUTZ_TEMPLATE = `
 HINWEIS: Dies ist eine automatisch generierte Vorlage. Sie als Webseitenbetreiber sind rechtlich dafür verantwortlich, diese Angaben zu prüfen, zu vervollständigen (insbesondere Ihre eigenen Kontaktdaten unter "Verantwortlicher") und anwaltlich prüfen zu lassen. Sie müssen ebenfalls alle Dienste hinzufügen, die Sie selbst einbetten (z.B. Google Maps, YouTube, Calendly, etc.).
 
@@ -94,7 +93,6 @@ Unsere Webseite verwendet ein Cookie-Banner, um Ihre Zustimmung zur Datennutzung
 
 Sie haben im Rahmen der geltenden gesetzlichen Bestimmungen jederzeit das Recht auf unentgeltliche Auskunft über Ihre bei uns gespeicherten personenbezogenen Daten, deren Herkunft und Empfänger und den Zweck der Datenverarbeitung und ggf. ein Recht auf Berichtigung oder Löschung dieser Daten. Hierzu sowie zu weiteren Fragen zum Thema personenbezogene Daten können Sie sich jederzeit unter der im Impressum angegebenen Adresse an uns wenden.
 `;
-// --- END OF TEMPLATE ---
 
 const DEFAULT_PRIMARY_COLOR = '#ea580c';
 const DEFAULT_SECONDARY_COLOR = '#475569';
@@ -126,8 +124,10 @@ export default function EinstellungenPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   
+  // --- FIX: THESE WERE MISSING ---
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  // --- END OF FIX ---
 
   const router = useRouter();
 
@@ -152,14 +152,13 @@ export default function EinstellungenPage() {
           if (profileError && profileError.code !== 'PGRST116') {
               setGeneralError(`Profildaten konnten nicht geladen werden: ${profileError.message}`);
           } else if (profile) {
-            // --- UPDATED: Use the template ONLY if the user's text is null/empty ---
             const datenschutzText = profile.datenschutz_text || DATENSCHUTZ_TEMPLATE;
             setProfileData({
                 business_name: profile.business_name || '', address: profile.address || '', phone: profile.phone || '',
                 services_description: profile.services_description || '', about_text: profile.about_text || '',
                 slug: profile.slug || '',
                 impressum_text: profile.impressum_text || '',
-                datenschutz_text: datenschutzText, // Use the template if empty
+                datenschutz_text: datenschutzText,
                 logo_url: profile.logo_url || null,
                 primary_color: profile.primary_color || DEFAULT_PRIMARY_COLOR,
                 secondary_color: profile.secondary_color || DEFAULT_SECONDARY_COLOR,
@@ -390,6 +389,7 @@ export default function EinstellungenPage() {
     });
   };
   
+  // --- FIX: THIS FUNCTION WAS MISSING ---
   const handleDeleteAccount = async () => {
     setIsDeletingAccount(true);
 
@@ -414,13 +414,16 @@ export default function EinstellungenPage() {
           }
         }
       );
+      // Redirect on success
       window.location.href = '/'; 
     } catch (error) {
       console.error("Delete account failed:", error);
+      // Only reset state on failure, so user can see success toast
       setIsDeletingAccount(false);
       setShowDeleteModal(false);
     }
   };
+  // --- END OF FIX ---
 
 
   // === Render Logic ===
@@ -480,7 +483,13 @@ export default function EinstellungenPage() {
                   <div>
                     <label htmlFor="services_description" className="mb-2 block text-sm font-medium text-slate-300"> Kurze Beschreibung Ihrer Leistungen * </label>
                     <div className="relative"> <textarea id="services_description" name="services_description" value={profileData.services_description} onChange={handleInputChange} rows={4} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28"/> <button type="button" onClick={() => handleGenerateProfileText('services')} disabled={aiLoading === 'services' || !profileData.business_name} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'services' || !profileData.business_name ? 'bg-slate-600 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} > <SparklesIcon className={`h-4 w-4 ${aiLoading === 'services' ? 'animate-spin' : ''}`} /> {aiLoading === 'services' ? 'Generiere...' : 'Generieren'} </button> </div>
-                    <p className="mt-1 text-xs text-slate-500">Tipp: Jede Leistung in eine neue Zeile (z.B. "Service A: Beschreibung A").</p>
+                    {/* --- FIX: UPDATED HELPER TEXT --- */}
+                    <p className="mt-1 text-xs text-slate-500">
+                      Tipp: Formatieren Sie jede Leistung in einer neuen Zeile als: <strong>Titel: Beschreibung</strong>
+                      <br/>
+                      (z.B. Heizungstechnik: Installation und Wartung von Heizsystemen.)
+                    </p>
+                    {/* --- END OF FIX --- */}
                   </div>
                   {/* About */}
                   <div>
@@ -523,7 +532,7 @@ export default function EinstellungenPage() {
                 <h2 className="text-xl font-semibold text-white mb-6">Rechtstexte</h2>
                 <div className="space-y-6">
                   
-                  {/* --- ADDED LEGAL WARNING (Step B) --- */}
+                  {/* --- FIX: ADDED LEGAL WARNING --- */}
                   <div className="rounded-md bg-red-900/20 border border-red-500/30 p-4">
                     <div className="flex">
                       <div className="flex-shrink-0">
@@ -539,7 +548,7 @@ export default function EinstellungenPage() {
                       </div>
                     </div>
                   </div>
-                  {/* --- END OF WARNING --- */}
+                  {/* --- END OF FIX --- */}
 
                   {/* Impressum Text Area */}
                    <div>
@@ -649,6 +658,7 @@ export default function EinstellungenPage() {
         </div>
       )}
       
+      {/* --- FIX: THIS WAS MISSING --- */}
       {/* Confirmation Modal for Account Deletion */}
       <ConfirmationModal
         isOpen={showDeleteModal}
@@ -663,3 +673,4 @@ export default function EinstellungenPage() {
     </main>
   );
 }
+

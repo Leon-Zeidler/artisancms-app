@@ -265,8 +265,13 @@ export default function EditProjectPage() {
             if (currentImageUrl) {
                  try {
                     const url = new URL(currentImageUrl);
-                    // --- FIX: Changed slice(4) to slice(6) ---
-                    oldImagePath = url.pathname.split('/').slice(6).join('/'); 
+                    // ---
+                    // --- THIS IS THE FIX ---
+                    // ---
+                    oldImagePath = url.pathname.split('/').slice(8).join('/'); // Changed from 6 to 8
+                    // ---
+                    // --- END OF FIX ---
+                    // ---
                     if (oldImagePath) {
                          console.log("Attempting to delete old image:", oldImagePath);
                          const { error: deleteError } = await supabase.storage.from('project-images').remove([oldImagePath]);

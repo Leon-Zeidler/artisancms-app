@@ -4,27 +4,31 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
+async function checkAdmin(supabase: any) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.id !== process.env.ADMIN_USER_ID) {
+    return null;
+  }
+  return user;
+}
+
 export async function GET() {
   const cookieStore = cookies();
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
-  // 1. Get the currently authenticated user from their cookie
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // 2. Perform the security check ON THE SERVER
-  //    (This uses the NEW private environment variable)
-  if (!user || user.id !== process.env.ADMIN_USER_ID) {
+  const adminUser = await checkAdmin(supabase);
+  if (!adminUser) {
     return NextResponse.json({ error: 'Access Denied' }, { status: 403 });
   }
 
-  // 3. If the check passes, create the all-powerful SERVICE ROLE client
-  //    This client bypasses RLS and is safe to use *only* on the server.
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // 4. Fetch the data using the admin client
+  // Join with profiles table to get user email
   const { data, error } = await supabaseAdmin
     .from('feedback')
     .select(`
@@ -34,6 +38,7 @@ export async function GET() {
     .order('created_at', { ascending: false });
 
   if (error) {
+    console.error("Error fetching admin feedback:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

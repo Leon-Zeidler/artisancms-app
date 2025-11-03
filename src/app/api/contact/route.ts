@@ -71,19 +71,47 @@ export async function POST(request: Request) {
 
   // --- Main Logic ---
   try {
-    // 1. Fetch Recipient Email
-    console.log(`Fetching user email for profileId: ${profileId}`);
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(profileId);
-    if (userError || !userData?.user?.email) { console.error("Error fetching recipient user data:", userError); return NextResponse.json({ error: "Could not identify recipient." }, { status: 500 }); }
+    // 1. Fetch Recipient Email AND Business Name
+    console.log(`Fetching user email and profile for profileId: ${profileId}`);
+
+    // ---
+    // --- THIS IS THE FIX (Part 1) ---
+    // ---
+    // We fetch auth data AND profile data in parallel
+    const [authResponse, profileResponse] = await Promise.all([
+        supabaseAdmin.auth.admin.getUserById(profileId),
+        supabaseAdmin.from('profiles').select('business_name').eq('id', profileId).single()
+    ]);
+
+    const { data: userData, error: userError } = authResponse;
+    const { data: profileData, error: profileError } = profileResponse;
+
+    if (userError) {
+      console.error("Error fetching recipient user data:", userError); 
+      return NextResponse.json({ error: "Could not identify recipient auth." }, { status: 500 }); 
+    }
+    if (profileError) {
+      console.error("Error fetching recipient profile data:", profileError); 
+      return NextResponse.json({ error: "Could not identify recipient profile." }, { status: 500 }); 
+    }
+    if (!userData?.user?.email) {
+      console.error("Recipient email not found for ID:", profileId);
+      return NextResponse.json({ error: "Could not find recipient email." }, { status: 500 });
+    }
+
     const recipientEmail = userData.user.email;
-    const recipientBusinessName = userData.user.user_metadata?.business_name || 'Ihrer Webseite';
-    console.log(`Recipient email found: ${recipientEmail}`);
+    const recipientBusinessName = profileData?.business_name || 'Ihrer Webseite';
+    // ---
+    // --- END OF FIX (Part 1) ---
+    // ---
+    console.log(`Recipient email found: ${recipientEmail}, Business: ${recipientBusinessName}`);
+
 
     // *** 2. Save Submission to DB (with detailed error logging) ***
     const submissionData = {
         profile_id: profileId,
-        sender_name: name,
-        sender_email: senderEmail,
+        sender_name: name, // Use `name` from request body
+        sender_email: senderEmail, // Use `senderEmail` from request body
         message: message,
         is_read: false
     };
@@ -109,13 +137,20 @@ export async function POST(request: Request) {
     // 3. Send Email (Only if DB insert succeeded)
     console.log(`Sending email via Resend from ${fromEmail} to ${recipientEmail}`);
     const emailHtml = ` <p>Sie haben eine neue Kontaktanfrage erhalten:</p> <ul> <li><strong>Name:</strong> ${name}</li> <li><strong>Email:</strong> ${senderEmail}</li> </ul> <p><strong>Nachricht:</strong></p> <p>${message.replace(/\n/g, '<br>')}</p> `;
+    
+    // ---
+    // --- THIS IS THE FIX (Part 2) ---
+    // ---
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: `Kontaktformular <${fromEmail}>`,
       to: [recipientEmail],
       replyTo: senderEmail,
-      subject: `Neue Kontaktanfrage von ${name} über ${recipientBusinessName}`,
+      subject: `Neue Kontaktanfrage von ${name} über ${recipientBusinessName}`, // <-- Business name is now correct
       html: emailHtml,
     });
+    // ---
+    // --- END OF FIX (Part 2) ---
+    // ---
 
     if (emailError) { console.error("Error sending email via Resend:", emailError); return NextResponse.json({ error: "Failed to send message email notification." }, { status: 500 }); }
     console.log("Email sent successfully:", emailData);
@@ -130,4 +165,3 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

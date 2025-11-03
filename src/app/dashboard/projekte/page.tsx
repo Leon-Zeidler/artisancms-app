@@ -9,9 +9,11 @@ import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import EmptyState from '@/components/EmptyState';
+// --- 1. Import the new modal ---
+import RequestTestimonialModal from '@/components/RequestTestimonialModal';
+
 
 // --- TYPE DEFINITIONS ---
-// <-- FIX: Added missing Project type -->
 type Project = {
   id: string;
   title: string | null;
@@ -32,18 +34,28 @@ const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props
 const PencilIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /> </svg> );
 const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /> </svg> );
 const ProjectsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" strokeLinecap="round" strokeLinejoin="round" /> </svg> );
+// --- 2. Add new icon ---
+const ChatBubbleOvalLeftEllipsisIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M18 10.5c0 .902-.32 1.75-.85 2.433m-3.72 4.781a3.75 3.75 0 01-5.105-2.094m0 0a3.73 3.73 0 01-3.296 2.094 3.75 3.75 0 01-3.433-5.133A3.75 3.75 0 016 6.643v-1.897a3.75 3.75 0 117.5 0v1.897a3.75 3.75 0 01-1.148 2.684 3.73 3.73 0 01-3.296-2.094zM18 10.5c-.218 0-.43.02-.639.058m-5.82 5.17A3.75 3.75 0 0115 13.5v-3c0-.902.32-1.75.85-2.433m4.303 8.366a3.75 3.75 0 01-.85 2.433m.02-6.681a3.73 3.73 0 013.296-2.094 3.75 3.75 0 013.433 5.133 3.75 3.75 0 01-6.43 2.684z" /> </svg> );
 
 
 // --- PROJECT LIST ITEM COMPONENT ---
 interface ProjectListItemProps { 
   project: Project; 
   onStatusToggle: (projectId: string, currentStatus: string | null) => void; 
-  onDeleteRequest: (project: Project) => void; 
+  onDeleteRequest: (project: Project) => void;
+  onRequestTestimonial: (project: Project) => void; // <-- 3. Add new prop
   isToggling: boolean; 
   isDeleting: boolean; 
 }
 
-function ProjectListItem({ project, onStatusToggle, onDeleteRequest, isToggling, isDeleting }: ProjectListItemProps) {
+function ProjectListItem({ 
+  project, 
+  onStatusToggle, 
+  onDeleteRequest, 
+  onRequestTestimonial, // <-- 4. Destructure prop
+  isToggling, 
+  isDeleting 
+}: ProjectListItemProps) {
   const displayDate = project['project-date'] ? new Date(project['project-date']).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
   const imageUrl = project.image_url || `https://placehold.co/48x48/334155/94a3b8?text=${encodeURIComponent(project.title?.charAt(0) || 'P')}`;
   const isPublished = project.status === 'Published';
@@ -63,6 +75,17 @@ function ProjectListItem({ project, onStatusToggle, onDeleteRequest, isToggling,
       <div className="flex items-center space-x-3 text-sm flex-shrink-0 ml-4">
          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ isPublished ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400' }`}> {project.status || 'N/A'} </span>
          <span className="text-slate-400 hidden sm:inline">{displayDate}</span>
+         {/* -- 5. Add new button -- */}
+         {isPublished && (
+           <button 
+             onClick={() => onRequestTestimonial(project)} 
+             disabled={isToggling || isDeleting} 
+             title="Kundenstimme anfragen" 
+             className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isToggling || isDeleting ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-indigo-600/20 text-indigo-300 hover:bg-indigo-500/30' }`}> 
+             <span className="sr-only">Kundenstimme anfragen</span>
+             <ChatBubbleOvalLeftEllipsisIcon className="h-4 w-4" /> 
+           </button>
+         )}
          <button onClick={() => onStatusToggle(project.id, project.status)} disabled={isToggling || isDeleting} title={isPublished ? 'Projekt verbergen' : 'Projekt veröffentlichen'} className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isToggling ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : isPublished ? 'bg-yellow-600/20 text-yellow-300 hover:bg-yellow-500/30' : 'bg-green-600/20 text-green-300 hover:bg-green-500/30' }`}> <span className="sr-only">{isPublished ? 'Verbergen' : 'Veröffentlichen'}</span> {isToggling ? <ArrowPathIcon className="h-4 w-4" /> : isPublished ? <EyeSlashIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />} </button>
          <Link href={editUrl} title="Projekt bearbeiten" aria-disabled={isDeleting || isToggling} onClick={(e) => { if (isDeleting || isToggling) e.preventDefault(); }} className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDeleting || isToggling ? 'bg-slate-700 text-slate-500 cursor-not-allowed pointer-events-none' : 'bg-blue-600/20 text-blue-300 hover:bg-blue-500/30' }`}> <span className="sr-only">Bearbeiten</span> <PencilIcon className="h-4 w-4" /> </Link>
          <button onClick={() => onDeleteRequest(project)} disabled={isDeleting || isToggling} title="Projekt löschen" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDeleting ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : isToggling ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-red-600/20 text-red-300 hover:bg-red-500/30' }`}> <span className="sr-only">Löschen</span> {isDeleting ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />} </button>
@@ -82,11 +105,14 @@ export default function ProjektePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  
+  // --- 6. Add state for new modal ---
+  const [requestModalProject, setRequestModalProject] = useState<Project | null>(null);
+  const [isRequestingTestimonial, setIsRequestingTestimonial] = useState(false);
 
   const router = useRouter();
 
   // === Fetch Data Function ===
-  // <-- FIX: Added missing function -->
   const fetchProjects = async (user: User) => { 
     setLoading(true);
     setError(null);
@@ -111,7 +137,6 @@ export default function ProjektePage() {
   };
 
   // === Initial Data Fetch ===
-  // <-- FIX: Added missing useEffect -->
   useEffect(() => {
     const getUserAndFetchData = async () => {
         setLoading(true); 
@@ -132,7 +157,6 @@ export default function ProjektePage() {
   }, [router]);
 
   // === Handle Status Toggle Function ===
-  // <-- FIX: Added missing function -->
   const handleStatusToggle = async (projectId: string, currentStatus: string | null) => {
     setTogglingProjectId(projectId);
     const newStatus = currentStatus === 'Published' ? 'Draft' : 'Published';
@@ -170,7 +194,6 @@ export default function ProjektePage() {
 
 
   // === Handle Delete Request (Opens Modal) ===
-  // <-- FIX: Added missing function -->
   const handleDeleteRequest = (project: Project) => { 
     setError(null); 
     setDeletingProject(project); 
@@ -178,7 +201,6 @@ export default function ProjektePage() {
   };
 
   // === Handle Delete Confirmation (Actual Deletion) ===
-  // <-- FIX: Added missing function -->
   const handleConfirmDelete = async () => {
     if (!deletingProject || !currentUser) return;
 
@@ -189,7 +211,8 @@ export default function ProjektePage() {
     if (deletingProject.image_url) { 
         try { 
             const url = new URL(deletingProject.image_url); 
-            imagePath = url.pathname.split('/').slice(6).join('/'); 
+            // --- This slice(8) is the fix from the previous step ---
+            imagePath = url.pathname.split('/').slice(8).join('/'); 
             if (!imagePath) {
                 console.warn("Could not parse a valid image path from URL:", deletingProject.image_url);
             }
@@ -247,12 +270,63 @@ export default function ProjektePage() {
   };
 
   // === Handle Cancel Delete ===
-  // <-- FIX: Added missing function -->
   const handleCancelDelete = () => { 
     setShowDeleteConfirm(false); 
     setDeletingProject(null); 
     setIsConfirmingDelete(false); 
     setError(null); 
+  };
+  
+  
+  // --- 7. Add handlers for the new modal ---
+  
+  const handleOpenRequestModal = (project: Project) => {
+    setRequestModalProject(project);
+  };
+
+  const handleCloseRequestModal = () => {
+    if (isRequestingTestimonial) return;
+    setRequestModalProject(null);
+  };
+
+  const handleSendTestimonialRequest = async (clientEmail: string) => {
+    if (!requestModalProject) return;
+    
+    setIsRequestingTestimonial(true);
+    
+    const sendPromise = async () => {
+      const response = await fetch('/api/request-testimonial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: requestModalProject.id,
+          clientEmail: clientEmail,
+        }),
+      });
+      
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Fehler beim Senden der Anfrage.');
+      }
+      return result;
+    };
+
+    await toast.promise(
+      sendPromise(),
+      {
+        loading: 'Anfrage wird gesendet...',
+        success: (result) => {
+          setIsRequestingTestimonial(false);
+          setRequestModalProject(null);
+          return 'Anfrage erfolgreich per E-Mail gesendet!';
+        },
+        error: (err: any) => {
+          setIsRequestingTestimonial(false);
+          // Don't close modal on error, so user can see it
+          return `Fehler: ${err.message}`;
+        }
+      }
+    );
   };
 
 
@@ -281,6 +355,7 @@ export default function ProjektePage() {
                 project={project}
                 onStatusToggle={handleStatusToggle}
                 onDeleteRequest={handleDeleteRequest}
+                onRequestTestimonial={handleOpenRequestModal} // <-- 8. Pass handler
                 isToggling={togglingProjectId === project.id && !isConfirmingDelete}
                 isDeleting={deletingProject?.id === project.id && isConfirmingDelete}
               />
@@ -310,7 +385,15 @@ export default function ProjektePage() {
          onCancel={handleCancelDelete}
          isConfirming={isConfirmingDelete}
        />
+       
+       {/* --- 9. Add new modal to JSX --- */}
+       <RequestTestimonialModal
+         isOpen={!!requestModalProject}
+         projectTitle={requestModalProject?.title || ''}
+         onClose={handleCloseRequestModal}
+         onSend={handleSendTestimonialRequest}
+         isSending={isRequestingTestimonial}
+       />
     </main>
   );
 }
-

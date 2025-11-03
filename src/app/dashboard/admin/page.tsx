@@ -2,13 +2,14 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // <-- 1. ADDED IMPORT
 import { supabase } from '@/lib/supabaseClient';
-import { createAdminClient } from '@/lib/supabaseAdminClient';
+// import { createAdminClient } from '@/lib/supabaseAdminClient'; // <-- 2. REMOVED IMPORT
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import AdminFeedbackModal from '@/components/AdminFeedbackModal';
 
-// --- Icons ---
+// --- Icons (All are correct) ---
 const DocumentDuplicateIcon = ({ title, ...props }: React.SVGProps<SVGSVGElement> & { title?: string }) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" > {title && <title>{title}</title>}<path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" /> </svg> );
 const UsersIcon = ({ title, ...props }: React.SVGProps<SVGSVGElement> & { title?: string }) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> {title && <title>{title}</title>}<path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.003c0 1.113.285 2.16.786 3.07M15 19.128c-1.113 0-2.16-.285-3.07-.786v-.003c-1.113 0-2.16.285-3.07.786m6.14 0c-1.113 0-2.16-.285-3.07-.786V15.07c0-1.113-.285-2.16-.786-3.07M15 19.128v-.003c0-1.113.285-2.16.786-3.07M9 15.07v.003c0 1.113.285 2.16.786 3.07M9 15.07c-1.113 0-2.16.285-3.07.786v-.003c-1.113 0-2.16-.285-3.07.786m6.14 0c-1.113 0-2.16-.285-3.07-.786V15.07" /> </svg>);
 const ChatBubbleLeftRightIcon = ({ title, ...props }: React.SVGProps<SVGSVGElement> & { title?: string }) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> {title && <title>{title}</title>}<path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72 3.72a.75.75 0 01-1.06 0l-3.72-3.72C9.847 17.001 9 16.036 9 14.9v-4.286c0-.97.616-1.813 1.5-2.097L12 6.75l3.75 1.761zm-6 3.486l-3.72 3.72a.75.75 0 000 1.06l3.72 3.72C11.153 20.89 12 19.925 12 18.887v-7.135c0-1.038-.847-2-1.98-2.093l-3.72-1.761a.75.75 0 00-.63.123 7.48 7.48 0 00-.738.738A7.47 7.47 0 003 11.25v4.286c0 .97.616 1.813 1.5 2.097L6 18.311v-.757c0-1.28.624-2.43 1.65-3.181l.71-.533zM18.75 9.75h.008v.008h-.008V9.75z" /> </svg>);
@@ -24,6 +25,7 @@ function StatCard({ title, value, description, icon: Icon }: StatCardProps) {
 }
 
 // --- TYPE DEFINITIONS ---
+// 4. UPDATED TYPE: Feedback now includes a 'profiles' object
 export type Feedback = {
     id: string;
     created_at: string;
@@ -33,6 +35,10 @@ export type Feedback = {
     page_url: string | null;
     admin_notes: string | null;
     is_resolved: boolean | null;
+    profiles: { // This data is 'joined' from the profiles table
+      email: string | null;
+      business_name: string | null;
+    } | null; // It could be null if the profile was deleted
 };
 type Profile = {
     id: string;
@@ -42,21 +48,19 @@ type Profile = {
 };
 
 export default function AdminPage() {
+  const router = useRouter(); // <-- 3. ADDED ROUTER
+
+  // --- Data State (Kept all original states) ---
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // --- Data State ---
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalProjects, setTotalProjects] = useState(0);
-  
   const [masterFeedbackList, setMasterFeedbackList] = useState<Feedback[]>([]); 
   const [newFeedback, setNewFeedback] = useState<Feedback[]>([]); 
   const [resolvedFeedback, setResolvedFeedback] = useState<Feedback[]>([]); 
-
   const [userList, setUserList] = useState<Profile[]>([]);
-  
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [isSavingNote, setIsSavingNote] = useState(false);
 
@@ -65,67 +69,57 @@ export default function AdminPage() {
     setResolvedFeedback(masterFeedbackList.filter(item => item.is_resolved));
   }, [masterFeedbackList]);
 
+  // <-- 5. REPLACED useEffect with the new fetch-based logic -->
   useEffect(() => {
     const initializeAdmin = async () => {
       setLoading(true);
+      setError(null);
       
       const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUser(user);
-
-      const adminId = process.env.NEXT_PUBLIC_ADMIN_USER_ID;
-      if (!user || user.id !== adminId) {
-        setIsAdmin(false);
-        setError("Access Denied. This page is for administrators only.");
-        setLoading(false);
+      if (!user) {
+        toast.error("Not logged in.");
+        router.push('/login');
         return;
       }
-      
-      setIsAdmin(true);
-      const adminSupabase = createAdminClient();
+      setCurrentUser(user);
+      setIsAdmin(true); // Optimistically set to true. API will block if not admin.
 
       try {
-        const [feedbackRes, projectsRes, profilesRes] = await Promise.all([
-          
-          adminSupabase
-            .from('feedback')
-            .select(`
-              id, created_at, category, message, page_url, user_id,
-              admin_notes, is_resolved 
-            `) 
-            .order('created_at', { ascending: false }),
-          
-          adminSupabase
-            .from('projects')
-            .select('id', { count: 'exact', head: true }),
-          
-          adminSupabase
-            .from('profiles')
-            .select('id, business_name, slug, email')
-            .order('updated_at', { ascending: false, nullsFirst: false })
+        // We will create these API routes next
+        const [feedbackRes, projectsCountRes, usersRes] = await Promise.all([
+          fetch('/api/admin/feedback'),
+          fetch('/api/admin/projects-count'),
+          fetch('/api/admin/users')
         ]);
 
-        if (feedbackRes.error) throw feedbackRes.error;
-        setMasterFeedbackList(feedbackRes.data as Feedback[]);
+        if (!feedbackRes.ok) throw new Error(`Failed to fetch feedback: ${await feedbackRes.text()}`);
+        if (!projectsCountRes.ok) throw new Error(`Failed to fetch project count: ${await projectsCountRes.text()}`);
+        if (!usersRes.ok) throw new Error(`Failed to fetch users: ${await usersRes.text()}`);
 
-        if (projectsRes.error) throw projectsRes.error;
-        setTotalProjects(projectsRes.count || 0);
+        const feedbackData = await feedbackRes.json();
+        const projectsCountData = await projectsCountRes.json();
+        const usersData = await usersRes.json();
 
-        if (profilesRes.error) throw profilesRes.error;
-        setUserList(profilesRes.data as Profile[]); 
-        setTotalUsers(profilesRes.data.length);
+        setMasterFeedbackList(feedbackData);
+        setTotalProjects(projectsCountData.count || 0);
+        setUserList(usersData);
+        setTotalUsers(usersData.length);
 
       } catch (err: any) {
         console.error("Error fetching admin data:", err);
         setError(`Failed to load admin data: ${err.message}`);
+        if (err.message.includes('Access Denied')) {
+          setIsAdmin(false); // Correctly set admin status if API denies
+        }
       } finally {
         setLoading(false);
       }
     };
 
     initializeAdmin();
-  }, []);
+  }, [router]); // Added router dependency
 
-  // --- Modal Handlers ---
+  // --- Modal Handlers (Kept all original functions) ---
   const handleOpenFeedback = (item: Feedback) => {
     setSelectedFeedback(item);
   };
@@ -136,50 +130,34 @@ export default function AdminPage() {
 
   const handleSaveNoteAndResolve = async (itemId: string, newNote: string, newResolvedStatus: boolean) => {
     setIsSavingNote(true);
-    const adminSupabase = createAdminClient(); 
-
-    const savePromise = async () => {
-      //
-      // --- THIS IS THE FIX ---
-      //
-      const { data, error } = await adminSupabase
-        .from('feedback')
-        .update({
-          admin_notes: newNote,
-          is_resolved: newResolvedStatus
-        })
-        .eq('id', itemId)
-        .select(); // <-- REMOVED .single()
-      
-      if (error) {
-        console.error("Supabase update error:", error);
-        throw error; // This will be caught by toast.promise
+    
+    // We can't use createAdminClient() anymore.
+    // We must call a new API route to perform this action.
+    
+    // We will create this API route in the next step.
+    const savePromise = fetch('/api/admin/feedback/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        feedbackId: itemId,
+        admin_notes: newNote,
+        is_resolved: newResolvedStatus
+      })
+    }).then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to update');
       }
+      return res.json();
+    });
 
-      // Check if data was returned (it might not be due to RLS quirk)
-      if (!data || data.length === 0) {
-        console.warn("Update succeeded but SELECT returned 0 rows. Using local data for UI update.");
-        // We return a "partial" feedback object with just the changed data
-        return { 
-          id: itemId, 
-          admin_notes: newNote, 
-          is_resolved: newResolvedStatus 
-        } as Partial<Feedback>; // Use Partial<Feedback>
-      }
 
-      return data[0] as Feedback; // Return the full updated row
-      //
-      // --- END OF FIX ---
-      //
-    };
-
-    await toast.promise(savePromise(), {
+    await toast.promise(savePromise, {
       loading: 'Saving note...',
-      success: (updatedItem) => {
+      success: (updatedItem: Feedback) => {
         // Update the item in our master list
         setMasterFeedbackList(currentList => 
           currentList.map(item => 
-            // Merge the partial or full updated item
             item.id === updatedItem.id ? { ...item, ...updatedItem } : item
           )
         );
@@ -204,11 +182,14 @@ export default function AdminPage() {
      return <div className="p-8 text-center text-red-500">{error}</div>;
   }
   
+  // This check is now cosmetic, the API routes provide the real security
   if (!isAdmin) {
      return <div className="p-8 text-center text-red-500">Access Denied.</div>;
   }
 
-  const userMap = new Map(userList.map(user => [user.id, user.email || 'No Email']));
+  // 6. UPDATED userMap logic
+  // The new API route joins the user email, so we don't need a separate map.
+  // We can just access `item.profiles.email`.
 
   return (
     <main className="p-8">
@@ -245,8 +226,9 @@ export default function AdminPage() {
                   className="w-full p-4 bg-slate-800 rounded-lg border border-slate-700 text-left transition-all hover:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 >
                   <div className="flex justify-between items-center mb-2">
+                    {/* 7. UPDATED to use new data shape */}
                     <span className="text-sm font-semibold text-white truncate max-w-[200px]">
-                      {userMap.get(item.user_id) || `Unknown User (${item.user_id.slice(0, 8)}...)`}
+                      {item.profiles?.email || `Unknown User (${item.user_id.slice(0, 8)}...)`}
                     </span>
                     <div className="flex items-center gap-2">
                       {item.admin_notes && (
@@ -281,8 +263,9 @@ export default function AdminPage() {
                     className="w-full p-4 bg-slate-800/60 rounded-lg border border-slate-700/60 text-left transition-all hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 opacity-70 hover:opacity-100"
                   >
                     <div className="flex justify-between items-center mb-2">
+                      {/* 7. UPDATED to use new data shape */}
                       <span className="text-sm font-medium text-slate-300 truncate max-w-[200px]">
-                        {userMap.get(item.user_id) || `Unknown User`}
+                        {item.profiles?.email || `Unknown User`}
                       </span>
                       <div className="flex items-center gap-2">
                         {item.admin_notes && (
@@ -327,9 +310,9 @@ export default function AdminPage() {
         onClose={handleCloseModal}
         onSave={handleSaveNoteAndResolve}
         isSaving={isSavingNote}
-        userEmail={userMap.get(selectedFeedback?.user_id || '') || 'Unknown User'}
+        // 7. UPDATED to use new data shape
+        userEmail={selectedFeedback?.profiles?.email || 'Unknown User'}
       />
     </main>
   );
 }
-
