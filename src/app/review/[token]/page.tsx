@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
 // --- Icons ---
@@ -29,7 +29,6 @@ export default function ReviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const params = useParams();
-  const router = useRouter();
   const token = Array.isArray(params.token) ? params.token[0] : params.token;
 
   // 1. Verify the token on page load
@@ -116,8 +115,7 @@ export default function ReviewPage() {
       <p className="text-gray-600 mb-6">{message}</p>
       <p className="text-sm text-gray-500">
         Dieser Bewertungslink ist möglicherweise abgelaufen oder wurde bereits verwendet.
-      </p>{' '}
-      {/* <-- FIX: Corrected </S-p> to </p> --> */}
+      </p>
     </div>
   );
 

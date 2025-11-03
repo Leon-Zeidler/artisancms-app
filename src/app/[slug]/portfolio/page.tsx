@@ -24,15 +24,21 @@ type Profile = {
     slug: string | null;
     logo_url: string | null;        // <-- New
     primary_color: string | null;   // <-- New
+    secondary_color: string | null; // <-- Added secondary color
 };
 
 // --- Constants (Defaults if not set in DB) ---
 const DEFAULT_PRIMARY = '#ea580c'; // orange-600
+const DEFAULT_SECONDARY = '#ffffff'; // white
 
 // --- Helper function to darken color ---
 const darkenColor = (hex: string, amount: number = 20): string => {
+    if (!hex) return DEFAULT_PRIMARY;
     try {
       let color = hex.startsWith('#') ? hex.slice(1) : hex;
+      if (color.length === 3) {
+        color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
+      }
       let r = parseInt(color.substring(0, 2), 16);
       let g = parseInt(color.substring(2, 4), 16);
       let b = parseInt(color.substring(4, 6), 16);
@@ -41,7 +47,7 @@ const darkenColor = (hex: string, amount: number = 20): string => {
       b = Math.max(0, b - amount);
       return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     } catch (e) {
-      return hex;
+      return DEFAULT_PRIMARY; // Return default on error
     }
 };
 
@@ -49,9 +55,8 @@ const darkenColor = (hex: string, amount: number = 20): string => {
 interface PortfolioCardProps {
   project: Project;
   slug: string | null;
-  primaryColor: string; // Pass color for hover
 }
-function PortfolioCard({ project, slug, primaryColor }: PortfolioCardProps) {
+function PortfolioCard({ project, slug }: PortfolioCardProps) {
   const imageUrl = project.image_url || `https://placehold.co/600x400/A3A3A3/FFF?text=${encodeURIComponent(project.title || 'Project')}`;
   const projectUrl = slug ? `/${slug}/portfolio/${project.id}` : `/portfolio/${project.id}`;
 
@@ -70,9 +75,7 @@ function PortfolioCard({ project, slug, primaryColor }: PortfolioCardProps) {
         <div className="max-w-xl mt-4">
             <div className="relative">
             <h3 
-              className="text-lg font-semibold leading-6 text-gray-900 group-hover:text-orange-600 transition-colors"
-              onMouseOver={(e) => e.currentTarget.style.color = primaryColor}
-              onMouseOut={(e) => e.currentTarget.style.color = ''}
+              className="text-lg font-semibold leading-6 text-gray-900 group-hover:text-brand transition-colors"
             >
                 {project.title || 'Untitled Project'}
             </h3>
@@ -109,7 +112,8 @@ export default function ClientPortfolioPage() {
         // --- 1. Fetch Profile by Slug ---
         const { data: profileResult, error: profileError } = await supabase
           .from('profiles')
-          .select('id, business_name, slug, logo_url, primary_color') // <-- FETCH COLORS/LOGO
+          // --- FIX: Added secondary_color ---
+          .select('id, business_name, slug, logo_url, primary_color, secondary_color') 
           .eq('slug', slug)
           .maybeSingle();
 
@@ -118,6 +122,7 @@ export default function ClientPortfolioPage() {
 
         profileData = profileResult as Profile;
         profileData.primary_color = profileData.primary_color || DEFAULT_PRIMARY;
+        profileData.secondary_color = profileData.secondary_color || DEFAULT_SECONDARY; // <-- Add default
         setProfile(profileData);
 
         // --- 2. Fetch Published Projects for THIS Profile ID ---
@@ -156,15 +161,23 @@ export default function ClientPortfolioPage() {
 
   const primaryColor = profile.primary_color || DEFAULT_PRIMARY;
   const primaryColorDark = darkenColor(primaryColor);
+  const secondaryColor = profile.secondary_color || DEFAULT_SECONDARY;
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col">
+    // --- FIX: Inject CSS Variables ---
+    <div 
+      className="min-h-screen bg-white text-gray-900 flex flex-col"
+      style={{
+        '--color-brand-primary': primaryColor,
+        '--color-brand-primary-dark': primaryColorDark,
+        '--color-brand-secondary': secondaryColor,
+      } as React.CSSProperties}
+    >
+      {/* --- FIX: Remove color props --- */}
        <Navbar 
          businessName={profile?.business_name} 
          slug={profile?.slug}
          logoUrl={profile.logo_url}
-         primaryColor={primaryColor}
-         primaryColorDark={primaryColorDark}
        />
 
         <main className="py-24 sm:py-32 flex-grow">
@@ -186,7 +199,6 @@ export default function ClientPortfolioPage() {
                                   key={project.id} 
                                   project={project} 
                                   slug={profile?.slug}
-                                  primaryColor={primaryColor}
                                 />
                             ))
                         ) : (
@@ -199,10 +211,7 @@ export default function ClientPortfolioPage() {
                  <div className="mt-16 text-center">
                     <Link 
                       href={`/${profile.slug}`} 
-                      className="text-sm font-semibold leading-6 text-orange-600 hover:text-orange-500"
-                      style={{ color: primaryColor }}
-                      onMouseOver={(e) => e.currentTarget.style.color = primaryColorDark}
-                      onMouseOut={(e) => e.currentTarget.style.color = primaryColor}
+                      className="text-sm font-semibold leading-6 text-brand hover:text-brand-dark transition-colors"
                     >
                         <span aria-hidden="true">←</span> Zurück zur Startseite
                     </Link>
@@ -210,10 +219,10 @@ export default function ClientPortfolioPage() {
             </div>
         </main>
 
+       {/* --- FIX: Remove color props --- */}
        <Footer 
          businessName={profile?.business_name} 
          slug={profile?.slug}
-         primaryColor={primaryColor}
        />
     </div>
   );

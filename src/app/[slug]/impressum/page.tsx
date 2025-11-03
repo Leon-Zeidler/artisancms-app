@@ -15,15 +15,21 @@ type Profile = {
     impressum_text: string | null; 
     logo_url: string | null;
     primary_color: string | null;
+    secondary_color: string | null; // <-- Added secondary color
 };
 
 // --- Constants (Defaults if not set in DB) ---
 const DEFAULT_PRIMARY = '#ea580c'; // orange-600
+const DEFAULT_SECONDARY = '#ffffff'; // white
 
 // --- Helper function to darken color ---
 const darkenColor = (hex: string, amount: number = 20): string => {
+    if (!hex) return DEFAULT_PRIMARY;
     try {
       let color = hex.startsWith('#') ? hex.slice(1) : hex;
+      if (color.length === 3) {
+        color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
+      }
       let r = parseInt(color.substring(0, 2), 16);
       let g = parseInt(color.substring(2, 4), 16);
       let b = parseInt(color.substring(4, 6), 16);
@@ -32,7 +38,7 @@ const darkenColor = (hex: string, amount: number = 20): string => {
       b = Math.max(0, b - amount);
       return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     } catch (e) {
-      return hex;
+      return DEFAULT_PRIMARY; // Return default on error
     }
 };
 
@@ -57,7 +63,8 @@ export default function ImpressumPage() {
       try {
         const { data, error: fetchError } = await supabase
           .from('profiles')
-          .select('id, business_name, slug, impressum_text, logo_url, primary_color') // Select the impressum text
+           // --- FIX: Added secondary_color ---
+          .select('id, business_name, slug, impressum_text, logo_url, primary_color, secondary_color') // Select the impressum text
           .eq('slug', slug)
           .maybeSingle();
 
@@ -67,16 +74,14 @@ export default function ImpressumPage() {
          } else if (!data) {
              return notFound(); // Show 404 if slug is invalid
          } else {
-            // *** FIX IS HERE ***
-            // This code now only runs if 'data' is not null
             data.primary_color = data.primary_color || DEFAULT_PRIMARY;
+            data.secondary_color = data.secondary_color || DEFAULT_SECONDARY; // <-- Add default
             setProfile(data as Profile);
          }
       } catch (err: any) {
         console.error("Unexpected error fetching profile:", err);
         setError(err.message || "An unknown error occurred.");
       } finally {
-        // This will run regardless of success or error
         setLoading(false);
       }
     };
@@ -90,15 +95,23 @@ export default function ImpressumPage() {
 
   const primaryColor = profile.primary_color || DEFAULT_PRIMARY;
   const primaryColorDark = darkenColor(primaryColor);
+  const secondaryColor = profile.secondary_color || DEFAULT_SECONDARY;
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-gray-900">
+    // --- FIX: Inject CSS Variables ---
+    <div 
+      className="flex min-h-screen flex-col bg-white text-gray-900"
+      style={{
+        '--color-brand-primary': primaryColor,
+        '--color-brand-primary-dark': primaryColorDark,
+        '--color-brand-secondary': secondaryColor,
+      } as React.CSSProperties}
+    >
+      {/* --- FIX: Remove color props --- */}
       <Navbar 
         businessName={profile.business_name} 
         slug={profile.slug}
         logoUrl={profile.logo_url}
-        primaryColor={primaryColor}
-        primaryColorDark={primaryColorDark}
       />
 
       {/* Main Content Area for Legal Text */}
@@ -122,10 +135,10 @@ export default function ImpressumPage() {
         </div>
       </main>
 
+      {/* --- FIX: Remove color props --- */}
       <Footer 
         businessName={profile.business_name} 
         slug={profile.slug}
-        primaryColor={primaryColor}
       />
     </div>
   );

@@ -24,15 +24,21 @@ type Profile = {
     slug: string | null;
     logo_url: string | null;
     primary_color: string | null;
+    secondary_color: string | null; // <-- Added secondary color
 };
 
 // --- Constants (Defaults if not set in DB) ---
 const DEFAULT_PRIMARY = '#ea580c'; // orange-600
+const DEFAULT_SECONDARY = '#ffffff'; // white
 
 // --- Helper function to darken color ---
 const darkenColor = (hex: string, amount: number = 20): string => {
+    if (!hex) return DEFAULT_PRIMARY;
     try {
       let color = hex.startsWith('#') ? hex.slice(1) : hex;
+      if (color.length === 3) {
+        color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
+      }
       let r = parseInt(color.substring(0, 2), 16);
       let g = parseInt(color.substring(2, 4), 16);
       let b = parseInt(color.substring(4, 6), 16);
@@ -41,7 +47,7 @@ const darkenColor = (hex: string, amount: number = 20): string => {
       b = Math.max(0, b - amount);
       return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     } catch (e) {
-      return hex;
+      return DEFAULT_PRIMARY; // Return default on error
     }
 };
 
@@ -71,7 +77,8 @@ export default function ClientProjectDetailPage() {
         // --- 1. Fetch Profile by Slug ---
         const { data: profileResult, error: profileError } = await supabase
           .from('profiles')
-          .select('id, business_name, slug, logo_url, primary_color') // <-- FETCH COLORS/LOGO
+          // --- FIX: Added secondary_color ---
+          .select('id, business_name, slug, logo_url, primary_color, secondary_color') 
           .eq('slug', slug)
           .maybeSingle();
 
@@ -80,6 +87,7 @@ export default function ClientProjectDetailPage() {
 
         profileData = profileResult as Profile;
         profileData.primary_color = profileData.primary_color || DEFAULT_PRIMARY;
+        profileData.secondary_color = profileData.secondary_color || DEFAULT_SECONDARY; // <-- Add default
         setProfile(profileData);
 
         // --- 2. Fetch Project Details by ID AND Profile ID ---
@@ -124,15 +132,23 @@ export default function ClientProjectDetailPage() {
 
   const primaryColor = profile.primary_color || DEFAULT_PRIMARY;
   const primaryColorDark = darkenColor(primaryColor);
+  const secondaryColor = profile.secondary_color || DEFAULT_SECONDARY;
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col">
+    // --- FIX: Inject CSS Variables ---
+    <div 
+      className="min-h-screen bg-white text-gray-900 flex flex-col"
+      style={{
+        '--color-brand-primary': primaryColor,
+        '--color-brand-primary-dark': primaryColorDark,
+        '--color-brand-secondary': secondaryColor,
+      } as React.CSSProperties}
+    >
+      {/* --- FIX: Remove color props --- */}
       <Navbar 
         businessName={profile?.business_name} 
         slug={profile?.slug}
         logoUrl={profile.logo_url}
-        primaryColor={primaryColor}
-        primaryColorDark={primaryColorDark}
       />
 
         <main className="flex-grow py-16 sm:py-24">
@@ -142,10 +158,7 @@ export default function ClientProjectDetailPage() {
                         <div className="mb-8">
                             <Link 
                               href={`/${profile?.slug}/portfolio`} 
-                              className="text-sm font-semibold leading-6 text-orange-600 hover:text-orange-500"
-                              style={{ color: primaryColor }}
-                              onMouseOver={(e) => e.currentTarget.style.color = primaryColorDark}
-                              onMouseOut={(e) => e.currentTarget.style.color = primaryColor}
+                              className="text-sm font-semibold leading-6 text-brand hover:text-brand-dark transition-colors"
                             >
                                 <span aria-hidden="true">←</span> Alle Projekte
                             </Link>
@@ -182,10 +195,7 @@ export default function ClientProjectDetailPage() {
                              <div className="mt-6">
                                 <Link
                                     href={`/${profile?.slug}/#kontakt`}
-                                    className="rounded-md px-5 py-3 text-base font-semibold text-white shadow-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                                    style={{ backgroundColor: primaryColor, outlineColor: primaryColor }}
-                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = primaryColorDark}
-                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = primaryColor}
+                                    className="rounded-md bg-brand px-5 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                                 >
                                     Angebot anfordern
                                 </Link>
@@ -195,10 +205,10 @@ export default function ClientProjectDetailPage() {
             </div>
         </main>
 
+       {/* --- FIX: Remove color props --- */}
        <Footer 
          businessName={profile?.business_name} 
          slug={profile?.slug}
-         primaryColor={primaryColor}
        />
     </div>
   );
