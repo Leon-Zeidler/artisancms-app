@@ -1,3 +1,4 @@
+// src/app/api/generate-profile-text/route.ts
 import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
@@ -22,7 +23,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { context, type } = requestData;
+  // <-- 1. EXTRACT 'keywords' FROM REQUEST BODY -->
+  const { context, type, keywords } = requestData;
 
   if (!context || !type) {
     return NextResponse.json({ error: "Context (e.g., business name) and type ('services' or 'about') are required" }, { status: 400 });
@@ -34,20 +36,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Server configuration error (API key missing)" }, { status: 500 });
   }
 
-  // --- Construct the Prompt based on type ---
+  // --- 2. Construct the Prompt based on type AND keywords ---
   let prompt = '';
   let maxTokens = 150; // Default
 
   if (type === 'services') {
     prompt = `Schreibe eine kurze, professionelle Zusammenfassung der typischen Leistungen (max 3-4 Sätze oder Stichpunkte) für einen deutschen Handwerksbetrieb mit dem Namen "${context}". Nutze relevante Keywords.`;
+    // --- ADD KEYWORDS IF THEY EXIST ---
+    if (keywords && keywords.trim() !== '') {
+      prompt += ` Berücksichtige dabei besonders die folgenden Schlagworte: "${keywords}".`;
+    }
     maxTokens = 100;
   } else if (type === 'about') {
     prompt = `Schreibe einen kurzen, ansprechenden "Über uns"-Text (ca. 3-5 Sätze) für die Webseite eines deutschen Handwerksbetriebs namens "${context}". Betone Erfahrung, Qualität oder regionale Verbundenheit.`;
+    // --- ADD KEYWORDS IF THEY EXIST ---
+    if (keywords && keywords.trim() !== '') {
+      prompt += ` Gehe dabei auf folgende Spezialisierungen ein: "${keywords}".`;
+    }
     maxTokens = 150;
   } else {
     return NextResponse.json({ error: "Invalid generation type specified" }, { status: 400 });
   }
   console.log("Constructed Prompt:", prompt);
+  // --- END OF PROMPT UPDATE ---
 
   // --- Call OpenAI API ---
   const apiUrl = 'https://api.openai.com/v1/chat/completions';

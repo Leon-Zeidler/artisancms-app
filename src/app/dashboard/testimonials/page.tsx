@@ -8,9 +8,9 @@ import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import EmptyState from '@/components/EmptyState';
+import PlusIcon from '@/components/icons/PlusIcon';
 
 // --- Icons ---
-const PlusIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /> </svg> );
 const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> );
 const EyeSlashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /> </svg> );
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
@@ -21,7 +21,6 @@ const ChatBubbleLeftRightIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg
 
 
 // --- TYPE DEFINITIONS ---
-// <-- FIX: Added missing type definitions -->
 type Testimonial = {
     id: string;
     created_at: string;
@@ -31,38 +30,27 @@ type Testimonial = {
     body: string;
     is_published: boolean;
 };
-
 type TestimonialFormData = Omit<Testimonial, 'id' | 'created_at' | 'user_id'>;
-
-type ModalState = {
-    isOpen: boolean;
-    mode: 'add' | 'edit';
-    data: Testimonial | null;
-};
+type ModalState = { isOpen: boolean; mode: 'add' | 'edit'; data: Testimonial | null; };
+type TabState = 'pending' | 'published'; // <-- ADDED TAB STATE TYPE
 
 // --- ADD/EDIT MODAL ---
-// <-- FIX: Added missing TestimonialModal component -->
 interface TestimonialModalProps {
     modalState: ModalState;
     onClose: () => void;
     onSave: (data: TestimonialFormData, id?: string) => Promise<void>;
     isSaving: boolean;
 }
-
 function TestimonialModal({ modalState, onClose, onSave, isSaving }: TestimonialModalProps) {
     if (!modalState.isOpen) return null;
-
     const [formData, setFormData] = useState<TestimonialFormData>(
         modalState.mode === 'edit' && modalState.data
         ? { author_name: modalState.data.author_name, author_handle: modalState.data.author_handle ?? '', body: modalState.data.body, is_published: modalState.data.is_published }
         : { author_name: '', author_handle: '', body: '', is_published: false }
     );
     const [localError, setLocalError] = useState<string | null>(null);
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { const { name, value, type } = e.target; setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value })); setLocalError(null); };
-
     const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); setLocalError(null); if (!formData.author_name.trim() || !formData.body.trim()) { setLocalError("Name des Autors und Text dürfen nicht leer sein."); return; } await onSave(formData, modalState.data?.id); };
-
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog">
             <div className="bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-lg border border-slate-700 relative">
@@ -91,9 +79,10 @@ export default function TestimonialsManagementPage() {
     const [modalState, setModalState] = useState<ModalState>({ isOpen: false, mode: 'add', data: null });
     const [deleteConfirmState, setDeleteConfirmState] = useState<{ isOpen: boolean; testimonial: Testimonial | null }>({ isOpen: false, testimonial: null });
     const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+    
+    const [currentTab, setCurrentTab] = useState<TabState>('pending'); // <-- ADDED TAB STATE
+    
     const router = useRouter();
-
-    // <-- FIX: Added all missing functions -->
     
     // Fetch Testimonials
     const fetchTestimonials = useCallback(async (user: User) => {
@@ -101,7 +90,13 @@ export default function TestimonialsManagementPage() {
         console.log("Fetching testimonials for user:", user.id);
         const { data, error: fetchError } = await supabase.from('testimonials').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
         if (fetchError) { console.error('Error fetching testimonials:', fetchError); setError(`Kundenstimmen konnten nicht geladen werden: ${fetchError.message}`); setTestimonials([]); }
-        else { console.log("Fetched testimonials:", data); setTestimonials(data || []); }
+        else { 
+            console.log("Fetched testimonials:", data); 
+            setTestimonials(data || []);
+            // --- NEW: Set default tab based on data ---
+            const hasPending = (data || []).some(t => !t.is_published);
+            setCurrentTab(hasPending ? 'pending' : 'published');
+        }
         setLoading(false);
     }, []);
 
@@ -152,7 +147,17 @@ export default function TestimonialsManagementPage() {
         const { error: updateError } = await supabase.from('testimonials').update({ is_published: newStatus }).eq('id', testimonial.id).eq('user_id', currentUser.id);
         setLoadingState(testimonial.id, null);
         if (updateError) toast.error(`Status konnte nicht geändert werden: ${updateError.message}`);
-        else { toast.success("Status erfolgreich geändert!"); setTestimonials(prev => prev.map(t => t.id === testimonial.id ? { ...t, is_published: newStatus } : t)); }
+        else { 
+            toast.success("Status erfolgreich geändert!"); 
+            // Update local state to move item between tabs
+            const updatedTestimonials = testimonials.map(t => t.id === testimonial.id ? { ...t, is_published: newStatus } : t);
+            setTestimonials(updatedTestimonials);
+            
+            // If the last pending item was published, switch tabs
+            if (currentTab === 'pending' && !updatedTestimonials.some(t => !t.is_published)) {
+                setCurrentTab('published');
+            }
+        }
     };
 
     // Delete Handlers
@@ -182,6 +187,10 @@ export default function TestimonialsManagementPage() {
     };
     const handleCancelDelete = () => { setDeleteConfirmState({ isOpen: false, testimonial: null }); };
 
+    // --- NEW: Filtered lists for tabs ---
+    const pendingTestimonials = testimonials.filter(t => !t.is_published);
+    const publishedTestimonials = testimonials.filter(t => t.is_published);
+    const testimonialsToShow = currentTab === 'pending' ? pendingTestimonials : publishedTestimonials;
 
     // === Render Logic ===
     return (
@@ -192,6 +201,40 @@ export default function TestimonialsManagementPage() {
                 <button onClick={openAddModal} className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"> <PlusIcon className="h-5 w-5" /> Neue Kundenstimme </button>
             </div>
 
+            {/* --- NEW: Tab Navigation --- */}
+            <div className="mb-6">
+              <div className="border-b border-slate-700">
+                <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+                  <button
+                    onClick={() => setCurrentTab('pending')}
+                    className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
+                      currentTab === 'pending'
+                        ? 'border-orange-500 text-orange-400'
+                        : 'border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-200'
+                    }`}
+                  >
+                    Ausstehende Freigabe
+                    {pendingTestimonials.length > 0 && (
+                      <span className="ml-1 rounded-full bg-orange-500/20 px-2.5 py-0.5 text-xs font-medium text-orange-400">
+                        {pendingTestimonials.length}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setCurrentTab('published')}
+                    className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
+                      currentTab === 'published'
+                        ? 'border-orange-500 text-orange-400'
+                        : 'border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-200'
+                    }`}
+                  >
+                    Veröffentlicht ({publishedTestimonials.length})
+                  </button>
+                </nav>
+              </div>
+            </div>
+            {/* --- END: Tab Navigation --- */}
+
             {/* Loading */}
             {loading && (<p className="text-slate-400 mt-6 text-center">Lade Kundenstimmen...</p>)}
             {/* General Error */}
@@ -200,8 +243,9 @@ export default function TestimonialsManagementPage() {
             {/* List */}
             {!loading && (
                 <div className="space-y-4">
-                    {testimonials.length > 0 ? (
-                        testimonials.map((t) => {
+                    {/* --- UPDATE: Use testimonialsToShow --- */}
+                    {testimonialsToShow.length > 0 ? (
+                        testimonialsToShow.map((t) => {
                              const isLoading = actionLoading[t.id];
                              const isDisabled = !!isLoading || actionLoading.modal === 'save' || (deleteConfirmState.testimonial?.id === t.id && isConfirmingDelete);
                             return (
@@ -225,9 +269,9 @@ export default function TestimonialsManagementPage() {
                         !error && (
                           <EmptyState
                             icon={ChatBubbleLeftRightIcon}
-                            title="Sie haben noch keine Kundenstimmen"
-                            message="Fügen Sie manuell eine Referenz hinzu, um Vertrauen bei neuen Besuchern aufzubauen."
-                            buttonText="Erste Kundenstimme hinzufügen"
+                            title={currentTab === 'pending' ? "Keine ausstehenden Kundenstimmen" : "Keine veröffentlichten Kundenstimmen"}
+                            message={currentTab === 'pending' ? "Sobald ein Kunde eine Bewertung abgibt, erscheint sie hier zur Freigabe." : "Fügen Sie manuell eine Referenz hinzu oder veröffentlichen Sie eine ausstehende."}
+                            buttonText="Kundenstimme hinzufügen"
                             onButtonClick={openAddModal}
                           />
                         )
@@ -241,4 +285,3 @@ export default function TestimonialsManagementPage() {
         </main>
     );
 }
-

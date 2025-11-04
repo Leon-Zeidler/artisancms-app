@@ -22,10 +22,10 @@ type Profile = {
     slug: string | null;
     onboarding_complete?: boolean | null;
     has_seen_welcome_modal?: boolean | null;
+    role?: string | null; // <-- ADD 'role' TO TYPE
 };
 
 // --- ICON COMPONENTS ---
-// <-- FIX: All icon definitions were missing
 const DashboardIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6A2.25 2.25 0 0115.75 3.75h2.25A2.25 2.25 0 0120.25 6v2.25a2.25 2.25 0 01-2.25 2.25h-2.25A2.25 2.25 0 0113.5 8.25V6zM13.5 15.75A2.25 2.25 0 0115.75 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25h-2.25a2.25 2.25 0 01-2.25-2.25v-2.25z" strokeLinecap="round" strokeLinejoin="round" /> </svg> );
 const ProjectsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" strokeLinecap="round" strokeLinejoin="round" /> </svg> );
 const SettingsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M9.594 3.94c.09-.542.56-1.007 1.11-1.226.554-.22 1.156-.22 1.71 0 .554.219 1.02.684 1.11 1.226l.082.499a11.954 11.954 0 013.414 1.516.44.44 0 01.44.64l-.082.15c-.42.784-.962 1.512-1.542 2.142a.44.44 0 01-.652.066 11.954 11.954 0 01-4.228 0 .44.44 0 01-.652-.066c-.58-.63-.1.122-1.358-1.542-2.142a.44.44 0 01.44-.64c1.236-.612 2.456-1.21 3.414-1.516l.082-.499z" strokeLinecap="round" strokeLinejoin="round" /> <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" /> </svg> );
@@ -40,7 +40,7 @@ const LockClosedIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 // --- SIDEBAR COMPONENTS ---
-function SidebarLink({ icon: Icon, text, href, active = false, isExternal = false }: SidebarLinkProps) { // <-- FIX: Definition was missing
+function SidebarLink({ icon: Icon, text, href, active = false, isExternal = false }: SidebarLinkProps) {
   const baseClasses = "flex items-center p-4 text-base font-normal rounded-lg transition duration-75 group w-full";
   const activeClasses = "bg-orange-600 text-white shadow-lg";
   const inactiveClasses = "text-slate-300 hover:bg-slate-700 hover:text-white";
@@ -79,10 +79,12 @@ function SidebarLink({ icon: Icon, text, href, active = false, isExternal = fals
   );
 }
 
-function Sidebar({ user, userSlug }: { user: User | null, userSlug: string | null }) { // <-- FIX: Definition was missing
+// --- UPDATE: Sidebar now accepts 'isAdmin' prop
+function Sidebar({ user, userSlug, isAdmin }: { user: User | null, userSlug: string | null, isAdmin: boolean }) {
   const pathname = usePathname();
   const websiteHref = userSlug ? `/${userSlug}` : '#'; 
-  const isAdmin = user?.id === process.env.NEXT_PUBLIC_ADMIN_USER_ID;
+  // --- REMOVED: Old admin check
+  // const isAdmin = user?.id === process.env.NEXT_PUBLIC_ADMIN_USER_ID;
 
   return (
     <aside className="w-64 flex-shrink-0 bg-slate-800 p-4 relative">
@@ -104,6 +106,7 @@ function Sidebar({ user, userSlug }: { user: User | null, userSlug: string | nul
                 isExternal={true}
              />
          </div>
+         {/* --- UPDATE: This now uses the 'isAdmin' prop --- */}
          {isAdmin && (
            <div className="pt-4 mt-4 border-t border-slate-700">
              <SidebarLink
@@ -135,15 +138,16 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, setUser] = useState<User | null>(null); // <-- FIX: Imports were missing
+  const [user, setUser] = useState<User | null>(null);
   const [userSlug, setUserSlug] = useState<string | null>(null); 
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
-  const router = useRouter(); // <-- FIX: Imports were missing
-  const pathname = usePathname(); // <-- FIX: Imports were missing
+  const [isAdmin, setIsAdmin] = useState(false); // <-- ADD isAdmin STATE
+  const router = useRouter(); 
+  const pathname = usePathname(); 
 
-  useEffect(() => { // <-- FIX: Imports were missing
+  useEffect(() => { 
     let isMounted = true;
     const checkAuthAndOnboarding = async () => {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -158,7 +162,8 @@ export default function DashboardLayout({
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('onboarding_complete, slug, has_seen_welcome_modal') 
+        // --- UPDATE: Add 'role' to the select query ---
+        .select('onboarding_complete, slug, has_seen_welcome_modal, role') 
         .eq('id', currentUser.id)
         .maybeSingle(); 
 
@@ -172,6 +177,12 @@ export default function DashboardLayout({
                 setShowWelcomeModal(true);
               }
               
+              // --- ADD: Set admin state based on profile role ---
+              if (profile.role === 'admin') {
+                setIsAdmin(true);
+              }
+              // --- END ADD ---
+
               const onboardingCompleteValue = profile?.onboarding_complete;
               const needsOnboarding = !profile || onboardingCompleteValue !== true;
               const isOnboardingPage = pathname === '/onboarding';
@@ -202,17 +213,12 @@ export default function DashboardLayout({
     if (!user) return;
     setIsClosingModal(true);
     
-    // This function returns a full Promise
     const updatePromise = async () => {
         const { error } = await supabase
             .from('profiles')
             .update({ has_seen_welcome_modal: true })
             .eq('id', user.id);
-
-        if (error) {
-            console.error("Error updating profile:", error);
-            throw error;
-        }
+        if (error) { console.error("Error updating profile:", error); throw error; }
         return;
     };
 
@@ -249,7 +255,8 @@ export default function DashboardLayout({
         />
       )}
       
-      <Sidebar user={user} userSlug={userSlug} />
+      {/* --- UPDATE: Pass 'isAdmin' prop to Sidebar --- */}
+      <Sidebar user={user} userSlug={userSlug} isAdmin={isAdmin} />
       <div className="flex-1 overflow-y-auto">
         {children}
       </div>

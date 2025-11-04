@@ -38,6 +38,7 @@ export default function OnboardingPage() {
   const [businessName, setBusinessName] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
+  const [keywords, setKeywords] = useState(''); // <-- 1. ADD NEW STATE
   const [servicesDescription, setServicesDescription] = useState('');
   const [aboutText, setAboutText] = useState('');
   const [slug, setSlug] = useState(''); 
@@ -60,8 +61,8 @@ export default function OnboardingPage() {
         console.log("Checking profile for user:", user.id);
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            // <-- 1. ADD 'email' TO THE SELECT STATEMENT -->
-            .select('business_name, address, phone, services_description, about_text, onboarding_complete, slug, email')
+            // <-- 2. ADD 'keywords' TO THE SELECT STATEMENT -->
+            .select('business_name, address, phone, services_description, about_text, onboarding_complete, slug, email, keywords')
             .eq('id', user.id).single();
 
         if (profileError && profileError.code !== 'PGRST116') {
@@ -69,6 +70,7 @@ export default function OnboardingPage() {
         } else if (profile) {
             console.log("Existing profile found:", profile);
             setBusinessName(profile.business_name || ''); setAddress(profile.address || ''); setPhone(profile.phone || '');
+            setKeywords(profile.keywords || ''); // <-- 3. SET THE STATE
             setServicesDescription(profile.services_description || ''); setAboutText(profile.about_text || '');
             setSlug(profile.slug || '');
             if (profile.slug) setSlugStatus('available');
@@ -128,7 +130,29 @@ export default function OnboardingPage() {
   };
 
   // Handle AI Text Generation
-  const handleGenerateProfileText = async (type: AIGenerationType) => { const context = businessName || 'Handwerksbetrieb'; if (!context) { setError("Bitte geben Sie zuerst den Namen des Betriebs ein."); return; } setAiLoading(type); setError(null); try { const response = await fetch('/api/generate-profile-text', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ context: context, type: type }), }); if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error || `Failed to generate ${type} text`); } const data = await response.json(); if (type === 'services') { setServicesDescription(data.text); } else if (type === 'about') { setAboutText(data.text); } } catch (err) { console.error(`Error calling ${type} generation API:`, err); const message = err instanceof Error ? err.message : "An unknown error occurred"; setError(`Fehler bei der Textgenerierung: ${message}`); } finally { setAiLoading(null); } };
+  const handleGenerateProfileText = async (type: AIGenerationType) => { 
+    const context = businessName || 'Handwerksbetrieb'; 
+    if (!context) { setError("Bitte geben Sie zuerst den Namen des Betriebs ein."); return; } 
+    setAiLoading(type); setError(null); 
+    try { 
+      // <-- 4. ADD 'keywords' TO THE API CALL BODY -->
+      const response = await fetch('/api/generate-profile-text', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ context: context, type: type, keywords: keywords }), 
+      }); 
+      if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error || `Failed to generate ${type} text`); } 
+      const data = await response.json(); 
+      if (type === 'services') { setServicesDescription(data.text); } 
+      else if (type === 'about') { setAboutText(data.text); } 
+    } catch (err) { 
+        console.error(`Error calling ${type} generation API:`, err); 
+        const message = err instanceof Error ? err.message : "An unknown error occurred"; 
+        setError(`Fehler bei der Textgenerierung: ${message}`); 
+    } finally { 
+      setAiLoading(null); 
+    } 
+  };
 
 
   // === Handle Form Submission ===
@@ -149,12 +173,13 @@ export default function OnboardingPage() {
         'business_name': businessName, 
         'address': address,
         'phone': phone, 
+        'keywords': keywords, // <-- 5. ADD 'keywords' TO SAVE OBJECT
         'services_description': servicesDescription, 
         'about_text': aboutText,
         'slug': slug, 
         'onboarding_complete': true, 
         'updated_at': new Date().toISOString(),
-        'email': currentUser.email // <-- 2. ADD THE EMAIL TO THE SAVE OBJECT
+        'email': currentUser.email
      };
     console.log("Data being sent to upsert:", profileData);
 
@@ -254,6 +279,23 @@ export default function OnboardingPage() {
             <label htmlFor="phone" className="mb-2 block text-sm font-medium text-gray-700"> Telefonnummer * </label>
             <input type="tel" id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="+49 123 456789"/>
           </div>
+
+          {/* --- 6. ADD KEYWORDS INPUT FIELD --- */}
+          <div>
+            <label htmlFor="keywords" className="mb-2 block text-sm font-medium text-gray-700"> Wichtige Schlagworte (Optional) </label>
+            <input 
+              type="text" 
+              id="keywords" 
+              value={keywords} 
+              onChange={(e) => setKeywords(e.target.value)} 
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500" 
+              placeholder="z.B. Badsanierung, Heizung, Solar, Möbelbau"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+               Helfen Sie der AI, bessere Texte zu generieren. Trennen Sie Begriffe mit Kommas.
+             </p>
+          </div>
+
            {/* Services Description with AI */}
            <div>
             <label htmlFor="servicesDescription" className="mb-2 block text-sm font-medium text-gray-700"> Leistungen * </label>
@@ -264,13 +306,11 @@ export default function OnboardingPage() {
                    {aiLoading === 'services' ? 'Generiere...' : 'Generieren'}
                  </button>
              </div>
-             {/* --- START OF CHANGE --- */}
              <p className="mt-1 text-xs text-gray-500">
                Tipp: Formatieren Sie jede Leistung in einer neuen Zeile als: <strong>Titel: Beschreibung</strong>
                <br/>
                (z.B. Heizungstechnik: Installation und Wartung von Heizsystemen.)
              </p>
-             {/* --- END OF CHANGE --- */}
           </div>
            {/* About Text with AI */}
            <div>

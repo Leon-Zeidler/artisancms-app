@@ -9,8 +9,9 @@ import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import EmptyState from '@/components/EmptyState';
-// --- 1. Import the new modal ---
 import RequestTestimonialModal from '@/components/RequestTestimonialModal';
+import PlusIcon from '@/components/icons/PlusIcon';
+
 
 
 // --- TYPE DEFINITIONS ---
@@ -20,21 +21,20 @@ type Project = {
   client?: string | null; 
   'project-date': string | null;
   image_url: string | null;
+  image_storage_path: string | null; // <-- ADDED
   status: 'Published' | 'Draft' | string | null;
   created_at: string;
   ai_description?: string | null;
 };
 
 
-// --- ICON COMPONENTS ---
-const PlusIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /> </svg> );
+// --- ICON COMPONENTS (Omitted for brevity) ---
 const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> );
 const EyeSlashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /> </svg> );
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
 const PencilIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /> </svg> );
 const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /> </svg> );
 const ProjectsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" strokeLinecap="round" strokeLinejoin="round" /> </svg> );
-// --- 2. Add new icon ---
 const ChatBubbleOvalLeftEllipsisIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M18 10.5c0 .902-.32 1.75-.85 2.433m-3.72 4.781a3.75 3.75 0 01-5.105-2.094m0 0a3.73 3.73 0 01-3.296 2.094 3.75 3.75 0 01-3.433-5.133A3.75 3.75 0 016 6.643v-1.897a3.75 3.75 0 117.5 0v1.897a3.75 3.75 0 01-1.148 2.684 3.73 3.73 0 01-3.296-2.094zM18 10.5c-.218 0-.43.02-.639.058m-5.82 5.17A3.75 3.75 0 0115 13.5v-3c0-.902.32-1.75.85-2.433m4.303 8.366a3.75 3.75 0 01-.85 2.433m.02-6.681a3.73 3.73 0 013.296-2.094 3.75 3.75 0 013.433 5.133 3.75 3.75 0 01-6.43 2.684z" /> </svg> );
 
 
@@ -43,7 +43,7 @@ interface ProjectListItemProps {
   project: Project; 
   onStatusToggle: (projectId: string, currentStatus: string | null) => void; 
   onDeleteRequest: (project: Project) => void;
-  onRequestTestimonial: (project: Project) => void; // <-- 3. Add new prop
+  onRequestTestimonial: (project: Project) => void; 
   isToggling: boolean; 
   isDeleting: boolean; 
 }
@@ -52,7 +52,7 @@ function ProjectListItem({
   project, 
   onStatusToggle, 
   onDeleteRequest, 
-  onRequestTestimonial, // <-- 4. Destructure prop
+  onRequestTestimonial,
   isToggling, 
   isDeleting 
 }: ProjectListItemProps) {
@@ -75,7 +75,6 @@ function ProjectListItem({
       <div className="flex items-center space-x-3 text-sm flex-shrink-0 ml-4">
          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ isPublished ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400' }`}> {project.status || 'N/A'} </span>
          <span className="text-slate-400 hidden sm:inline">{displayDate}</span>
-         {/* -- 5. Add new button -- */}
          {isPublished && (
            <button 
              onClick={() => onRequestTestimonial(project)} 
@@ -106,7 +105,6 @@ export default function ProjektePage() {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   
-  // --- 6. Add state for new modal ---
   const [requestModalProject, setRequestModalProject] = useState<Project | null>(null);
   const [isRequestingTestimonial, setIsRequestingTestimonial] = useState(false);
 
@@ -118,11 +116,14 @@ export default function ProjektePage() {
     setError(null);
 
     console.log(`All Projects: Fetching projects for user ${user.id}...`);
+    // --- THIS IS THE FIX ---
+    // Added 'image_storage_path' to the select query
     const { data, error: fetchError } = await supabase
       .from('projects')
-      .select(`id, title, "project-date", image_url, status, created_at`)
+      .select(`id, title, "project-date", image_url, image_storage_path, status, created_at`)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
+    // --- END OF FIX ---
 
     console.log("All Projects - Supabase fetch response:", { data, fetchError });
 
@@ -207,19 +208,10 @@ export default function ProjektePage() {
     setIsConfirmingDelete(true);
     setTogglingProjectId(deletingProject.id); 
 
-    let imagePath: string | null = null;
-    if (deletingProject.image_url) { 
-        try { 
-            const url = new URL(deletingProject.image_url); 
-            // --- This slice(8) is the fix from the previous step ---
-            imagePath = url.pathname.split('/').slice(8).join('/'); 
-            if (!imagePath) {
-                console.warn("Could not parse a valid image path from URL:", deletingProject.image_url);
-            }
-        } catch (e) { 
-            console.error("Could not parse image URL:", e); 
-        } 
-    }
+    // --- THIS IS THE FIX ---
+    // Use the reliable storage path instead of parsing the URL
+    const imagePath = deletingProject.image_storage_path;
+    // --- END OF FIX ---
 
     const deletePromise = async () => {
         if (imagePath) {
@@ -228,8 +220,8 @@ export default function ProjektePage() {
             
             if (imageError) {
                 console.error("Error deleting image:", imageError);
-                toast.error(`Bild konnte nicht gelöscht werden: ${imageError.message}. Löschen abgebrochen.`);
-                throw new Error(`Bild konnte nicht gelöscht werden: ${imageError.message}.`);
+                // Don't throw, just warn, so DB row can still be deleted
+                toast.error(`Bild konnte nicht gelöscht werden: ${imageError.message}. DB-Eintrag wird trotzdem gelöscht.`);
             } else {
                  console.log("Image deleted successfully.");
              }
@@ -278,17 +270,14 @@ export default function ProjektePage() {
   };
   
   
-  // --- 7. Add handlers for the new modal ---
-  
+  // --- Handlers for the new modal ---
   const handleOpenRequestModal = (project: Project) => {
     setRequestModalProject(project);
   };
-
   const handleCloseRequestModal = () => {
     if (isRequestingTestimonial) return;
     setRequestModalProject(null);
   };
-
   const handleSendTestimonialRequest = async (clientEmail: string) => {
     if (!requestModalProject) return;
     
@@ -322,7 +311,6 @@ export default function ProjektePage() {
         },
         error: (err: any) => {
           setIsRequestingTestimonial(false);
-          // Don't close modal on error, so user can see it
           return `Fehler: ${err.message}`;
         }
       }
@@ -355,7 +343,7 @@ export default function ProjektePage() {
                 project={project}
                 onStatusToggle={handleStatusToggle}
                 onDeleteRequest={handleDeleteRequest}
-                onRequestTestimonial={handleOpenRequestModal} // <-- 8. Pass handler
+                onRequestTestimonial={handleOpenRequestModal}
                 isToggling={togglingProjectId === project.id && !isConfirmingDelete}
                 isDeleting={deletingProject?.id === project.id && isConfirmingDelete}
               />
@@ -386,7 +374,6 @@ export default function ProjektePage() {
          isConfirming={isConfirmingDelete}
        />
        
-       {/* --- 9. Add new modal to JSX --- */}
        <RequestTestimonialModal
          isOpen={!!requestModalProject}
          projectTitle={requestModalProject?.title || ''}

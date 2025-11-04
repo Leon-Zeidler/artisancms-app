@@ -1,11 +1,12 @@
+// src/app/api/generate-description/route.ts
 import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js'; // Import createClient
 
-// This function handles POST requests made to /api/generate-description
 export async function POST(request: Request) {
   
-  // --- 1. ADD AUTHENTICATION CHECK ---
+  // --- 1. AUTHENTICATION (already in place) ---
   const cookieStore = cookies();
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -13,38 +14,59 @@ export async function POST(request: Request) {
   if (userError || !user) {
     return NextResponse.json({ error: 'You must be authenticated to use this service.' }, { status: 401 });
   }
-  // --- END OF AUTH CHECK ---
 
-  // --- 2. Extract Project Title & Notes ---
+  // --- 2. Extract Project Title & Notes (already in place) ---
   let requestData;
-  try {
-    requestData = await request.json();
-  } catch (error) {
-    console.error("Error parsing request body:", error);
+  try { requestData = await request.json(); } catch (error) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
-
   const { title, notes } = requestData;
-
   if (!title) {
     return NextResponse.json({ error: "Project title is required" }, { status: 400 });
   }
 
-  // --- 3. Get OpenAI API Key (Securely) ---
+  // --- 3. Get OpenAI API Key (already in place) ---
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    console.error("OpenAI API key not found in environment variables.");
     return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
   }
+  
+  // --- 4. NEW: Fetch User's Profile Keywords ---
+  let userKeywords = '';
+  try {
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('keywords')
+      .eq('id', user.id)
+      .single();
+    
+    if (profileError) throw profileError;
+    if (profile && profile.keywords) {
+      userKeywords = profile.keywords;
+    }
+  } catch (err) {
+    console.warn("Could not fetch user keywords for AI prompt, proceeding without them.");
+  }
+  // --- END OF NEW SECTION ---
 
-  // --- 4. Construct the Prompt ---
-  let prompt = `Write a short, professional project description (max 2-3 sentences) in German for a portfolio, based on the following project title: "${title}". Focus on the work performed and the quality. Use keywords relevant for a German trade business.`;
+
+  // --- 5. Construct the Prompt (Now with keywords) ---
+  let prompt = `Write a short, professional project description (max 2-3 sentences) in German for a portfolio, based on the following project title: "${title}". Focus on the work performed and the quality.`;
 
   if (notes && notes.trim() !== '') {
-    prompt += `\n\nIncorporate these additional notes from the tradesperson to add specific detail (e.g., materials, special techniques): "${notes}"`;
+    prompt += `\n\nIncorporate these specific notes about the project: "${notes}"`;
+  }
+  
+  // --- ADDED KEYWORDS TO PROMPT ---
+  if (userKeywords && userKeywords.trim() !== '') {
+     prompt += `\n\nAlso, try to relate this project to the business's main keywords, which are: "${userKeywords}".`;
   }
 
-  // --- 5. Call OpenAI API ---
+  // --- 6. Call OpenAI API (no changes needed below) ---
   const apiUrl = 'https://api.openai.com/v1/chat/completions'; 
 
   try {
@@ -72,8 +94,6 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json();
-
-    // --- 6. Extract and Return Description ---
     const description = data.choices?.[0]?.message?.content?.trim();
 
     if (!description) {

@@ -6,13 +6,37 @@ import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
+// --- UPDATED ADMIN CHECK ---
 async function checkAdmin(supabase: any) {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.id !== process.env.ADMIN_USER_ID) {
-    return null;
+  if (!user) {
+    return null; // No user
   }
-  return user;
+
+  // Use the SERVICE_ROLE_KEY to securely check the user's role
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data: profile, error } = await supabaseAdmin
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+    
+  if (error || !profile) {
+     console.warn(`Admin check failed for user ${user.id}: ${error?.message}`);
+    return null; // Profile not found or error
+  }
+
+  if (profile.role === 'admin') {
+    return user; // User is an admin
+  }
+
+  return null; // Not an admin
 }
+// --- END OF UPDATE ---
 
 export async function GET() {
   const cookieStore = cookies();

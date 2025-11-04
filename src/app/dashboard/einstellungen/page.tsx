@@ -23,6 +23,7 @@ type ProfileData = {
   business_name: string;
   address: string;
   phone: string;
+  keywords: string; // <-- 1. ADD 'keywords'
   services_description: string;
   about_text: string;
   slug: string;
@@ -101,7 +102,7 @@ export default function EinstellungenPage() {
   // === State Variables ===
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [profileData, setProfileData] = useState<ProfileData>({
-      business_name: '', address: '', phone: '', services_description: '', about_text: '', slug: '',
+      business_name: '', address: '', phone: '', keywords: '', services_description: '', about_text: '', slug: '', // <-- 2. ADD 'keywords'
       impressum_text: '', datenschutz_text: '',
       logo_url: null,
       primary_color: DEFAULT_PRIMARY_COLOR,
@@ -124,10 +125,8 @@ export default function EinstellungenPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   
-  // --- FIX: THESE WERE MISSING ---
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  // --- END OF FIX ---
 
   const router = useRouter();
 
@@ -140,7 +139,8 @@ export default function EinstellungenPage() {
       if (!isMounted || userError || !user) { if (isMounted) router.push('/login'); return; }
       if (isMounted) setCurrentUser(user);
 
-      const selectColumns = 'business_name, address, phone, services_description, about_text, slug, impressum_text, datenschutz_text, logo_url, primary_color, secondary_color, email';
+      // <-- 3. ADD 'keywords' to select string -->
+      const selectColumns = 'business_name, address, phone, services_description, about_text, slug, impressum_text, datenschutz_text, logo_url, primary_color, secondary_color, email, keywords';
       
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -155,6 +155,7 @@ export default function EinstellungenPage() {
             const datenschutzText = profile.datenschutz_text || DATENSCHUTZ_TEMPLATE;
             setProfileData({
                 business_name: profile.business_name || '', address: profile.address || '', phone: profile.phone || '',
+                keywords: profile.keywords || '', // <-- 4. SET 'keywords'
                 services_description: profile.services_description || '', about_text: profile.about_text || '',
                 slug: profile.slug || '',
                 impressum_text: profile.impressum_text || '',
@@ -242,7 +243,12 @@ export default function EinstellungenPage() {
     if (!context) { toast.error("Bitte geben Sie zuerst den Namen des Betriebs ein."); return; }
     setAiLoading(type);
     await toast.promise(
-       fetch('/api/generate-profile-text', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ context: context, type: type }), })
+       fetch('/api/generate-profile-text', { 
+         method: 'POST', 
+         headers: { 'Content-Type': 'application/json' }, 
+         // Pass keywords to the API
+         body: JSON.stringify({ context: context, type: type, keywords: profileData.keywords }), 
+        })
        .then(async (response) => { if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error || `Failed to generate ${type} text`); } return response.json(); }),
        { loading: `${type === 'services' ? 'Leistungsbeschreibung' : '"Über uns" Text'} wird generiert...`,
          success: (data) => { if (type === 'services') setProfileData(prev => ({ ...prev, services_description: data.text })); else if (type === 'about') setProfileData(prev => ({ ...prev, about_text: data.text })); return `${type === 'services' ? 'Leistungsbeschreibung' : '"Über uns" Text'} erfolgreich generiert!`; },
@@ -289,6 +295,7 @@ export default function EinstellungenPage() {
 
         const profileUpdates = {
           business_name: profileData.business_name, address: profileData.address, phone: profileData.phone,
+          keywords: profileData.keywords, // <-- 5. ADD 'keywords' to update object
           services_description: profileData.services_description, about_text: profileData.about_text,
           slug: profileData.slug,
           impressum_text: profileData.impressum_text || null,
@@ -389,7 +396,6 @@ export default function EinstellungenPage() {
     });
   };
   
-  // --- FIX: THIS FUNCTION WAS MISSING ---
   const handleDeleteAccount = async () => {
     setIsDeletingAccount(true);
 
@@ -423,7 +429,6 @@ export default function EinstellungenPage() {
       setShowDeleteModal(false);
     }
   };
-  // --- END OF FIX ---
 
 
   // === Render Logic ===
@@ -479,17 +484,34 @@ export default function EinstellungenPage() {
                     <label htmlFor="phone" className="mb-2 block text-sm font-medium text-slate-300"> Telefonnummer * </label>
                     <input type="tel" id="phone" name="phone" value={profileData.phone} onChange={handleInputChange} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"/>
                   </div>
+                  
+                  {/* --- 6. THIS IS THE NEWLY ADDED FIELD --- */}
+                  <div>
+                    <label htmlFor="keywords" className="mb-2 block text-sm font-medium text-slate-300"> Wichtige Schlagworte (Optional) </label>
+                    <input 
+                      type="text" 
+                      id="keywords" 
+                      name="keywords"
+                      value={profileData.keywords} 
+                      onChange={handleInputChange} 
+                      className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" 
+                      placeholder="z.B. Badsanierung, Heizung, Solar, Möbelbau"
+                    />
+                    <p className="mt-1 text-xs text-slate-500">
+                       Helfen Sie der AI, bessere Texte zu generieren. Trennen Sie Begriffe mit Kommas.
+                     </p>
+                  </div>
+                  {/* --- END OF NEW FIELD --- */}
+
                   {/* Services */}
                   <div>
                     <label htmlFor="services_description" className="mb-2 block text-sm font-medium text-slate-300"> Kurze Beschreibung Ihrer Leistungen * </label>
                     <div className="relative"> <textarea id="services_description" name="services_description" value={profileData.services_description} onChange={handleInputChange} rows={4} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28"/> <button type="button" onClick={() => handleGenerateProfileText('services')} disabled={aiLoading === 'services' || !profileData.business_name} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'services' || !profileData.business_name ? 'bg-slate-600 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} > <SparklesIcon className={`h-4 w-4 ${aiLoading === 'services' ? 'animate-spin' : ''}`} /> {aiLoading === 'services' ? 'Generiere...' : 'Generieren'} </button> </div>
-                    {/* --- FIX: UPDATED HELPER TEXT --- */}
                     <p className="mt-1 text-xs text-slate-500">
                       Tipp: Formatieren Sie jede Leistung in einer neuen Zeile als: <strong>Titel: Beschreibung</strong>
                       <br/>
                       (z.B. Heizungstechnik: Installation und Wartung von Heizsystemen.)
                     </p>
-                    {/* --- END OF FIX --- */}
                   </div>
                   {/* About */}
                   <div>
@@ -532,7 +554,7 @@ export default function EinstellungenPage() {
                 <h2 className="text-xl font-semibold text-white mb-6">Rechtstexte</h2>
                 <div className="space-y-6">
                   
-                  {/* --- FIX: ADDED LEGAL WARNING --- */}
+                  {/* Legal Warning */}
                   <div className="rounded-md bg-red-900/20 border border-red-500/30 p-4">
                     <div className="flex">
                       <div className="flex-shrink-0">
@@ -548,7 +570,6 @@ export default function EinstellungenPage() {
                       </div>
                     </div>
                   </div>
-                  {/* --- END OF FIX --- */}
 
                   {/* Impressum Text Area */}
                    <div>
@@ -576,7 +597,6 @@ export default function EinstellungenPage() {
            </form>
            
            {/* --- Account Security Section --- */}
-           {/* These are separate forms, so they are outside the main <form> */}
            <section className="pt-8">
               <h2 className="text-xl font-semibold text-white mb-6">Konto & Sicherheit</h2>
               {/* Change Password Form */}
@@ -658,7 +678,6 @@ export default function EinstellungenPage() {
         </div>
       )}
       
-      {/* --- FIX: THIS WAS MISSING --- */}
       {/* Confirmation Modal for Account Deletion */}
       <ConfirmationModal
         isOpen={showDeleteModal}
@@ -673,4 +692,3 @@ export default function EinstellungenPage() {
     </main>
   );
 }
-

@@ -9,47 +9,34 @@ export async function POST(request: Request) {
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
   try {
-    // 1. Get the authenticated user
+    // 1. Get the authenticated user (already in place)
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-
     if (userError || !user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // 2. Parse the incoming request
+    // 2. Parse the incoming request (already in place)
     const { customerMessage } = await request.json();
     if (!customerMessage) {
       return NextResponse.json({ error: 'customerMessage is required' }, { status: 400 });
     }
 
-    // 3. Get API Key and create Admin Client
+    // 3. Get API Key and create Admin Client (already in place)
     const openApiKey = process.env.OPENAI_API_KEY;
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-    // --- ADD THESE DEBUG LINES ---
-    console.log("--- /api/draft-reply DEBUG ---");
-    if (openApiKey) {
-      console.log("SUCCESS: OPENAI_API_KEY is loaded.");
-      console.log("Key starts with:", openApiKey.substring(0, 5) + "...");
-    } else {
-      console.error("!!! FAILURE: OPENAI_API_KEY is missing or undefined on the server. !!!");
-    }
-    console.log("---------------------------------");
-    // --- END DEBUG LINES ---
-
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!openApiKey || !supabaseUrl || !serviceKey) {
       console.error("Server configuration error: Missing API keys or URL.");
       return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
     }
-
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
     // 4. Get the user's service description from their profile
+    // --- 1. ADD 'keywords' TO THE SELECT ---
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('services_description, business_name')
+      .select('services_description, business_name, keywords')
       .eq('id', user.id)
       .single();
 
@@ -58,9 +45,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Could not find user profile" }, { status: 500 });
     }
 
-    const { services_description, business_name } = profile;
+    const { services_description, business_name, keywords } = profile;
 
     // 5. Construct the prompt for OpenAI
+    // --- 2. ADD 'keywords' TO THE PROMPT ---
     const prompt = `
       Du bist ein professioneller und freundlicher Assistent für einen deutschen Handwerksbetrieb namens "${business_name || 'mein Betrieb'}".
       Ein Kunde hat die folgende Anfrage gesendet:
@@ -73,15 +61,17 @@ export async function POST(request: Request) {
       ${services_description || 'Allgemeine Handwerksleistungen'}
       ---
 
+      Die Haupt-Schlagworte des Betriebs sind: "${keywords || 'keine Angabe'}".
+
       Bitte verfasse einen kurzen, höflichen Antwortentwurf.
       - Sprich den Kunden mit "Sehr geehrte/r Anfragesteller/in" an (wir kennen den Namen nicht).
       - Bedanke dich für die Anfrage.
-      - Gehe kurz auf die Anfrage ein.
+      - Gehe kurz auf die Anfrage ein (vielleicht im Bezug auf die Schlagworte/Leistungen).
       - Schlage vor, dass sich der Betrieb in Kürze melden wird, um Details zu besprechen.
       - Antworte auf Deutsch.
     `;
 
-    // 6. Call OpenAI API
+    // 6. Call OpenAI API (no changes needed below)
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -115,11 +105,9 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error in /api/draft-reply:", error);
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-    // Check for the specific error you mentioned
     if (errorMessage.includes("Unauthorized")) {
         return NextResponse.json({ error: "OpenAI API key is invalid or missing. Please check server configuration." }, { status: 500 });
     }
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-
