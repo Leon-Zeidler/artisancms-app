@@ -5,20 +5,6 @@ import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 
-// Initialize Resend
-const resendApiKey = process.env.RESEND_API_KEY;
-const fromEmail = process.env.FROM_EMAIL;
-if (!resendApiKey || !fromEmail) {
-  console.warn("Missing RESEND_API_KEY or FROM_EMAIL for testimonial requests.");
-}
-const resend = new Resend(resendApiKey);
-
-// Initialize Supabase Admin (we need this to create the request token)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 // --- Define Profile type for the joined data ---
 // --- FIX 1: Changed 'profiles' to be an array type to match TS inference ---
 type ProjectWithProfile = {
@@ -33,6 +19,28 @@ export async function POST(request: Request) {
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.FROM_EMAIL;
+
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+      console.error('Missing Supabase service configuration for testimonial request route.');
+      return NextResponse.json({ error: 'Server configuration error (database).' }, { status: 500 });
+    }
+
+    if (!resendApiKey || !fromEmail) {
+      console.error('Missing Resend configuration for testimonial request route.');
+      return NextResponse.json({ error: 'Server configuration error (email).' }, { status: 500 });
+    }
+
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      supabaseServiceRoleKey,
+    );
+
+    const resend = new Resend(resendApiKey);
+
     // 1. Get and authenticate the user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -44,7 +52,7 @@ export async function POST(request: Request) {
     if (!projectId || !clientEmail) {
       return NextResponse.json({ error: 'projectId and clientEmail are required' }, { status: 400 });
     }
-    
+
     // We expect projectId to be a number (bigint) but it comes as a string from JSON
     const projectIdNum = parseInt(projectId, 10);
     if (isNaN(projectIdNum)) {
@@ -56,17 +64,17 @@ export async function POST(request: Request) {
       .from('projects')
       .select('title, profiles ( business_name )')
       .eq('id', projectIdNum) // Use the number
-      .eq('user_id', user.id) 
+      .eq('user_id', user.id)
       .single();
 
     if (projectError || !projectData) {
-      console.error("Error fetching project data or no access:", projectError);
+      console.error('Error fetching project data or no access:', projectError);
       return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 });
     }
-    
+
     // Cast the data to our type to help TypeScript
     const typedProjectData = projectData as ProjectWithProfile;
-    
+
     const projectTitle = typedProjectData.title || 'ein kürzliches Projekt';
     // --- FIX 2: Access the first item in the 'profiles' array ---
     const businessName = typedProjectData.profiles?.[0]?.business_name || 'Ihrem Handwerksbetrieb';
@@ -79,21 +87,32 @@ export async function POST(request: Request) {
         project_id: projectIdNum, // Use the number
         client_email: clientEmail
       })
-      .select('id') 
+      .select('id')
       .single();
-    
+
     if (tokenError || !requestData) {
-      console.error("Error creating testimonial token:", tokenError);
+      console.error('Error creating testimonial token:', tokenError);
       return NextResponse.json({ error: 'Could not create testimonial request token.' }, { status: 500 });
     }
 
     const token = requestData.id;
-    const reviewUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/review/${token}`;
+
+    const resolvedOrigin =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      request.headers.get('origin') ||
+      new URL(request.url).origin;
+
+    if (!resolvedOrigin) {
+      console.error('Unable to resolve site URL for testimonial email.');
+      return NextResponse.json({ error: 'Server configuration error (site url).' }, { status: 500 });
+    }
+
+    const reviewUrl = `${resolvedOrigin.replace(/\/$/, '')}/review/${token}`;
 
     // 5. Ask OpenAI to draft the email (The "Magic")
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: "Server configuration error (AI)" }, { status: 500 });
+      return NextResponse.json({ error: 'Server configuration error (AI)' }, { status: 500 });
     }
 
     const prompt = `Schreibe eine kurze, höfliche E-Mail (auf Deutsch) an einen Kunden, um nach einer Kundenstimme für ein abgeschlossenes Projekt zu fragen.
@@ -102,7 +121,8 @@ export async function POST(request: Request) {
     - E-Mail soll den Kunden direkt ansprechen (z.B. "Sehr geehrter Kunde," oder neutraler).
     - Mache es kurz und freundlich.
     - Erwähne, dass es nur ein paar Minuten dauert.
-    - WICHTIG: Die E-Mail MUSS den folgenden Platzhalter GENAU SO enthalten, damit ich den Link einfügen kann: [REVIEW_LINK_URL]`;
+    - WICHTIG: Die E-Mail MUSS den folgenden Platzhalter GENAU SO enthalten, damit ich den Link einfügen kann: [REVIEW_LINK_URL]
+`;
 
     let emailBody = `
       <p>Sehr geehrter Kunde,</p>
@@ -122,8 +142,8 @@ export async function POST(request: Request) {
           'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "gpt-3.5-turbo",
-          messages: [{ role: "user", content: prompt }],
+          model: 'gpt-3.5-turbo',
+          messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
         }),
       });
@@ -138,12 +158,12 @@ export async function POST(request: Request) {
         }
       }
     } catch (aiError) {
-      console.warn("AI email generation failed, using fallback template.", aiError);
+      console.warn('AI email generation failed, using fallback template.', aiError);
       // Fallback email body is already set
     }
-    
+
     // 6. Send the email via Resend
-    await resend.emails.send({
+    const { data: emailData, error: emailError } = await resend.emails.send({
       from: `${businessName} <${fromEmail}>`,
       to: [clientEmail],
       replyTo: user.email, // Use correct camelCase
@@ -151,11 +171,18 @@ export async function POST(request: Request) {
       html: emailBody,
     });
 
+    if (emailError) {
+      console.error('Error sending testimonial request email via Resend:', emailError);
+      return NextResponse.json({ error: 'Failed to send testimonial request email.' }, { status: 500 });
+    }
+
+    console.info('Testimonial request email queued successfully:', emailData?.id);
+
     return NextResponse.json({ success: true, message: 'Anfrage gesendet!' });
 
   } catch (error) {
-    console.error("Error in /api/request-testimonial:", error);
-    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+    console.error('Error in /api/request-testimonial:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

@@ -2,14 +2,21 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// We can use the anon key for this read-only, RLS-protected query
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export async function POST(request: Request) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase configuration for review token verification.');
+      return NextResponse.json({ error: 'Server configuration error (database).' }, { status: 500 });
+    }
+
+    const supabase = createClient(
+      supabaseUrl,
+      supabaseAnonKey,
+    );
+
     const { token } = await request.json();
 
     if (!token) {
@@ -25,7 +32,7 @@ export async function POST(request: Request) {
       .single();
 
     if (requestError || !requestData) {
-      console.error("Verify token error:", requestError);
+      console.error('Verify token error:', requestError);
       return NextResponse.json({ error: 'Token not found' }, { status: 404 });
     }
 
@@ -41,7 +48,7 @@ export async function POST(request: Request) {
       .single();
 
     if (projectError) {
-      console.error("Project fetch error:", projectError);
+      console.error('Project fetch error:', projectError);
       return NextResponse.json({ error: 'Could not find project details' }, { status: 500 });
     }
 
@@ -51,9 +58,9 @@ export async function POST(request: Request) {
       .select('business_name')
       .eq('id', requestData.profile_id)
       .single();
-    
+
     if (profileError) {
-      console.error("Profile fetch error:", profileError);
+      console.error('Profile fetch error:', profileError);
       return NextResponse.json({ error: 'Could not find business details' }, { status: 500 });
     }
     // --- END NEW STRATEGY ---
@@ -65,9 +72,8 @@ export async function POST(request: Request) {
     });
 
   } catch (error) {
-    console.error("Error in /api/review/verify-token:", error);
-    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+    console.error('Error in /api/review/verify-token:', error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-
