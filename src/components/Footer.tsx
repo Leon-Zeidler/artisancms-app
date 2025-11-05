@@ -35,10 +35,10 @@ export default function Footer({
 }: FooterProps) {
 
   const basePath = slug ? `/${slug}` : '/';
-  const leistungenPath = `${basePath}/#leistungen`;
-  const portfolioPath = `${basePath}/portfolio`;
-  const testimonialsPath = `${basePath}/testimonials`;
-  const kontaktPath = `${basePath}/#kontakt`;
+  const leistungenPath = `${basePath}#leistungen`;
+  const portfolioPath = `${basePath}#projekte`;
+  const testimonialsPath = `${basePath}#testimonials`;
+  const kontaktPath = `${basePath}#kontakt`;
   const impressumPath = slug ? `${basePath}/impressum` : "/impressum"; 
   const datenschutzPath = slug ? `${basePath}/datenschutz` : "/datenschutz"; 
 

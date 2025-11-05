@@ -5,49 +5,73 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-// Define the props including slug and logoUrl
 interface NavbarProps {
   businessName?: string | null;
   slug?: string | null;
   logoUrl?: string | null;
-  // primaryColor?: string; // <-- No longer needed
-  // primaryColorDark?: string; // <-- No longer needed
 }
 
-// Icons
-const MenuIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /> </svg> );
-const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg> );
+const MenuIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
+    stroke="currentColor"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+  </svg>
+);
 
+const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
+    stroke="currentColor"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
 
-export default function Navbar({
-    businessName,
-    slug,
-    logoUrl,
-}: NavbarProps) {
+export default function Navbar({ businessName, slug, logoUrl }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [logoHasError, setLogoHasError] = useState(false); // State to track logo loading error
+  const [logoHasError, setLogoHasError] = useState(false);
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  const basePath = slug ? `/${slug}` : '/';
+  const homePath = basePath;
+  const leistungenPath = `${basePath}#leistungen`;
+  const projektePath = `${basePath}#projekte`;
+  const testimonialsPath = `${basePath}#testimonials`;
+  const kontaktPath = `${basePath}#kontakt`;
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
+  const brandLabel = businessName?.trim() || 'ArtisanCMS';
 
   useEffect(() => {
     if (!isMobileMenuOpen) {
       document.body.style.removeProperty('overflow');
       return;
     }
+
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return (
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMobileMenuOpen]);
+
+  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  return (
     <>
       <nav className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-lg">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            {/* Logo/Brand Name */}
             <div className="flex-shrink-0">
               <Link href={homePath} className="flex items-center text-xl font-bold text-gray-900">
                 {logoUrl && !logoHasError ? (
@@ -61,19 +85,16 @@ export default function Navbar({
                     unoptimized
                   />
                 ) : (
-                  <span className="rounded-lg bg-brand/10 px-2.5 py-1 text-base font-semibold text-brand">
-                    {brandLabel}
-                  </span>
+                  <span className="rounded-lg bg-brand/10 px-2.5 py-1 text-base font-semibold text-brand">{brandLabel}</span>
                 )}
               </Link>
             </div>
 
-            {/* Desktop Menu Links */}
             <div className="hidden space-x-8 md:flex">
               <Link href={leistungenPath} className="font-medium text-gray-600 transition-colors hover:text-brand">
                 Leistungen
               </Link>
-              <Link href={portfolioPath} className="font-medium text-gray-600 transition-colors hover:text-brand">
+              <Link href={projektePath} className="font-medium text-gray-600 transition-colors hover:text-brand">
                 Projekte
               </Link>
               <Link href={testimonialsPath} className="font-medium text-gray-600 transition-colors hover:text-brand">
@@ -84,7 +105,6 @@ export default function Navbar({
               </Link>
             </div>
 
-            {/* Desktop Login Button */}
             <div className="hidden md:block">
               <Link
                 href="/login"
@@ -94,7 +114,6 @@ export default function Navbar({
               </Link>
             </div>
 
-            {/* Mobile Menu Button */}
             <div className="md:hidden">
               <button
                 type="button"
@@ -141,7 +160,7 @@ export default function Navbar({
               <Link href={leistungenPath} onClick={closeMobileMenu} className="rounded-lg px-4 py-3 hover:bg-brand/10">
                 Leistungen
               </Link>
-              <Link href={portfolioPath} onClick={closeMobileMenu} className="rounded-lg px-4 py-3 hover:bg-brand/10">
+              <Link href={projektePath} onClick={closeMobileMenu} className="rounded-lg px-4 py-3 hover:bg-brand/10">
                 Projekte
               </Link>
               <Link href={testimonialsPath} onClick={closeMobileMenu} className="rounded-lg px-4 py-3 hover:bg-brand/10">
@@ -166,4 +185,3 @@ export default function Navbar({
     </>
   );
 }
-
