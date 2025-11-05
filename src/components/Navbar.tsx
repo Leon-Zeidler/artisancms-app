@@ -1,55 +1,87 @@
 // src/components/Navbar.tsx
 "use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
-// Define the props including slug and logoUrl
 interface NavbarProps {
   businessName?: string | null;
   slug?: string | null;
   logoUrl?: string | null;
-  // primaryColor?: string; // <-- No longer needed
-  // primaryColorDark?: string; // <-- No longer needed
 }
 
-// Icons
-const MenuIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /> </svg> );
-const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg> );
+const MenuIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+    />
+  </svg>
+);
 
+const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth="1.5"
+    stroke="currentColor"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
 
-export default function Navbar({
-    businessName,
-    slug,
-    logoUrl,
-}: NavbarProps) {
+export default function Navbar({ businessName, slug, logoUrl }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [logoHasError, setLogoHasError] = useState(false); // State to track logo loading error
+  const [logoHasError, setLogoHasError] = useState(false);
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  // ---- Derived labels & paths (fixes 'Cannot find name' errors) ----
+  const brandLabel = businessName?.trim() || "ArtisanCMS";
+  const basePath = slug ? `/${slug}` : "/";
+  const homePath = basePath;
+  const leistungenPath = `${basePath}/leistungen`;
+  const portfolioPath = `${basePath}/portfolio`;
+  const testimonialsPath = `${basePath}/testimonials`;
+  const kontaktPath = `${basePath}/kontakt`;
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
-
+  // ---- Prevent background scroll when the mobile menu is open ----
   useEffect(() => {
     if (!isMobileMenuOpen) {
-      document.body.style.removeProperty('overflow');
+      // ensure any previous lock is cleared
+      document.body.style.removeProperty("overflow");
       return;
     }
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return (
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow || "";
+    };
+  }, [isMobileMenuOpen]);
+
+  const toggleMobileMenu = () => setIsMobileMenuOpen((v) => !v);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  return (
     <>
       <nav className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-lg">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo/Brand Name */}
             <div className="flex-shrink-0">
-              <Link href={homePath} className="flex items-center text-xl font-bold text-gray-900">
+              <Link
+                href={homePath}
+                className="flex items-center text-xl font-bold text-gray-900"
+              >
                 {logoUrl && !logoHasError ? (
                   <Image
                     src={logoUrl}
@@ -70,16 +102,28 @@ export default function Navbar({
 
             {/* Desktop Menu Links */}
             <div className="hidden space-x-8 md:flex">
-              <Link href={leistungenPath} className="font-medium text-gray-600 transition-colors hover:text-brand">
+              <Link
+                href={leistungenPath}
+                className="font-medium text-gray-600 transition-colors hover:text-brand"
+              >
                 Leistungen
               </Link>
-              <Link href={portfolioPath} className="font-medium text-gray-600 transition-colors hover:text-brand">
+              <Link
+                href={portfolioPath}
+                className="font-medium text-gray-600 transition-colors hover:text-brand"
+              >
                 Projekte
               </Link>
-              <Link href={testimonialsPath} className="font-medium text-gray-600 transition-colors hover:text-brand">
+              <Link
+                href={testimonialsPath}
+                className="font-medium text-gray-600 transition-colors hover:text-brand"
+              >
                 Kundenstimmen
               </Link>
-              <Link href={kontaktPath} className="font-medium text-gray-600 transition-colors hover:text-brand">
+              <Link
+                href={kontaktPath}
+                className="font-medium text-gray-600 transition-colors hover:text-brand"
+              >
                 Kontakt
               </Link>
             </div>
@@ -104,7 +148,11 @@ export default function Navbar({
                 aria-expanded={isMobileMenuOpen}
               >
                 <span className="sr-only">Open main menu</span>
-                {isMobileMenuOpen ? <CloseIcon className="block h-6 w-6" /> : <MenuIcon className="block h-6 w-6" />}
+                {isMobileMenuOpen ? (
+                  <CloseIcon className="block h-6 w-6" />
+                ) : (
+                  <MenuIcon className="block h-6 w-6" />
+                )}
               </button>
             </div>
           </div>
@@ -125,7 +173,11 @@ export default function Navbar({
             aria-modal="true"
           >
             <div className="flex items-center justify-between">
-              <Link href={homePath} onClick={closeMobileMenu} className="text-lg font-semibold text-gray-900">
+              <Link
+                href={homePath}
+                onClick={closeMobileMenu}
+                className="text-lg font-semibold text-gray-900"
+              >
                 {brandLabel}
               </Link>
               <button
@@ -138,16 +190,32 @@ export default function Navbar({
               </button>
             </div>
             <nav className="mt-8 flex flex-col gap-2 text-base font-semibold text-gray-900">
-              <Link href={leistungenPath} onClick={closeMobileMenu} className="rounded-lg px-4 py-3 hover:bg-brand/10">
+              <Link
+                href={leistungenPath}
+                onClick={closeMobileMenu}
+                className="rounded-lg px-4 py-3 hover:bg-brand/10"
+              >
                 Leistungen
               </Link>
-              <Link href={portfolioPath} onClick={closeMobileMenu} className="rounded-lg px-4 py-3 hover:bg-brand/10">
+              <Link
+                href={portfolioPath}
+                onClick={closeMobileMenu}
+                className="rounded-lg px-4 py-3 hover:bg-brand/10"
+              >
                 Projekte
               </Link>
-              <Link href={testimonialsPath} onClick={closeMobileMenu} className="rounded-lg px-4 py-3 hover:bg-brand/10">
+              <Link
+                href={testimonialsPath}
+                onClick={closeMobileMenu}
+                className="rounded-lg px-4 py-3 hover:bg-brand/10"
+              >
                 Kundenstimmen
               </Link>
-              <Link href={kontaktPath} onClick={closeMobileMenu} className="rounded-lg px-4 py-3 hover:bg-brand/10">
+              <Link
+                href={kontaktPath}
+                onClick={closeMobileMenu}
+                className="rounded-lg px-4 py-3 hover:bg-brand/10"
+              >
                 Kontakt
               </Link>
             </nav>
@@ -166,4 +234,3 @@ export default function Navbar({
     </>
   );
 }
-
