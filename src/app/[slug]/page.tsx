@@ -55,16 +55,132 @@ const formatProjectDate = (value: string | null): string | null => {
   }
 };
 
+type RGB = { r: number; g: number; b: number };
+
+const clampChannel = (value: number) => Math.max(0, Math.min(255, value));
+
+const hexToRgb = (value: string): RGB | null => {
+  let hex = value.replace('#', '').trim();
+  if (![3, 4, 6, 8].includes(hex.length)) return null;
+  if (hex.length === 3 || hex.length === 4) {
+    hex = hex
+      .split('')
+      .map((char) => char + char)
+      .join('');
+  }
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  if ([r, g, b].some((channel) => Number.isNaN(channel))) return null;
+  return { r, g, b };
+};
+
+const rgbStringToRgb = (value: string): RGB | null => {
+  const match = value.match(/rgba?\(([^)]+)\)/i);
+  if (!match) return null;
+  const components = match[1]
+    .split(',')
+    .slice(0, 3)
+    .map((component) => component.trim());
+
+  if (components.length < 3) return null;
+
+  const parseComponent = (component: string) => {
+    if (component.endsWith('%')) {
+      const percentValue = parseFloat(component.replace('%', ''));
+      return clampChannel((percentValue / 100) * 255);
+    }
+    const numericValue = parseFloat(component);
+    if (Number.isNaN(numericValue)) return NaN;
+    if (numericValue <= 1) {
+      return clampChannel(numericValue * 255);
+    }
+    return clampChannel(numericValue);
+  };
+
+  const [r, g, b] = components.map(parseComponent);
+  if ([r, g, b].some((channel) => Number.isNaN(channel))) return null;
+  return { r, g, b };
+};
+
+const hslToRgb = (value: string): RGB | null => {
+  const match = value.match(/hsla?\(([^)]+)\)/i);
+  if (!match) return null;
+  const [hRaw, sRaw, lRaw] = match[1]
+    .split(',')
+    .slice(0, 3)
+    .map((component) => component.trim());
+
+  const h = parseFloat(hRaw);
+  const s = parseFloat(sRaw.replace('%', '')) / 100;
+  const l = parseFloat(lRaw.replace('%', '')) / 100;
+
+  if ([h, s, l].some((component) => Number.isNaN(component))) return null;
+
+  const chroma = (1 - Math.abs(2 * l - 1)) * s;
+  const huePrime = (h / 60) % 6;
+  const x = chroma * (1 - Math.abs((huePrime % 2) - 1));
+
+  let r1 = 0;
+  let g1 = 0;
+  let b1 = 0;
+
+  if (huePrime >= 0 && huePrime < 1) {
+    [r1, g1, b1] = [chroma, x, 0];
+  } else if (huePrime >= 1 && huePrime < 2) {
+    [r1, g1, b1] = [x, chroma, 0];
+  } else if (huePrime >= 2 && huePrime < 3) {
+    [r1, g1, b1] = [0, chroma, x];
+  } else if (huePrime >= 3 && huePrime < 4) {
+    [r1, g1, b1] = [0, x, chroma];
+  } else if (huePrime >= 4 && huePrime < 5) {
+    [r1, g1, b1] = [x, 0, chroma];
+  } else if (huePrime >= 5 && huePrime < 6) {
+    [r1, g1, b1] = [chroma, 0, x];
+  }
+
+  const m = l - chroma / 2;
+  const r = clampChannel(Math.round((r1 + m) * 255));
+  const g = clampChannel(Math.round((g1 + m) * 255));
+  const b = clampChannel(Math.round((b1 + m) * 255));
+
+  return { r, g, b };
+};
+
+const extractColorToken = (value: string): string | null => {
+  const hexMatch = value.match(/#[0-9a-fA-F]{3,8}/);
+  if (hexMatch) return hexMatch[0];
+  const rgbMatch = value.match(/rgba?\([^)]*\)/i);
+  if (rgbMatch) return rgbMatch[0];
+  const hslMatch = value.match(/hsla?\([^)]*\)/i);
+  if (hslMatch) return hslMatch[0];
+  return null;
+};
+
+const parseColor = (value: string): RGB | null => {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith('#')) return hexToRgb(trimmed);
+  if (trimmed.startsWith('rgb')) return rgbStringToRgb(trimmed);
+  if (trimmed.startsWith('hsl')) return hslToRgb(trimmed);
+
+  const token = extractColorToken(trimmed);
+  if (!token) return null;
+  return parseColor(token);
+};
+
 // Helper function to check if a color is dark
-const isColorDark = (hex: string | null | undefined): boolean => {
-    if (!hex) return false;
-    try {
-        let color = hex.startsWith('#') ? hex.slice(1) : hex;
-        if (color.length === 3) color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
-        const r = parseInt(color.substring(0, 2), 16), g = parseInt(color.substring(2, 4), 16), b = parseInt(color.substring(4, 6), 16);
-        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        return luminance < 0.5;
-    } catch { return false; }
+const isColorDark = (color: string | null | undefined): boolean => {
+  if (!color) return false;
+  try {
+    const rgb = parseColor(color);
+    if (!rgb) return false;
+    const { r, g, b } = rgb;
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.5;
+  } catch {
+    return false;
+  }
 };
 
 // --- MAIN PAGE ---
@@ -231,6 +347,7 @@ export default function ClientHomepage() {
               <p className={`mt-3 text-3xl font-bold tracking-tight sm:text-4xl ${servicesHeadingColor}`}>
                 Unsere Kernkompetenzen
               </p>
+              <p className={`mt-3 text-sm lg:text-base ${servicesTextColor}`}>
               <p className={`mt-3 text-sm text-gray-600 lg:text-base ${servicesTextColor}`}>
                 Passgenaue Lösungen für private und gewerbliche Projekte – sorgfältig geplant und zuverlässig umgesetzt.
               </p>
