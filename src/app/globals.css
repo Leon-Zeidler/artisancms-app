@@ -1,3 +1,50 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --color-brand-primary: #ea580c;
+    --color-brand-primary-dark: #c2410c;
+    --color-brand-secondary: #ffffff;
+  }
+
+  html {
+    @apply h-full scroll-smooth;
+  }
+
+  body {
+    @apply min-h-full bg-slate-50 text-slate-900 antialiased font-sans;
+    background-image: radial-gradient(125% 125% at 50% 0%, rgba(248, 250, 252, 1) 0%, rgba(226, 232, 240, 0.7) 45%, rgba(248, 250, 252, 1) 100%);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  a {
+    @apply text-brand transition-colors duration-150 ease-out;
+  }
+
+  a:hover {
+    @apply text-brand-dark;
+  }
+
+  :focus-visible {
+    outline: 2px solid theme('colors.brand');
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    @apply bg-brand text-white;
+  }
+}
+
+@layer components {
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-white focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-brand focus:shadow-lg;
+  }
+
+  .card-surface {
+    @apply rounded-3xl border border-slate-200/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur;
+  }
+}
+
