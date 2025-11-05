@@ -16,7 +16,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       {/* The body tag applies default styles but NO logic */}
-      <body>{children}</body> 
+      <body className="bg-transparent text-slate-900">
+        <a href="#main-content" className="skip-link">
+          Zum Inhalt springen
+        </a>
+        <div id="main-content" className="min-h-screen">
+          {children}
+        </div>
+      </body>
     </html>
   );
 }
+
