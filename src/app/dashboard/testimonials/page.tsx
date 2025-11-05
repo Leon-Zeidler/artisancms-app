@@ -8,9 +8,9 @@ import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import EmptyState from '@/components/EmptyState';
-import PlusIcon from '@/components/icons/PlusIcon';
 
 // --- Icons ---
+const PlusIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /> </svg> );
 const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> );
 const EyeSlashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /> </svg> );
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
@@ -32,7 +32,7 @@ type Testimonial = {
 };
 type TestimonialFormData = Omit<Testimonial, 'id' | 'created_at' | 'user_id'>;
 type ModalState = { isOpen: boolean; mode: 'add' | 'edit'; data: Testimonial | null; };
-type TabState = 'pending' | 'published'; // <-- ADDED TAB STATE TYPE
+type TabState = 'pending' | 'published'; // <-- 1. ADDED TAB STATE TYPE
 
 // --- ADD/EDIT MODAL ---
 interface TestimonialModalProps {
@@ -80,7 +80,8 @@ export default function TestimonialsManagementPage() {
     const [deleteConfirmState, setDeleteConfirmState] = useState<{ isOpen: boolean; testimonial: Testimonial | null }>({ isOpen: false, testimonial: null });
     const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
     
-    const [currentTab, setCurrentTab] = useState<TabState>('pending'); // <-- ADDED TAB STATE
+    // --- 2. ADD TAB STATE ---
+    const [currentTab, setCurrentTab] = useState<TabState>('pending');
     
     const router = useRouter();
     
@@ -93,7 +94,7 @@ export default function TestimonialsManagementPage() {
         else { 
             console.log("Fetched testimonials:", data); 
             setTestimonials(data || []);
-            // --- NEW: Set default tab based on data ---
+            // --- 3. SET DEFAULT TAB BASED ON DATA ---
             const hasPending = (data || []).some(t => !t.is_published);
             setCurrentTab(hasPending ? 'pending' : 'published');
         }
@@ -149,7 +150,7 @@ export default function TestimonialsManagementPage() {
         if (updateError) toast.error(`Status konnte nicht geändert werden: ${updateError.message}`);
         else { 
             toast.success("Status erfolgreich geändert!"); 
-            // Update local state to move item between tabs
+            // --- 4. UPDATE LOCAL STATE TO SWITCH TABS ---
             const updatedTestimonials = testimonials.map(t => t.id === testimonial.id ? { ...t, is_published: newStatus } : t);
             setTestimonials(updatedTestimonials);
             
@@ -187,7 +188,8 @@ export default function TestimonialsManagementPage() {
     };
     const handleCancelDelete = () => { setDeleteConfirmState({ isOpen: false, testimonial: null }); };
 
-    // --- NEW: Filtered lists for tabs ---
+
+    // --- 5. NEW: Filtered lists for tabs ---
     const pendingTestimonials = testimonials.filter(t => !t.is_published);
     const publishedTestimonials = testimonials.filter(t => t.is_published);
     const testimonialsToShow = currentTab === 'pending' ? pendingTestimonials : publishedTestimonials;
@@ -201,7 +203,7 @@ export default function TestimonialsManagementPage() {
                 <button onClick={openAddModal} className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"> <PlusIcon className="h-5 w-5" /> Neue Kundenstimme </button>
             </div>
 
-            {/* --- NEW: Tab Navigation --- */}
+            {/* --- 6. NEW: Tab Navigation --- */}
             <div className="mb-6">
               <div className="border-b border-slate-700">
                 <nav className="-mb-px flex space-x-6" aria-label="Tabs">
@@ -235,6 +237,7 @@ export default function TestimonialsManagementPage() {
             </div>
             {/* --- END: Tab Navigation --- */}
 
+
             {/* Loading */}
             {loading && (<p className="text-slate-400 mt-6 text-center">Lade Kundenstimmen...</p>)}
             {/* General Error */}
@@ -243,7 +246,7 @@ export default function TestimonialsManagementPage() {
             {/* List */}
             {!loading && (
                 <div className="space-y-4">
-                    {/* --- UPDATE: Use testimonialsToShow --- */}
+                    {/* --- 7. UPDATE: Use testimonialsToShow --- */}
                     {testimonialsToShow.length > 0 ? (
                         testimonialsToShow.map((t) => {
                              const isLoading = actionLoading[t.id];
@@ -257,7 +260,23 @@ export default function TestimonialsManagementPage() {
                                             <p className="text-xs text-slate-500 mt-1">Erstellt: {new Date(t.created_at).toLocaleDateString('de-DE')}</p>
                                         </div>
                                         <div className="flex items-center space-x-2 flex-shrink-0">
-                                            <button onClick={() => handlePublishToggle(t)} disabled={!!isDisabled || isLoading === 'publish'} title={t.is_published ? 'Verbergen' : 'Veröffentlichen'} className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isLoading === 'publish' ? 'bg-slate-600 text-slate-400 cursor-wait' : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : t.is_published ? 'bg-yellow-600/20 text-yellow-300 hover:bg-yellow-500/30' : 'bg-green-600/20 text-green-300 hover:bg-green-500/30' }`}> <span className="sr-only">{t.is_published ? 'Verbergen' : 'Veröffentlichen'}</span> {isLoading === 'publish' ? <ArrowPathIcon className="h-4 w-4" /> : t.is_published ? <EyeSlashIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />} </button>
+                                            {/* --- 8. UPDATE: Show green "publish" icon if on pending tab --- */}
+                                            <button 
+                                              onClick={() => handlePublishToggle(t)} 
+                                              disabled={!!isDisabled || isLoading === 'publish'} 
+                                              title={t.is_published ? 'Verbergen' : 'Veröffentlichen'} 
+                                              className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ 
+                                                isLoading === 'publish' ? 'bg-slate-600 text-slate-400 cursor-wait' 
+                                                : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' 
+                                                : t.is_published ? 'bg-yellow-600/20 text-yellow-300 hover:bg-yellow-500/30' 
+                                                : 'bg-green-600/20 text-green-300 hover:bg-green-500/30' 
+                                              }`}
+                                            > 
+                                              <span className="sr-only">{t.is_published ? 'Verbergen' : 'Veröffentlichen'}</span> 
+                                              {isLoading === 'publish' ? <ArrowPathIcon className="h-4 w-4" /> 
+                                                : t.is_published ? <EyeSlashIcon className="h-4 w-4" /> 
+                                                : <CheckCircleIcon className="h-4 w-4" />} 
+                                            </button>
                                             <button onClick={() => openEditModal(t)} disabled={!!isDisabled} title="Bearbeiten" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600/20 text-blue-300 hover:bg-blue-500/30' }`}> <span className="sr-only">Bearbeiten</span> <PencilIcon className="h-4 w-4" /> </button>
                                             <button onClick={() => handleDeleteRequest(t)} disabled={!!isDisabled || isLoading === 'delete'} title="Löschen" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isLoading === 'delete' ? 'bg-slate-600 text-slate-400 cursor-wait' : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-red-600/20 text-red-300 hover:bg-red-500/30' }`}> <span className="sr-only">Löschen</span> {isLoading === 'delete' ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />} </button>
                                         </div>
