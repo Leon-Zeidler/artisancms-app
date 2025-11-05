@@ -77,10 +77,10 @@ export default function Navbar({ businessName, slug, logoUrl }: NavbarProps) {
   const brandLabel = businessName?.trim() || "ArtisanCMS";
   const basePath = slug ? `/${slug}` : "/";
   const homePath = basePath;
-  const leistungenPath = `${basePath}/leistungen`;
+  const leistungenPath = `${basePath}/#leistungen`;
   const portfolioPath = `${basePath}/portfolio`;
   const testimonialsPath = `${basePath}/testimonials`;
-  const kontaktPath = `${basePath}/kontakt`;
+  const kontaktPath = `${basePath}/#kontakt`;
 
   // ---- Prevent background scroll when the mobile menu is open ----
   useEffect(() => {
