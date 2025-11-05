@@ -348,6 +348,7 @@ export default function ClientHomepage() {
                 Unsere Kernkompetenzen
               </p>
               <p className={`mt-3 text-sm lg:text-base ${servicesTextColor}`}>
+              <p className={`mt-3 text-sm text-gray-600 lg:text-base ${servicesTextColor}`}>
                 Passgenaue Lösungen für private und gewerbliche Projekte – sorgfältig geplant und zuverlässig umgesetzt.
               </p>
             </div>
