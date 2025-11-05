@@ -35,6 +35,17 @@ export default function LoginPage() {
   const [resendLoading, setResendLoading] = useState(false);
   const router = useRouter();
 
+  const resolveSiteUrl = (): string | null => {
+    const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (envUrl && envUrl.trim().length > 0) {
+      return envUrl;
+    }
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return window.location.origin;
+    }
+    return null;
+  };
+
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
@@ -78,19 +89,19 @@ export default function LoginPage() {
     setMessage(null);
     setShowResendButton(false);
 
-    //
-    // --- THIS IS THE FIX ---
-    //
-    // Get the site URL from the environment variable we just set
-    const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`;
+    const baseUrl = resolveSiteUrl();
+    if (!baseUrl) {
+      setResetLoading(false);
+      toast.error("Unable to determine the site URL for password reset. Please try again later.");
+      return;
+    }
+
+    const redirectUrl = `${baseUrl.replace(/\/$/, '')}/reset-password`;
     console.log("Sending password reset, redirecting to:", redirectUrl);
 
     const resetPromise = supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl, // Use the environment variable
     });
-    //
-    // --- END OF FIX ---
-    //
 
     await toast.promise(
       resetPromise,

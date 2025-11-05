@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This repository contains the source for the ArtisanCMS web application.
 
-## Getting Started
+## Applying the runtime environment guard fixes locally
 
-First, run the development server:
+If you received a `.patch` file (or pulled this repository without the `work` branch that originally held the fixes), you can apply the exact changes by running the following commands from the root of your local clone:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# fetch the patch file if necessary
+curl -O https://raw.githubusercontent.com/<your-fork>/artisancms-app/main/patches/runtime-env-guards.patch
+
+# make sure you are on the branch you want to update (e.g. main)
+git checkout main
+
+# apply the patch
+git apply patches/runtime-env-guards.patch
+
+# review and commit
+git status
+git diff
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> **Troubleshooting:**
+>
+> * If `git apply` reports that the patch cannot be applied cleanly, ensure your local repository matches the commit prior to the fix (`2ce3c01`) or review the patch manually and copy the relevant sections into your files.
+> * If you prefer using `git am`, run `git am patches/runtime-env-guards.patch` instead; it preserves the original commit metadata.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+After applying the patch, redeploy or restart the application so the updated runtime guards take effect. Confirm that all required environment variables are present (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `FROM_EMAIL`, and `OPENAI_API_KEY`).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Local development
 
-## Learn More
+Install dependencies and start the development server:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The application will be available at [http://localhost:3000](http://localhost:3000).
