@@ -246,8 +246,9 @@ export default function ClientHomepage() {
 
   // Check if secondary color is dark
   const isServicesDark = isColorDark(profile.secondary_color);
+  const servicesSectionTextColor = isServicesDark ? "text-white" : "text-gray-900";
   const servicesHeadingColor = isServicesDark ? "text-white" : "text-gray-900";
-  const servicesTextColor = isServicesDark ? "text-gray-300" : "text-gray-600";
+  const servicesTextColor = isServicesDark ? "text-gray-200" : "text-gray-600";
 
   // Layout is handled by layout.tsx, we just return the <main> content
   return (
@@ -340,14 +341,17 @@ export default function ClientHomepage() {
 
       {/* ========== SERVICES SECTION ========== */}
       {parsedServices.length > 0 && (
-        <section id="leistungen" className="bg-brandsec py-24 sm:py-28">
+        <section
+          id="leistungen"
+          className={`bg-brandsec py-24 sm:py-28 ${servicesSectionTextColor}`}
+        >
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center lg:max-w-3xl">
               <h2 className="text-base font-semibold uppercase tracking-wider text-brand">Leistungen</h2>
               <p className={`mt-3 text-3xl font-bold tracking-tight sm:text-4xl ${servicesHeadingColor}`}>
                 Unsere Kernkompetenzen
               </p>
-              <p className={`mt-3 text-sm text-gray-600 lg:text-base ${servicesTextColor}`}>
+              <p className={`mt-3 text-sm lg:text-base ${servicesTextColor}`}>
                 Passgenaue Lösungen für private und gewerbliche Projekte – sorgfältig geplant und zuverlässig umgesetzt.
               </p>
             </div>
