@@ -6,6 +6,7 @@ import React from 'react';
 import { ProfileProvider, type Profile } from '@/contexts/ProfileContext'; 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { DynamicGlobalStyles } from '@/components/DynamicGlobalStyles'; // <-- 1. IMPORT THE NEW COMPONENT
 
 // --- Helper function to fetch profile by slug ---
 async function getProfileBySlug(slug: string): Promise<Profile | null> {
@@ -27,18 +28,12 @@ async function getProfileBySlug(slug: string): Promise<Profile | null> {
   return data as Profile;
 }
 
-// --- Dynamic CSS Variables Component ---
+// --- 2. REMOVE THE OLD DynamicGlobalStyles COMPONENT DEFINITION ---
+/*
 const DynamicGlobalStyles = ({ primaryColor, secondaryColor }: { primaryColor: string, secondaryColor: string }) => {
-  return (
-    <style jsx global>{`
-      :root {
-        --color-brand: ${primaryColor};
-        --color-brand-dark: ${primaryColor}; 
-        --color-brand-secondary: ${secondaryColor};
-      }
-    `}</style>
-  );
+  // ... THIS IS NOW IN ITS OWN FILE ...
 };
+*/
 
 // --- The Layout Component ---
 export default async function ClientLayout({
@@ -64,6 +59,7 @@ export default async function ClientLayout({
   return (
     // The profile object (with all flags) is now available to all child client components
     <ProfileProvider profile={profile}>
+      {/* 3. USE THE IMPORTED COMPONENT */}
       <DynamicGlobalStyles
         primaryColor={profile.primary_color || '#F97316'}
         secondaryColor={profile.secondary_color || '#F8FAFC'}
