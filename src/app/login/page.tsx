@@ -75,11 +75,12 @@ export default function LoginPage() {
 
     if (signInError) {
       console.error('Login error:', signInError.message);
-      if (signInError.message.includes('Invalid login credentials')) {
+      const msg = (signInError.message || '').toLowerCase();
+      if (msg.includes('invalid login credentials')) {
         setError('Invalid email or password.');
-      } else if (signInError.message.includes('Email not confirmed')) {
-         setError('Please confirm your email address first. Check your inbox (and spam folder) for the confirmation link.');
-         setShowResendButton(true);
+      } else if (msg.includes('email not confirmed') || msg.includes('confirm your email') || msg.includes('email_not_confirmed')) {
+        setError('Please confirm your email address first. Check your inbox (and spam folder) for the confirmation link.');
+        setShowResendButton(true);
       } else {
         setError(`Login failed: ${signInError.message}`);
       }
@@ -136,41 +137,50 @@ export default function LoginPage() {
 
   // --- Resend Confirmation Email ---
   const handleResendConfirmation = async () => {
-     if (!email) {
-       toast.error("Please enter the email address again to resend confirmation.");
-       return;
-     }
-     setResendLoading(true);
-     setError(null);
-     setMessage(null);
+    if (!email) {
+      toast.error("Please enter the email address again to resend confirmation.");
+      return;
+    }
+    setResendLoading(true);
+    setError(null);
+    setMessage(null);
 
-     const resendPromise = supabase.auth.resend({
-       type: 'signup',
-       email: email,
-     });
+    const baseUrl = resolveSiteUrl();
+    if (!baseUrl) {
+      setResendLoading(false);
+      toast.error("Unable to determine the site URL to build the confirmation link.");
+      return;
+    }
+    const redirectUrl = `${baseUrl.replace(/\/$/, '')}/auth/callback`;
 
-     await toast.promise(
-       resendPromise,
-       {
-         loading: 'Resending confirmation email...',
-         success: (data) => {
-           if (data.error) {
-             throw data.error;
-           }
-           setMessage("Confirmation email resent! Please check your inbox (and spam folder).");
-           setShowResendButton(false);
-           return 'Confirmation email resent!';
-         },
-         error: (err) => {
-           console.error('Resend confirmation error:', err.message);
-           setError(`Error resending email: ${err.message}`);
-           return `Error: ${err.message}`;
-         },
-       }
-     );
+    const resendPromise = supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: redirectUrl },
+    });
 
-     setResendLoading(false);
-   };
+    await toast.promise(
+      resendPromise,
+      {
+        loading: 'Resending confirmation email...',
+        success: (data) => {
+          if ((data as any)?.error) {
+            throw (data as any).error;
+          }
+          setMessage("Confirmation email resent! Please check your inbox (and spam folder).");
+          setShowResendButton(false);
+          return 'Confirmation email resent!';
+        },
+        error: (err) => {
+          console.error('Resend confirmation error:', err?.message || err);
+          setError(`Error resending email: ${err?.message || err}`);
+          return `Error: ${err?.message || err}`;
+        },
+      }
+    );
+
+    setResendLoading(false);
+  };
 
 
   return (
@@ -297,4 +307,3 @@ export default function LoginPage() {
     </main>
   );
 }
-

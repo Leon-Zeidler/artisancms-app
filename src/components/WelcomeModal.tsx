@@ -1,7 +1,7 @@
 // src/components/WelcomeModal.tsx
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 
 // --- Icons ---
 const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -90,20 +90,45 @@ const GlobeIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+const XMarkIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
 interface WelcomeModalProps {
   onClose: () => void;
   isSaving: boolean;
 }
 
 export default function WelcomeModal({ onClose, isSaving }: WelcomeModalProps) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm"
       aria-modal="true"
       role="dialog"
       aria-labelledby="welcome-modal-title"
+      onClick={onClose}
     >
-      <div className="bg-slate-800 rounded-lg shadow-xl p-6 sm:p-8 max-w-2xl w-full border border-slate-700">
+      <div
+        className="relative w-[min(92vw,56rem)] sm:w-[min(92vw,64rem)] max-w-3xl bg-slate-800 rounded-lg shadow-xl p-6 sm:p-8 border border-slate-700 max-h-[85vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-3 top-3 rounded-md p-2 text-slate-300 hover:bg-slate-700/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400"
+          aria-label="Modal schließen"
+        >
+          <XMarkIcon className="h-5 w-5" />
+        </button>
         <div className="flex items-start gap-3">
           <SparklesIcon className="h-8 w-8 text-orange-400 flex-shrink-0" aria-hidden="true" />
           <div className="space-y-1">
@@ -116,7 +141,7 @@ export default function WelcomeModal({ onClose, isSaving }: WelcomeModalProps) {
           </div>
         </div>
 
-        <div className="mt-6 space-y-6 text-slate-300">
+        <div className="mt-6 space-y-6 text-slate-300 flex-1 overflow-y-auto pr-2">
           <p>
             Damit du dich sofort zurechtfindest, haben wir die wichtigsten Bereiche mit kurzen
             Wegbeschreibungen zusammengefasst. Folge der Checkliste, um den Kern-Workflow einmal
@@ -223,7 +248,7 @@ export default function WelcomeModal({ onClose, isSaving }: WelcomeModalProps) {
           </section>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-8">
+        <div className="mt-6 border-t border-slate-700 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <p className="text-xs text-slate-400">
             Du kannst dieses Fenster jederzeit über <strong>Dashboard &gt; Hilfe</strong> erneut öffnen.
           </p>
