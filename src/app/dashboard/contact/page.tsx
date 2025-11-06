@@ -1,9 +1,9 @@
 // src/app/dashboard/contact/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import EmptyState from '@/components/EmptyState';
@@ -27,6 +27,7 @@ export type ContactSubmission = {
 };
 
 export default function ContactInboxPage() {
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userSlug, setUserSlug] = useState<string | null>(null); 

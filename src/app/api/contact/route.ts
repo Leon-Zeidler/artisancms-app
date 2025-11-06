@@ -90,8 +90,6 @@ export async function POST(request: Request) {
       message: message,
       is_read: false,
     };
-    console.log('Attempting DB insert with data:', JSON.stringify(submissionData, null, 2));
-
     const { error: insertError } = await supabaseAdmin
       .from('contact_submissions')
       .insert(submissionData);
@@ -104,9 +102,8 @@ export async function POST(request: Request) {
       console.error('Supabase Insert Error Hint:', insertError.hint);
       return NextResponse.json({ error: 'Failed to save submission to database.' }, { status: 500 });
     }
-    console.log('Submission saved to DB successfully.');
+    console.log(`Submission saved to DB for profile ${profileId}.`);
 
-    console.log(`Sending email via Resend from ${fromEmail} to ${recipientEmail}`);
     const emailHtml = ` <p>Sie haben eine neue Kontaktanfrage erhalten:</p> <ul> <li><strong>Name:</strong> ${name}</li> <li><strong>Email:</strong> ${senderEmail}</li> </ul> <p><strong>Nachricht:</strong></p> <p>${message.replace(/\n/g, '<br>')}</p> `;
 
     const { data: emailData, error: emailError } = await resend.emails.send({
@@ -121,7 +118,7 @@ export async function POST(request: Request) {
       console.error('Error sending email via Resend:', emailError);
       return NextResponse.json({ error: 'Failed to send message email notification.' }, { status: 500 });
     }
-    console.log('Email sent successfully:', emailData);
+    console.log('Email sent successfully via Resend request ID:', emailData?.id);
 
     return NextResponse.json({ message: 'Nachricht erfolgreich gesendet!' });
 

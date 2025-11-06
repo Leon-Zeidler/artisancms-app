@@ -1,9 +1,9 @@
 // Onboarding page - src/app/onboarding/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
@@ -34,6 +34,7 @@ const createSlug = (name: string): string => {
 
 export default function OnboardingPage() {
   // === State Variables ===
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [businessName, setBusinessName] = useState('');
   const [address, setAddress] = useState('');

@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useState, useEffect, useRef } from 'react'; // <-- FIX: Imports were missing, added useRef
-import { supabase } from '@/lib/supabaseClient';
+import React, { useState, useEffect, useRef, useMemo } from 'react'; // <-- FIX: Imports were missing, added useRef
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js'; // <-- FIX: Import for User type was missing
 import { Toaster, toast } from 'react-hot-toast';
 import FeedbackWidget from '@/components/FeedbackWidget';
@@ -165,6 +165,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const [user, setUser] = useState<User | null>(null);
   const [userSlug, setUserSlug] = useState<string | null>(null); 
   const [loadingProfile, setLoadingProfile] = useState(true);

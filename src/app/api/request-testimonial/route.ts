@@ -37,6 +37,7 @@ export async function POST(request: Request) {
     const supabaseAdmin = createClient(
       supabaseUrl,
       supabaseServiceRoleKey,
+      { auth: { autoRefreshToken: false, persistSession: false } },
     );
 
     const resend = new Resend(resendApiKey);

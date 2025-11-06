@@ -1,10 +1,10 @@
 // src/app/[slug]/portfolio/[id]/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams, notFound } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { useProfile } from '@/contexts/ProfileContext'; // <-- IMPORT CONTEXT
 
 // --- TYPE DEFINITIONS ---
@@ -21,6 +21,7 @@ type Project = {
 // --- MAIN PROJECT DETAIL PAGE COMPONENT ---
 export default function ClientProjectDetailPage() {
   // === State Variables ===
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const profile = useProfile(); // <-- GET PROFILE FROM CONTEXT
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);

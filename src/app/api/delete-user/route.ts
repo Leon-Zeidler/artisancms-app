@@ -58,8 +58,15 @@ export async function DELETE(request: Request) {
 
     // 6. Sign the user out on the client side by clearing the cookie
     // We do this by setting an empty, expired cookie
+    const { error: signOutError } = await supabase.auth.signOut();
+    if (signOutError) {
+      console.warn('Error clearing user session after account deletion:', signOutError.message);
+    }
+
     const response = NextResponse.json({ success: true, message: 'Account deleted successfully' });
-    response.cookies.set('supabase-auth-token', '', { expires: new Date(0) });
+    const expiredDate = new Date(0);
+    response.cookies.set('sb-access-token', '', { expires: expiredDate, path: '/' });
+    response.cookies.set('sb-refresh-token', '', { expires: expiredDate, path: '/' });
     return response;
 
   } catch (error) {

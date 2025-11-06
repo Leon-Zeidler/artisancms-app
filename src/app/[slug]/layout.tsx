@@ -1,9 +1,9 @@
 // src/app/[slug]/layout.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, notFound } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { ProfileContext, ProfileData } from '@/contexts/ProfileContext'; // Import the new context
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -32,6 +32,7 @@ const darkenColor = (hex: string, amount: number = 20): string => {
 };
 
 export default function SlugLayout({ children }: { children: React.ReactNode }) {
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const params = useParams();

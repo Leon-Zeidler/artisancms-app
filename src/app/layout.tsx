@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 // *** Corrected Import Path ***
 // Assuming globals.css is directly inside src/app/
-import "./globals.css"; 
+import "./globals.css";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
 
 export const metadata: Metadata = {
   title: "ArtisanCMS", // Or your client's business name later
@@ -23,6 +24,7 @@ export default function RootLayout({
         <div id="main-content" className="min-h-screen">
           {children}
         </div>
+        <CookieConsentBanner />
       </body>
     </html>
   );

@@ -1,14 +1,15 @@
 // src/app/dashboard/projekte/neu/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ProjectForm from '@/components/ProjectForm'; // <-- 1. IMPORT THE NEW FORM
 
 export default function NewProjectPage() {
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userSlug, setUserSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
