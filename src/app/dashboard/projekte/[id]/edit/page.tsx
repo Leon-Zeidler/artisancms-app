@@ -1,15 +1,16 @@
 // src/app/dashboard/projekte/[id]/edit/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ProjectForm, { type Project } from '@/components/ProjectForm'; // <-- 1. IMPORT THE FORM AND TYPE
 
 export default function EditProjectPage() {
   // === State Variables ===
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const [project, setProject] = useState<Project | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userSlug, setUserSlug] = useState<string | null>(null);

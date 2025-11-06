@@ -1,9 +1,9 @@
 // src/app/dashboard/einstellungen/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal'; // <-- Import reusable modal
@@ -100,6 +100,7 @@ const DEFAULT_SECONDARY_COLOR = '#475569';
 
 export default function EinstellungenPage() {
   // === State Variables ===
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [profileData, setProfileData] = useState<ProfileData>({
       business_name: '', address: '', phone: '', keywords: '', services_description: '', about_text: '', slug: '', // <-- 2. ADD 'keywords'

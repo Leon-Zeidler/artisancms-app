@@ -1,10 +1,10 @@
 // src/components/ProjectForm.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 
@@ -50,6 +50,7 @@ interface ProjectFormProps {
 
 export default function ProjectForm({ currentUser, userSlug, initialData }: ProjectFormProps) {
   const router = useRouter();
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const isEditMode = !!initialData;
 
   // === State Variables ===

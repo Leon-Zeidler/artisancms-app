@@ -1,10 +1,10 @@
 // src/app/[slug]/portfolio/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { useProfile } from '@/contexts/ProfileContext'; // <-- IMPORT CONTEXT
 
 // --- TYPE DEFINITIONS ---
@@ -57,6 +57,7 @@ function PortfolioCard({ project, slug }: PortfolioCardProps) {
 // --- MAIN PORTFOLIO PAGE COMPONENT ---
 export default function ClientPortfolioPage() {
   // === State Variables ===
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const profile = useProfile(); // <-- GET PROFILE FROM CONTEXT
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);

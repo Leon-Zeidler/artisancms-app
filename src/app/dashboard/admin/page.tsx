@@ -1,9 +1,9 @@
 // src/app/dashboard/admin/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation'; // <-- 1. ADDED IMPORT
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 // import { createAdminClient } from '@/lib/supabaseAdminClient'; // <-- 2. REMOVED IMPORT
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
@@ -49,6 +49,7 @@ type Profile = {
 
 export default function AdminPage() {
   const router = useRouter(); // <-- 3. ADDED ROUTER
+  const supabase = useMemo(() => createSupabaseClient(), []);
 
   // --- Data State (Kept all original states) ---
   const [currentUser, setCurrentUser] = useState<User | null>(null);

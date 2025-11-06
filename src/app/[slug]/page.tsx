@@ -3,8 +3,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import React, { useState, useEffect, useMemo } from 'react';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { useProfile } from '@/contexts/ProfileContext'; // <-- IMPORT CONTEXT
 
 // --- TYPE DEFINITIONS (Updated) ---
@@ -186,6 +186,7 @@ const isColorDark = (color: string | null | undefined): boolean => {
 // --- MAIN PAGE ---
 export default function ClientHomepage() {
   // === State Variables ===
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const profile = useProfile(); // <-- GET PROFILE FROM CONTEXT
   
   // These states are specific to this page

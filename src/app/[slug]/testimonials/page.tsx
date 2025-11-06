@@ -1,10 +1,10 @@
 // src/app/[slug]/testimonials/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { useProfile } from '@/contexts/ProfileContext'; // <-- IMPORT CONTEXT
 
 // --- TYPE DEFINITIONS ---
@@ -21,6 +21,7 @@ type Testimonial = {
 // --- MAIN TESTIMONIALS PAGE COMPONENT ---
 export default function ClientTestimonialsPage() {
   // === State Variables ===
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const profile = useProfile(); // <-- GET PROFILE FROM CONTEXT
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);

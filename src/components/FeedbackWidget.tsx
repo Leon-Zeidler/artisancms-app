@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from 'react'; // Import React
+import React, { useState, useEffect, useMemo } from 'react'; // Import React
 import { usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { supabase } from '@/lib/supabaseClient'; // <-- 1. Import Supabase client
+import { createSupabaseClient } from '@/lib/supabaseClient'; // <-- 1. Import Supabase client
 import { User } from '@supabase/supabase-js'; // <-- 2. Import User type
 
 // --- Icons ---
@@ -27,6 +27,7 @@ const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => (
 type FeedbackCategory = 'Bug Report' | 'Feature Request' | 'General Comment';
 
 export default function FeedbackWidget() {
+  const supabase = useMemo(() => createSupabaseClient(), []);
   const [isOpen, setIsOpen] = useState(false);
   const [category, setCategory] = useState<FeedbackCategory>('Bug Report');
   const [message, setMessage] = useState('');
