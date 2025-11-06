@@ -7,12 +7,12 @@ import { notFound } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { useProfile } from '@/contexts/ProfileContext'; // <-- IMPORT CONTEXT
 
-// --- TYPE DEFINITIONS ---
+// --- TYPE DEFINITIONS (Updated) ---
 type Project = {
   id: string;
   title: string | null;
   'project-date': string | null;
-  image_url: string | null;
+  after_image_url: string | null; // Renamed
   status: 'Published' | 'Draft' | string | null;
   created_at: string;
   ai_description?: string | null;
@@ -24,7 +24,8 @@ interface PortfolioCardProps {
   slug: string | null;
 }
 function PortfolioCard({ project, slug }: PortfolioCardProps) {
-  const imageUrl = project.image_url || `https://placehold.co/600x400/A3A3A3/FFF?text=${encodeURIComponent(project.title || 'Project')}`;
+  // Use after_image_url
+  const imageUrl = project.after_image_url || `https://placehold.co/600x400/A3A3A3/FFF?text=${encodeURIComponent(project.title || 'Project')}`;
   const projectUrl = slug ? `/${slug}/portfolio/${project.id}` : `/portfolio/${project.id}`;
 
   return (
@@ -71,10 +72,10 @@ export default function ClientPortfolioPage() {
       setLoading(true); setError(null); setProjects([]);
 
       try {
-        // --- Profile is already fetched by layout, just get projects ---
+        // --- Updated select query ---
         const { data, error: fetchError } = await supabase
           .from('projects')
-          .select(`id, title, "project-date", image_url, status, created_at, ai_description`)
+          .select(`id, title, "project-date", after_image_url, status, created_at, ai_description`) // Renamed
           .eq('user_id', profile.id) // <-- Use ID from context
           .eq('status', 'Published')
           .order('project-date', { ascending: false, nullsFirst: false })
@@ -98,7 +99,7 @@ export default function ClientPortfolioPage() {
     };
 
     fetchPortfolioData();
-  }, [profile]); // <-- Depend on profile from context
+  }, [profile, supabase]); // <-- Depend on profile from context and supabase
 
   // === Render Logic ===
   if (loading) { return <div className="min-h-screen flex items-center justify-center">Lade Portfolio...</div>; }

@@ -1,34 +1,51 @@
-// src/contexts/ProfileContext.tsx
 "use client";
 
-import { createContext, useContext } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 
-// Define the shape of your profile data that pages need
-export type ProfileData = {
+// Define the shape of the profile data
+export type Profile = {
   id: string;
+  slug: string | null;
   business_name: string | null;
   address: string | null;
   phone: string | null;
+  email: string | null;
+  logo_url: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+  keywords: string | null;
   services_description: string | null;
   about_text: string | null;
-  slug: string | null;
-  logo_url: string | null;
-  primary_color: string;
-  primary_color_dark: string;
-  secondary_color: string;
-  email: string | null;
-  // --- ADD THESE TWO LINES ---
   impressum_text: string | null;
   datenschutz_text: string | null;
-  // --- END OF FIX ---
+  is_published: boolean;
+  show_services_section: boolean;
+  show_team_page: boolean;
+  show_testimonials_page: boolean;
 };
 
-export const ProfileContext = createContext<ProfileData | null>(null);
+// 1. Create the context
+const ProfileContext = createContext<Profile>(null!);
 
-export const useProfile = () => {
+// 2. Create the Provider Component
+interface ProfileProviderProps {
+  children: ReactNode;
+  profile: Profile;
+}
+
+export function ProfileProvider({ children, profile }: ProfileProviderProps) {
+  return (
+    <ProfileContext.Provider value={profile}>
+      {children}
+    </ProfileContext.Provider>
+  );
+}
+
+// 3. Create the custom hook
+export function useProfile() {
   const context = useContext(ProfileContext);
-  if (!context) {
-    throw new Error('useProfile must be used within a ProfileProvider (check your layout.tsx)');
+  if (context === null) {
+    throw new Error('useProfile must be used within a ProfileProvider');
   }
   return context;
-};
+}

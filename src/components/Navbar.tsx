@@ -5,10 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+// --- 1. UPDATE THE PROPS INTERFACE ---
 interface NavbarProps {
   businessName?: string | null;
   slug?: string | null;
   logoUrl?: string | null;
+  showTeamPage?: boolean | null; // <-- ADD THIS
+  showTestimonialsPage?: boolean | null; // <-- ADD THIS
 }
 
 const MenuIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -41,16 +44,24 @@ const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export default function Navbar({ businessName, slug, logoUrl }: NavbarProps) {
+// --- 2. UPDATE THE COMPONENT TO ACCEPT NEW PROPS ---
+export default function Navbar({
+  businessName,
+  slug,
+  logoUrl,
+  showTeamPage,
+  showTestimonialsPage,
+}: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [logoHasError, setLogoHasError] = useState(false);
 
-  // ---- Derived labels & paths (fixes 'Cannot find name' errors) ----
+  // ---- Derived labels & paths ----
   const brandLabel = businessName?.trim() || "ArtisanCMS";
   const basePath = slug ? `/${slug}` : "/";
   const homePath = basePath;
-  const leistungenPath = `${basePath}/#leistungen`;
+  const leistungenPath = `${basePath}#leistungen`;
   const portfolioPath = `${basePath}/portfolio`;
+  const teamPath = `${basePath}/team`;
   const testimonialsPath = `${basePath}/testimonials`;
   const kontaktPath = `${basePath}/#kontakt`;
 
@@ -114,12 +125,25 @@ export default function Navbar({ businessName, slug, logoUrl }: NavbarProps) {
               >
                 Projekte
               </Link>
-              <Link
-                href={testimonialsPath}
-                className="font-medium text-gray-600 transition-colors hover:text-brand"
-              >
-                Kundenstimmen
-              </Link>
+              
+              {/* --- 3. MAKE LINKS CONDITIONAL --- */}
+              {showTeamPage && (
+                <Link
+                  href={teamPath}
+                  className="font-medium text-gray-600 transition-colors hover:text-brand"
+                >
+                  Über Uns
+                </Link>
+              )}
+              {showTestimonialsPage && (
+                <Link
+                  href={testimonialsPath}
+                  className="font-medium text-gray-600 transition-colors hover:text-brand"
+                >
+                  Kundenstimmen
+                </Link>
+              )}
+              
               <Link
                 href={kontaktPath}
                 className="font-medium text-gray-600 transition-colors hover:text-brand"
@@ -159,6 +183,7 @@ export default function Navbar({ businessName, slug, logoUrl }: NavbarProps) {
         </div>
       </nav>
 
+      {/* --- 4. UPDATE MOBILE MENU --- */}
       {isMobileMenuOpen && (
         <>
           <div
@@ -204,13 +229,27 @@ export default function Navbar({ businessName, slug, logoUrl }: NavbarProps) {
               >
                 Projekte
               </Link>
-              <Link
-                href={testimonialsPath}
-                onClick={closeMobileMenu}
-                className="rounded-lg px-4 py-3 hover:bg-brand/10"
-              >
-                Kundenstimmen
-              </Link>
+              
+              {/* --- MAKE MOBILE LINKS CONDITIONAL --- */}
+              {showTeamPage && (
+                <Link
+                  href={teamPath}
+                  onClick={closeMobileMenu}
+                  className="rounded-lg px-4 py-3 hover:bg-brand/10"
+                >
+                  Über Uns
+                </Link>
+              )}
+              {showTestimonialsPage && (
+                <Link
+                  href={testimonialsPath}
+                  onClick={closeMobileMenu}
+                  className="rounded-lg px-4 py-3 hover:bg-brand/10"
+                >
+                  Kundenstimmen
+                </Link>
+              )}
+              
               <Link
                 href={kontaktPath}
                 onClick={closeMobileMenu}

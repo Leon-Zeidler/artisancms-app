@@ -226,7 +226,7 @@ export default function ClientHomepage() {
     };
 
     fetchPageContent();
-  }, [profile]); // Depend on the profile from context
+  }, [profile, supabase]); // <-- ADDED supabase dependency
 
   // --- Helper to parse services ---
   const parsedServices = profile.services_description?.split('\n').map(line => { const parts = line.split(':'); const name = parts[0]?.trim(); const description = parts.slice(1).join(':').trim(); if (name && description) { const iconKey = Object.keys(serviceIcons).find(key => name.toLowerCase().includes(key.toLowerCase())) || 'Default'; return { name, description, icon: serviceIcons[iconKey as keyof typeof serviceIcons] }; } return null; }).filter(Boolean) as { name: string; description: string; icon: string }[] || [];
@@ -250,6 +250,13 @@ export default function ClientHomepage() {
   const servicesSectionTextColor = isServicesDark ? "text-white" : "text-gray-900";
   const servicesHeadingColor = isServicesDark ? "text-white" : "text-gray-900";
   const servicesTextColor = isServicesDark ? "text-gray-200" : "text-gray-600";
+
+  // --- 1. NEW LOGIC: Check if primary color is dark for icon contrast ---
+  const isPrimaryDark = isColorDark(profile.primary_color);
+  const iconStackBg = 'bg-brand'; // Always use the primary color for the background
+  // If the background is dark, use white text. If light, use dark text.
+  const iconStackIconColor = isPrimaryDark ? 'text-white' : 'text-gray-900';
+  // --- END OF NEW LOGIC ---
 
   // Layout is handled by layout.tsx, we just return the <main> content
   return (
@@ -360,13 +367,21 @@ export default function ClientHomepage() {
               <dl className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3">
                 {parsedServices.map((service) => (
                   <div key={service.name} className="card-surface flex h-full flex-col p-6">
-                    <dt className={`flex items-center gap-x-3 text-base font-semibold leading-7 ${servicesHeadingColor}`}>
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                    {/* --- 2. THIS IS THE CARD TITLE --- */}
+                    {/* Before: className={`... ${servicesHeadingColor}`} */}
+                    <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                      
+                      {/* --- 3. THIS IS THE ICON STACK --- */}
+                      {/* Before: className="flex h-10 w-10 ... bg-brand/10 text-brand" */}
+                      <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconStackBg} ${iconStackIconColor}`}>
                         <Icon path={service.icon} />
                       </span>
                       {service.name}
                     </dt>
-                    <dd className={`mt-4 text-sm leading-6 sm:text-base sm:leading-7 ${servicesTextColor}`}>
+                    
+                    {/* --- 4. THIS IS THE CARD DESCRIPTION --- */}
+                    {/* Before: className={`... ${servicesTextColor}`} */}
+                    <dd className="mt-4 text-sm leading-6 sm:text-base sm:leading-7 text-gray-600">
                       {service.description}
                     </dd>
                   </div>

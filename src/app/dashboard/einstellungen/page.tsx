@@ -1,695 +1,584 @@
-// src/app/dashboard/einstellungen/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
-import ConfirmationModal from '@/components/ConfirmationModal'; // <-- Import reusable modal
+import ConfirmationModal from '@/components/ConfirmationModal';
 
-// --- Icons ---
-const ArrowRightStartOnRectangleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /> </svg> );
-const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /> </svg> );
-const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z" /> </svg> );
-const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
-const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /> </svg> );
-const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /> </svg> );
-const ExclamationTriangleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /> </svg> );
-
-
-// Type for profile data
-type ProfileData = {
-  business_name: string;
-  address: string;
-  phone: string;
-  keywords: string; // <-- 1. ADD 'keywords'
-  services_description: string;
-  about_text: string;
-  slug: string;
+// --- TYPE DEFINITIONS ---
+type Profile = {
+  id: string;
+  business_name: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+  logo_url: string | null;
+  logo_storage_path: string | null;
+  keywords: string | null;
+  services_description: string | null;
+  about_text: string | null;
   impressum_text: string | null;
   datenschutz_text: string | null;
-  logo_url: string | null;
-  primary_color: string;
-  secondary_color: string;
+  is_published: boolean;
+  show_services_section: boolean;
+  show_team_page: boolean;
+  show_testimonials_page: boolean;
 };
 
-type AIGenerationType = 'services' | 'about';
-type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
+// --- ICONS ---
+const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
+const ExclamationTriangleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /> </svg> );
+const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"> <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /> </svg> );
+const LockClosedIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 00-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /> </svg> );
+const AtSymbolIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25" /> </svg> );
 
-const DATENSCHUTZ_TEMPLATE = `
-HINWEIS: Dies ist eine automatisch generierte Vorlage. Sie als Webseitenbetreiber sind rechtlich dafür verantwortlich, diese Angaben zu prüfen, zu vervollständigen (insbesondere Ihre eigenen Kontaktdaten unter "Verantwortlicher") und anwaltlich prüfen zu lassen. Sie müssen ebenfalls alle Dienste hinzufügen, die Sie selbst einbetten (z.B. Google Maps, YouTube, Calendly, etc.).
+// --- REUSABLE COMPONENTS ---
+const ColorInput = ({ label, name, value, onChange }: { label: string, name: string, value: string, onChange: (e: ChangeEvent<HTMLInputElement>) => void }) => (
+  <div>
+    <label htmlFor={name} className="block text-sm font-medium text-slate-300">{label}</label>
+    <div className="mt-2 flex items-center gap-3">
+      <input type="color" name={name} id={name} value={value || '#000000'} onChange={onChange} className="h-10 w-10 p-0 m-0 border-none rounded cursor-pointer bg-slate-800" />
+      <input type="text" value={value || ''} onChange={onChange} className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 sm:text-sm" placeholder="#F97316" />
+    </div>
+  </div>
+);
 
----
+const LogoUploader = ({ logoUrl, onFileChange, onRemoveLogo, isUploading }: { logoUrl: string | null, onFileChange: (e: ChangeEvent<HTMLInputElement>) => void, onRemoveLogo: () => void, isUploading: boolean }) => (
+  <div>
+    <label className="block text-sm font-medium text-slate-300">Logo</label>
+    <div className="mt-2 flex items-center gap-4">
+      <div className="flex-shrink-0 h-16 w-32 flex items-center justify-center rounded-md border border-slate-700 bg-slate-800 text-slate-500 overflow-hidden">
+        {logoUrl ? <img src={logoUrl} alt="Logo preview" className="h-full w-full object-contain" /> : <span className="text-xs">Vorschau</span>}
+      </div>
+      <div className="flex-grow space-y-2">
+        <input type="file" id="logoUpload" accept="image/png, image/jpeg, image/webp" onChange={onFileChange} disabled={isUploading} className="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 focus:ring-offset-slate-800" />
+        {logoUrl && <button type="button" onClick={onRemoveLogo} disabled={isUploading} className="text-xs text-red-400 hover:text-red-300 disabled:opacity-50">Logo entfernen</button>}
+      </div>
+    </div>
+  </div>
+);
 
-## Verantwortlicher
+const SectionCard = ({ title, description, children }: { title: string, description: string, children: React.ReactNode }) => (
+  <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg">
+    <div className="px-6 py-5 border-b border-slate-700">
+      <h3 className="text-lg font-semibold text-white">{title}</h3>
+      <p className="mt-1 text-sm text-slate-400">{description}</p>
+    </div>
+    <div className="p-6 space-y-6">
+      {children}
+    </div>
+  </div>
+);
 
-[BITTE HIER IHREN FIRMENNAMEN UND KONTAKTADATEN EINGEBEN]
-[Max Mustermann]
-[Musterstraße 1]
-[12345 Musterstadt]
-[Deutschland]
-E-Mail: [ihre-email@beispiel.de]
-Telefon: [Ihre Telefonnummer]
-Impressum: [Link zu Ihrer /impressum Seite]
+const SettingsInput = ({ label, name, value, onChange, placeholder, type = 'text', rows = 3 }: { label: string, name: string, value: string, onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void, placeholder?: string, type?: string, rows?: number }) => (
+  <div>
+    <label htmlFor={name} className="block text-sm font-medium text-slate-300">{label}</label>
+    {type === 'textarea' ? (
+      <textarea name={name} id={name} rows={rows} value={value} onChange={onChange} className="mt-2 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder={placeholder} />
+    ) : (
+      <input type={type} name={name} id={name} value={value} onChange={onChange} className="mt-2 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder={placeholder} />
+    )}
+  </div>
+);
 
-## Allgemeine Hinweise
+const SettingsToggle = ({ label, description, name, isChecked, onChange, disabled = false }: { label: string, description: string, name: string, isChecked: boolean, onChange: (e: ChangeEvent<HTMLInputElement>) => void, disabled?: boolean }) => (
+  <div className={`flex items-center justify-between ${disabled ? 'opacity-60' : ''}`}>
+    <span className="flex flex-grow flex-col">
+      <span className={`text-sm font-medium ${disabled ? 'text-slate-500' : 'text-slate-300'}`}>{label}</span>
+      <span className="text-xs text-slate-500">{description}</span>
+    </span>
+    <label className="relative inline-flex items-center cursor-pointer">
+      <input
+        type="checkbox"
+        name={name}
+        checked={isChecked}
+        onChange={onChange}
+        disabled={disabled}
+        className="sr-only peer"
+      />
+      <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${disabled ? 'cursor-not-allowed' : ''}`}></div>
+    </label>
+  </div>
+);
 
-Wir nehmen den Schutz Ihrer persönlichen Daten sehr ernst. Wir behandeln Ihre personenbezogenen Daten vertraulich und entsprechend der gesetzlichen Datenschutzvorschriften sowie dieser Datenschutzerklärung.
 
-## Hosting und Bereitstellung der Webseite (Auftragsverarbeitung)
+// --- DangerZone Component (with Publish Guard) ---
+function DangerZone({ profile, user, onUpdateProfile }: { profile: Profile | null, user: User | null, onUpdateProfile: (updatedProfile: Profile) => void }) {
+  const supabase = useMemo(() => createSupabaseClient(), []);
+  const router = useRouter();
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
-Diese Website wird im Rahmen einer Auftragsverarbeitung (AVV) durch den Dienst ArtisanCMS (Leon Zeidler, Alter Dorfrand 50, 01454 Radeberg) bereitgestellt. ArtisanCMS nutzt die folgende technische Infrastruktur, die zur Bereitstellung der Webseite und zur Verarbeitung von Daten notwendig ist:
+  if (!user || !profile) return null;
 
-### 1. Hosting & Web-Analyse durch Vercel
+  const isPublished = profile.is_published;
+  
+  const hasImpressum = profile.impressum_text && profile.impressum_text.trim().length > 10;
+  const hasDatenschutz = profile.datenschutz_text && profile.datenschutz_text.trim().length > 10;
+  const canPublish = hasImpressum && hasDatenschutz;
 
-Unser Hoster ist Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA.
-Vercel erhebt beim Besuch der Webseite technische Daten (Server-Log-Dateien), die für den stabilen Betrieb notwendig sind (IP-Adresse, Browsertyp, Betriebssystem, Referrer URL, Uhrzeit).
+  const handlePublishToggle = async () => {
+    const newStatus = !isPublished;
+    if (newStatus && !canPublish) {
+      toast.error("Bitte füllen Sie Impressum und Datenschutz aus, um die Seite zu veröffentlichen.");
+      return;
+    }
 
-Wir nutzen zudem Vercel Analytics, einen datenschutzfreundlichen Analysedienst, um die Nutzung unserer Webseite zu verstehen und zu verbessern. Vercel Analytics erfasst keine personenbezogenen Daten (wie IP-Adressen) und verwendet keine Cookies. Es werden anonymisierte Daten wie besuchte Seiten und Herkunftsland erfasst.
+    setIsPublishing(true);
+    const toastId = toast.loading(newStatus ? 'Website wird veröffentlicht...' : 'Veröffentlichung wird zurückgezogen...');
 
-Grundlage für die Datenverarbeitung ist Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse an einer fehlerfreien und optimierten Darstellung unserer Webseite). Wir haben mit Vercel einen Auftragsverarbeitungsvertrag (AVV / DPA) abgeschlossen.
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ is_published: newStatus })
+        .eq('id', user.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
 
-### 2. Datenbank & Speicherung durch Supabase
+      onUpdateProfile(data as Profile);
+      toast.success(newStatus ? 'Website ist jetzt live!' : 'Website ist jetzt offline.', { id: toastId });
+    } catch (err: any) {
+      toast.error(`Fehler: ${err.message}`, { id: toastId });
+    }
+    setIsPublishing(false);
+  };
 
-Die Inhalte dieser Webseite (z.B. Projektbilder, Texte) werden in einer Datenbank bei Supabase Inc., 970 Toa Payoh North #07-04, Singapur 318992, gespeichert. Dies ist für die Anzeige der Inhalte technisch notwendig. Wir haben mit Supabase einen AVV/DPA abgeschlossen.
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    const { error } = await supabase.rpc('delete_user_account');
+    if (error) {
+      toast.error(`Fehler beim Löschen: ${error.message}`);
+      setIsDeleting(false);
+    } else {
+      toast.success("Konto wird gelöscht. Sie werden abgemeldet.");
+      router.push('/login');
+    }
+  };
 
-### 3. Kontaktformular
+  return (
+    <>
+      <SectionCard
+        title="Gefahrenzone"
+        description="Wichtige Aktionen mit dauerhaften Konsequenzen."
+      >
+        {/* Publish UI */}
+        <div className="space-y-4 rounded-lg border border-slate-700 bg-slate-900/50 p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h4 className="text-base font-semibold text-white">Website veröffentlichen</h4>
+              <p className="mt-1 text-sm text-slate-400">
+                Machen Sie Ihre Webseite unter Ihrem Link öffentlich sichtbar.
+              </p>
+              {!canPublish && (
+                <p className="mt-2 text-xs text-yellow-400 flex items-center gap-2">
+                  <ExclamationTriangleIcon className="h-4 w-4 flex-shrink-0" />
+                  <span>Zum Veröffentlichen müssen Impressum & Datenschutz ausgefüllt sein.</span>
+                </p>
+              )}
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isPublished}
+                onChange={handlePublishToggle}
+                disabled={isPublishing || (!isPublished && !canPublish)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+            </label>
+          </div>
+        </div>
 
-Wenn Sie uns per Kontaktformular Anfragen zukommen lassen, werden Ihre Angaben aus dem Anfrageformular inklusive der von Ihnen dort angegebenen Kontaktdaten (Name, E-Mail, Nachricht) zwecks Bearbeitung der Anfrage und für den Fall von Anschlussfragen bei uns gespeichert und verarbeitet.
+        {/* Delete Account UI */}
+        <div className="space-y-4 rounded-lg border border-red-900/50 bg-red-900/20 p-4">
+          <div>
+            <h4 className="text-base font-semibold text-red-300">Konto löschen</h4>
+            <p className="mt-1 text-sm text-slate-400">
+              Diese Aktion ist endgültig und kann nicht rückgängig gemacht werden. Alle Ihre Daten, Projekte und Einstellungen werden dauerhaft gelöscht.
+            </p>
+          </div>
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={() => setConfirmDeleteModal(true)}
+              disabled={isDeleting}
+              className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 disabled:opacity-50"
+            >
+              Konto löschen
+            </button>
+          </div>
+        </div>
+      </SectionCard>
 
-Die Verarbeitung dieser Daten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO, sofern Ihre Anfrage mit der Erfüllung eines Vertrags zusammenhängt oder zur Durchführung vorvertraglicher Maßnahmen erforderlich ist. In allen übrigen Fällen beruht die Verarbeitung auf unserem berechtigten Interesse an der effektiven Bearbeitung der an uns gerichteten Anfragen (Art. 6 Abs. 1 lit. f DSGVO).
+      <ConfirmationModal
+        isOpen={confirmDeleteModal}
+        title="Konto unwiderruflich löschen?"
+        message="Sind Sie absolut sicher? Alle Ihre Daten, Projekte, Bilder und Einstellungen werden dauerhaft entfernt. Diese Aktion kann nicht rückgängig gemacht werden."
+        confirmText="Ja, mein Konto löschen"
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setConfirmDeleteModal(false)}
+        isConfirming={isDeleting}
+      />
+    </>
+  );
+}
 
-Ihre Daten werden zur Speicherung an unsere Datenbank (Supabase, siehe oben) und zur Benachrichtigung an unseren E-Mail-Dienstleister weitergeleitet.
 
-### 4. E-Mail-Versand (Kontaktformular) durch Resend
-
-Zum Versand der Benachrichtigung über Ihre Kontaktanfrage nutzen wir den Dienst Resend Inc., 548 Market St, PMB 98417, San Francisco, CA 94104-5401, USA. Resend verarbeitet Ihre E-Mail-Adresse und Ihren Namen, um diese Benachrichtigung an uns zuzustellen. Wir haben mit Resend einen AVV/DPA abgeschlossen.
-
-## Cookies & LocalStorage
-
-Unsere Webseite verwendet ein Cookie-Banner, um Ihre Zustimmung zur Datennutzung zu verwalten. Ihre Entscheidung (Akzeptieren oder Ablehnen) wird in Ihrem Browser im "LocalStorage" (in einem Eintrag namens \`cookie_consent\`) gespeichert. Dies ist technisch notwendig, um Ihre Auswahl bei zukünftigen Besuchen zu respektieren.
-
-## Ihre Rechte als Betroffener
-
-Sie haben im Rahmen der geltenden gesetzlichen Bestimmungen jederzeit das Recht auf unentgeltliche Auskunft über Ihre bei uns gespeicherten personenbezogenen Daten, deren Herkunft und Empfänger und den Zweck der Datenverarbeitung und ggf. ein Recht auf Berichtigung oder Löschung dieser Daten. Hierzu sowie zu weiteren Fragen zum Thema personenbezogene Daten können Sie sich jederzeit unter der im Impressum angegebenen Adresse an uns wenden.
-`;
-
-const DEFAULT_PRIMARY_COLOR = '#ea580c';
-const DEFAULT_SECONDARY_COLOR = '#475569';
-
+// --- MAIN PAGE COMPONENT ---
 export default function EinstellungenPage() {
-  // === State Variables ===
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [profileData, setProfileData] = useState<ProfileData>({
-      business_name: '', address: '', phone: '', keywords: '', services_description: '', about_text: '', slug: '', // <-- 2. ADD 'keywords'
-      impressum_text: '', datenschutz_text: '',
-      logo_url: null,
-      primary_color: DEFAULT_PRIMARY_COLOR,
-      secondary_color: DEFAULT_SECONDARY_COLOR,
-  });
-  const [slugStatus, setSlugStatus] = useState<SlugStatus>('idle');
-  const [slugCheckTimeout, setSlugCheckTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [originalSlug, setOriginalSlug] = useState('');
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
-  const [isRemovingLogo, setIsRemovingLogo] = useState(false);
-
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [aiLoading, setAiLoading] = useState<AIGenerationType | null>(null);
-  const [logoutLoading, setLogoutLoading] = useState(false);
-  const [generalError, setGeneralError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
   
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isSavingPassword, setIsSavingPassword] = useState(false);
-  
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  // --- FIX 1: Update Omit type ---
+  const [formData, setFormData] = useState<Omit<Profile, 'id' | 'logo_url' | 'logo_storage_path'>>({
+    business_name: '',
+    address: '',
+    phone: '',
+    email: '', // <-- Added email
+    primary_color: '#F97316',
+    secondary_color: '#F8FAFC',
+    keywords: '',
+    services_description: '',
+    about_text: '',
+    impressum_text: '',
+    datenschutz_text: '',
+    is_published: false,
+    show_services_section: true,
+    show_team_page: true,
+    show_testimonials_page: true,
+  });
 
   const router = useRouter();
 
-  // === Get Current User & Profile Data on Load ===
+  // --- Fetch data ---
   useEffect(() => {
-    let isMounted = true;
-    const fetchData = async () => {
-      setLoading(true); setGeneralError(null);
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (!isMounted || userError || !user) { if (isMounted) router.push('/login'); return; }
-      if (isMounted) setCurrentUser(user);
+    const getUserAndProfile = async () => {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+      setCurrentUser(user);
 
-      // <-- 3. ADD 'keywords' to select string -->
-      const selectColumns = 'business_name, address, phone, services_description, about_text, slug, impressum_text, datenschutz_text, logo_url, primary_color, secondary_color, email, keywords';
-      
-      const { data: profile, error: profileError } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
-        .select(selectColumns)
+        .select('*') // Fetch all columns
         .eq('id', user.id)
         .single();
-
-      if (isMounted) {
-          if (profileError && profileError.code !== 'PGRST116') {
-              setGeneralError(`Profildaten konnten nicht geladen werden: ${profileError.message}`);
-          } else if (profile) {
-            const datenschutzText = profile.datenschutz_text || DATENSCHUTZ_TEMPLATE;
-            setProfileData({
-                business_name: profile.business_name || '', address: profile.address || '', phone: profile.phone || '',
-                keywords: profile.keywords || '', // <-- 4. SET 'keywords'
-                services_description: profile.services_description || '', about_text: profile.about_text || '',
-                slug: profile.slug || '',
-                impressum_text: profile.impressum_text || '',
-                datenschutz_text: datenschutzText,
-                logo_url: profile.logo_url || null,
-                primary_color: profile.primary_color || DEFAULT_PRIMARY_COLOR,
-                secondary_color: profile.secondary_color || DEFAULT_SECONDARY_COLOR,
-            });
-            setOriginalSlug(profile.slug || '');
-            setSlugStatus(profile.slug ? 'available' : 'invalid');
-            setLogoPreviewUrl(profile.logo_url || null);
-          } else {
-              console.warn("Profile fetch returned no data, but user is past onboarding.");
-              setGeneralError("Profil nicht gefunden. Bitte versuchen Sie, sich neu anzumelden.");
-          }
-           setLoading(false);
+      
+      if (error && error.code !== 'PGRST116') { // 'PGRST116' = no rows found
+        toast.error(`Profil-Fehler: ${error.message}`);
+      } else if (profileData) {
+        setProfile(profileData as Profile);
+        // --- FIX 2: Set all fields in formData ---
+        setFormData({
+          business_name: profileData.business_name || '',
+          address: profileData.address || '',
+          phone: profileData.phone || '',
+          email: profileData.email || '', // <-- Added email
+          primary_color: profileData.primary_color || '#F97316',
+          secondary_color: profileData.secondary_color || '#F8FAFC',
+          keywords: profileData.keywords || '',
+          services_description: profileData.services_description || '',
+          about_text: profileData.about_text || '',
+          impressum_text: profileData.impressum_text || '',
+          datenschutz_text: profileData.datenschutz_text || '',
+          is_published: profileData.is_published || false,
+          show_services_section: profileData.show_services_section ?? true,
+          show_team_page: profileData.show_team_page ?? true,
+          show_testimonials_page: profileData.show_testimonials_page ?? true,
+        });
       }
+      setLoading(false);
     };
-    fetchData();
-    return () => { isMounted = false };
-  }, [router]);
+    getUserAndProfile();
+  }, [router, supabase]);
 
-  // === Handle Input Changes ===
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name, value } = e.target;
-      setProfileData(prev => ({ ...prev, [name]: value }));
-      if (name === 'slug') {
-          const newSlug = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-          setProfileData(prev => ({...prev, slug: newSlug}));
-          handleSlugChangeInternal(newSlug);
-      }
+  // --- Handle form input changes ---
+  const handleFormChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    
+    // Handle checkbox (toggle)
+    if (type === 'checkbox') {
+      const { checked } = e.target as HTMLInputElement;
+      setFormData(prev => ({ ...prev, [name]: checked }));
+    } else {
+      // Handle text, color, textarea
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
-  // --- Logo File Change Handler ---
-   const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-     if (event.target.files && event.target.files.length > 0) {
-       const file = event.target.files[0];
-       if (!file.type.startsWith('image/')) {
-         toast.error("Bitte wählen Sie eine Bilddatei (PNG, JPG, SVG, etc.).");
-         event.target.value = ''; return;
-       }
-       setLogoFile(file);
-       setLogoPreviewUrl(URL.createObjectURL(file));
-       setIsRemovingLogo(false);
-     } else {
-       setLogoFile(null);
-       setLogoPreviewUrl(profileData.logo_url);
-     }
-   };
-
-   // --- Handle Logo Removal Intent ---
-   const handleLogoRemoveIntent = () => {
-       setIsRemovingLogo(true);
-       setLogoFile(null);
-       setLogoPreviewUrl(null);
-   };
-
-  // --- Slug Check Logic ---
-  const checkSlugUniqueness = useCallback(async (currentSlug: string) => {
-    if (!currentSlug.trim()) { setSlugStatus('invalid'); return; }
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(currentSlug)) { setSlugStatus('invalid'); return; }
-    if (currentSlug === originalSlug) { setSlugStatus('available'); return; }
-    setSlugStatus('checking');
-    try {
-        const query = supabase.from('profiles').select('id').eq('slug', currentSlug);
-        const { data, error } = await query.limit(1);
-        if (error) { console.error("Error checking slug uniqueness:", error); setSlugStatus('idle'); toast.error("Fehler bei der Slug-Prüfung."); }
-        else if (data && data.length > 0) setSlugStatus('taken');
-        else setSlugStatus('available');
-    } catch (err) { console.error("Exception checking slug:", err); setSlugStatus('idle'); toast.error("Fehler bei der Slug-Prüfung."); }
-  }, [originalSlug]);
-
-  const handleSlugChangeInternal = (newSlug: string) => {
-    setSlugStatus('idle');
-    if (slugCheckTimeout) clearTimeout(slugCheckTimeout);
-    if (newSlug.trim()) {
-        const timeout = setTimeout(() => { checkSlugUniqueness(newSlug); }, 500);
-        setSlugCheckTimeout(timeout);
-    } else { setSlugStatus('invalid'); }
-  };
-
-  // --- AI Text Generation ---
-  const handleGenerateProfileText = async (type: AIGenerationType) => {
-    const context = profileData.business_name || 'Handwerksbetrieb';
-    if (!context) { toast.error("Bitte geben Sie zuerst den Namen des Betriebs ein."); return; }
-    setAiLoading(type);
-    await toast.promise(
-       fetch('/api/generate-profile-text', { 
-         method: 'POST', 
-         headers: { 'Content-Type': 'application/json' }, 
-         // Pass keywords to the API
-         body: JSON.stringify({ context: context, type: type, keywords: profileData.keywords }), 
-        })
-       .then(async (response) => { if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error || `Failed to generate ${type} text`); } return response.json(); }),
-       { loading: `${type === 'services' ? 'Leistungsbeschreibung' : '"Über uns" Text'} wird generiert...`,
-         success: (data) => { if (type === 'services') setProfileData(prev => ({ ...prev, services_description: data.text })); else if (type === 'about') setProfileData(prev => ({ ...prev, about_text: data.text })); return `${type === 'services' ? 'Leistungsbeschreibung' : '"Über uns" Text'} erfolgreich generiert!`; },
-         error: (err) => `Fehler bei der Textgenerierung: ${err.message}` }
-    );
-    setAiLoading(null);
-  };
-
-  // === Handle Form Submission ===
-  const handleSaveProfile = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!currentUser) { toast.error("Benutzer nicht gefunden."); return; }
-    if (slugStatus !== 'available') { toast.error("Bitte wählen Sie einen gültigen und verfügbaren URL-Pfad (Slug)."); if(slugStatus === 'idle' || slugStatus === 'checking') checkSlugUniqueness(profileData.slug); return; }
+  // --- Handle Save Profile ---
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
     setSaving(true);
-
-    const savePromise = async () => {
-        let finalLogoUrl = profileData.logo_url;
-        let oldLogoPath: string | null = null;
-        const userId = currentUser.id;
-
-        if (isRemovingLogo && profileData.logo_url) {
-            finalLogoUrl = null;
-            try { 
-              oldLogoPath = new URL(profileData.logo_url).pathname.split('/').slice(6).join('/'); 
-            } catch {}
-        }
-        else if (logoFile) {
-            const file = logoFile;
-            const fileExtension = file.name.split('.').pop() || 'png';
-            const fileName = `logo.${fileExtension}`;
-            const filePath = `${userId}/${fileName}`;
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('logos').upload(filePath, file, { upsert: true });
-            if (uploadError) { throw new Error(`Logo konnte nicht hochgeladen werden: ${uploadError.message}`); }
-            const { data: urlData } = supabase.storage.from('logos').getPublicUrl(uploadData.path);
-            if (!urlData?.publicUrl) { throw new Error("Konnte die URL des neuen Logos nicht abrufen."); }
-            finalLogoUrl = urlData.publicUrl;
-            if (profileData.logo_url && profileData.logo_url !== finalLogoUrl) {
-                try { 
-                  oldLogoPath = new URL(profileData.logo_url).pathname.split('/').slice(6).join('/'); 
-                } catch {}
-            }
-        }
-
-        const profileUpdates = {
-          business_name: profileData.business_name, address: profileData.address, phone: profileData.phone,
-          keywords: profileData.keywords, // <-- 5. ADD 'keywords' to update object
-          services_description: profileData.services_description, about_text: profileData.about_text,
-          slug: profileData.slug,
-          impressum_text: profileData.impressum_text || null,
-          datenschutz_text: profileData.datenschutz_text || null,
-          updated_at: new Date().toISOString(),
-          logo_url: finalLogoUrl,
-          primary_color: profileData.primary_color,
-          secondary_color: profileData.secondary_color,
-        };
-
-        const { data: updatedProfile, error: updateError } = await supabase
-            .from('profiles').update(profileUpdates).eq('id', currentUser.id).select().single();
-
-        if (updateError) {
-             if (updateError.message.includes('duplicate key value violates unique constraint "profiles_slug_key"')) {
-                setSlugStatus('taken'); throw new Error("Dieser URL-Pfad (Slug) ist bereits vergeben.");
-             }
-             throw new Error(`Profil konnte nicht gespeichert werden: ${updateError.message}`);
-        }
-
-        if (oldLogoPath) {
-             const { error: deleteError } = await supabase.storage.from('logos').remove([oldLogoPath]);
-             if (deleteError) {
-                 console.warn("Could not delete old logo from storage, proceeding anyway:", deleteError.message);
-                 toast.error(`Altes Logo (${oldLogoPath}) konnte nicht gelöscht werden, DB wurde aber aktualisiert.`);
-             }
-        }
-        return updatedProfile;
-    };
-
-    await toast.promise(savePromise(), {
-        loading: 'Änderungen werden gespeichert...',
-        success: (updatedData: any) => { 
-            setProfileData(prev => ({ 
-              ...prev, 
-              logo_url: updatedData.logo_url, 
-              primary_color: updatedData.primary_color, 
-              secondary_color: updatedData.secondary_color 
-            }));
-            setLogoFile(null);
-            setLogoPreviewUrl(updatedData.logo_url);
-            setIsRemovingLogo(false);
-            setOriginalSlug(profileData.slug);
-            return 'Einstellungen erfolgreich gespeichert!';
-        },
-        error: (err: any) => {
-             if (err.message.includes("bereits vergeben")) setSlugStatus('taken');
-             return err.message || "Speichern fehlgeschlagen.";
-        }
-    });
+    
+    // This now saves all fields in formData
+    const { error, data: updatedProfile } = await supabase
+      .from('profiles')
+      .update(formData)
+      .eq('id', currentUser.id)
+      .select()
+      .single();
+    
     setSaving(false);
+    if (error) {
+      toast.error(`Fehler: ${error.message}`);
+    } else {
+      setProfile(updatedProfile as Profile); // Update local profile state
+      toast.success("Einstellungen gespeichert!");
+    }
   };
 
-  // === Handle Logout Function ===
-  const handleLogout = async () => {
-    setLogoutLoading(true);
-    await toast.promise(
-        supabase.auth.signOut(),
-        { loading: 'Abmelden...',
-          success: () => { console.log("Logout successful"); router.push('/'); router.refresh(); return 'Erfolgreich abgemeldet.'; },
-          error: (err) => { console.error("Logout error:", err); setLogoutLoading(false); return `Abmeldung fehlgeschlagen: ${err.message}`; } }
-    );
+  // --- Handle Logo Upload ---
+  const handleLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !currentUser || !profile) return;
+    const file = e.target.files[0];
+    setIsUploading(true);
+    const toastId = toast.loading('Logo wird hochgeladen...');
+
+    if (profile.logo_storage_path) {
+      await supabase.storage.from('logos').remove([profile.logo_storage_path]);
+    }
+
+    const filePath = `${currentUser.id}/${file.name}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('logos')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast.error(`Upload-Fehler: ${uploadError.message}`, { id: toastId });
+      setIsUploading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from('logos').getPublicUrl(uploadData.path);
+    const newLogoUrl = urlData.publicUrl;
+
+    const { data: updatedProfile, error: dbError } = await supabase
+      .from('profiles')
+      .update({ logo_url: newLogoUrl, logo_storage_path: uploadData.path })
+      .eq('id', currentUser.id)
+      .select()
+      .single();
+
+    if (dbError) {
+      toast.error(`DB-Fehler: ${dbError.message}`, { id: toastId });
+    } else {
+      setProfile(updatedProfile as Profile);
+      toast.success('Logo erfolgreich hochgeladen!', { id: toastId });
+    }
+    setIsUploading(false);
   };
 
-  // --- Functions for Account Management ---
-  const handleChangePassword = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (newPassword.length < 6) {
-      toast.error("Passwort muss mindestens 6 Zeichen lang sein.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwörter stimmen nicht überein.");
-      return;
-    }
-    
-    setIsSavingPassword(true);
-    
-    const passwordPromise = async () => {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-      if (error) throw error;
-    };
+  // --- Handle Logo Removal ---
+  const handleRemoveLogo = async () => {
+    if (!currentUser || !profile || !profile.logo_storage_path) return;
+    setIsUploading(true);
+    const toastId = toast.loading('Logo wird entfernt...');
 
-    await toast.promise(passwordPromise(), {
-      loading: 'Passwort wird geändert...',
-      success: () => {
-        setNewPassword('');
-        setConfirmPassword('');
-        setIsSavingPassword(false);
-        return 'Passwort erfolgreich geändert!';
-      },
-      error: (err: any) => {
-        setIsSavingPassword(false);
-        return `Fehler: ${err.message}`;
-      }
-    });
+    const { error: storageError } = await supabase.storage.from('logos').remove([profile.logo_storage_path]);
+    if (storageError) {
+      toast.error(`Storage-Fehler: ${storageError.message}`, { id: toastId });
+      setIsUploading(false); return;
+    }
+
+    const { data: updatedProfile, error: dbError } = await supabase
+      .from('profiles')
+      .update({ logo_url: null, logo_storage_path: null })
+      .eq('id', currentUser.id)
+      .select()
+      .single();
+    
+    if (dbError) {
+      toast.error(`DB-Fehler: ${dbError.message}`, { id: toastId });
+    } else {
+      setProfile(updatedProfile as Profile);
+      toast.success('Logo entfernt.', { id: toastId });
+    }
+    setIsUploading(false);
   };
   
-  const handleDeleteAccount = async () => {
-    setIsDeletingAccount(true);
+  // --- Handle Change Email ---
+  const handleChangeEmail = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!newEmail || !currentUser || newEmail === currentUser.email) {
+      toast.error("Bitte geben Sie eine neue, andere E-Mail-Adresse ein.");
+      return;
+    }
 
-    const deletePromise = async () => {
-      const response = await fetch('/api/delete-user', {
-        method: 'DELETE'
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || 'Fehler beim Löschen des Kontos.');
-      }
-    };
+    setIsChangingEmail(true);
+    const toastId = toast.loading("E-Mail-Änderung wird eingeleitet...");
 
-    try {
-      await toast.promise(
-        deletePromise(),
-        {
-          loading: 'Konto wird unwiderruflich gelöscht...',
-          success: 'Konto erfolgreich gelöscht. Sie werden weitergeleitet.',
-          error: (err: any) => {
-            return `Fehler: ${err.message}`; 
-          }
-        }
+    const { data, error } = await supabase.auth.updateUser(
+      { email: newEmail }
+    );
+
+    setIsChangingEmail(false);
+    
+    if (error) {
+      toast.error(`Fehler: ${error.message}`, { id: toastId });
+    } else {
+      setNewEmail('');
+      toast.success(
+        "Bitte Posteingang prüfen! Wir haben eine Bestätigungs-E-Mail an Ihre ALTE und NEUE Adresse gesendet. Sie müssen beide bestätigen.",
+        { id: toastId, duration: 10000 }
       );
-      // Redirect on success
-      window.location.href = '/'; 
-    } catch (error) {
-      console.error("Delete account failed:", error);
-      // Only reset state on failure, so user can see success toast
-      setIsDeletingAccount(false);
-      setShowDeleteModal(false);
     }
   };
+  
+  // --- Callback to update local profile state ---
+  const handleProfileUpdate = (updatedProfile: Profile) => {
+    setProfile(updatedProfile);
+    // Also update formData to match
+    setFormData(prev => ({...prev, is_published: updatedProfile.is_published }));
+  };
 
+  if (loading) {
+    return <div className="p-8 text-slate-400">Lade Einstellungen...</div>;
+  }
 
-  // === Render Logic ===
+  // === Render Page ===
   return (
     <main className="p-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white">Einstellungen</h1>
-        <p className="text-slate-400 mt-1">Verwalten Sie hier Ihr Unternehmensprofil und Konto.</p>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Einstellungen</h1>
+          <p className="text-slate-400 mt-1">Verwalten Sie hier Ihre globalen Webseiten-Einstellungen.</p>
+        </div>
+        <button
+          onClick={handleSaveProfile}
+          disabled={saving || isUploading}
+          className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-50"
+        >
+          {saving ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
+          {saving ? 'Wird gespeichert...' : 'Änderungen speichern'}
+        </button>
       </div>
 
-      {/* Loading State */}
-      {loading && ( <p className="text-slate-400 mt-8 text-center">Lade Profildaten...</p> )}
-      {/* General Error State */}
-      {generalError && !loading && ( <p className="text-red-500 mt-8 text-center">{generalError}</p> )}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl">
+        
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-8">
+          <SectionCard
+            title="Firmendaten"
+            description="Diese Informationen werden auf Ihrer Webseite (z.B. im Impressum) angezeigt."
+          >
+            {/* --- FIX 3: Add ?? '' to all values --- */}
+            <SettingsInput label="Firmenname" name="business_name" value={formData.business_name ?? ''} onChange={handleFormChange} placeholder="z.B. Max Mustermann GmbH" />
+            <SettingsInput label="Adresse" name="address" value={formData.address ?? ''} onChange={handleFormChange} placeholder="z.B. Musterstraße 1, 12345 Musterstadt" type="textarea" rows={3} />
+            <SettingsInput label="Telefon" name="phone" value={formData.phone ?? ''} onChange={handleFormChange} placeholder="z.B. 01234 567890" />
+            <SettingsInput label="E-Mail (Öffentlich)" name="email" value={formData.email ?? ''} onChange={handleFormChange} placeholder="z.B. info@mustermann.de" />
+          </SectionCard>
 
-      {/* Settings Content */}
-      {!loading && currentUser && (
-        <div className="mt-8 max-w-2xl space-y-8 divide-y divide-slate-700">
+          <SectionCard
+            title="Webseiten-Branding & Inhalte"
+            description="Passen Sie das Aussehen Ihrer Webseite an."
+          >
+            {/* --- FIX 4: Add ?? 'default' to color values --- */}
+            <ColorInput label="Primärfarbe (Brand)" name="primary_color" value={formData.primary_color ?? '#F97316'} onChange={handleFormChange} />
+            <ColorInput label="Sekundärfarbe (Hintergrund)" name="secondary_color" value={formData.secondary_color ?? '#F8FAFC'} onChange={handleFormChange} />
+            <LogoUploader 
+              logoUrl={profile?.logo_url || null}
+              onFileChange={handleLogoUpload}
+              onRemoveLogo={handleRemoveLogo}
+              isUploading={isUploading}
+            />
+            <hr className="border-slate-700" />
+            <SettingsToggle
+              label="Leistungen anzeigen"
+              description="Zeigt den 'Leistungen' Abschnitt auf Ihrer Startseite."
+              name="show_services_section"
+              isChecked={formData.show_services_section}
+              onChange={handleFormChange}
+            />
+            <SettingsToggle
+              label="'Über Uns' Seite anzeigen"
+              description="Zeigt den 'Über Uns' Link in der Navigation."
+              name="show_team_page"
+              isChecked={formData.show_team_page}
+              onChange={handleFormChange}
+            />
+            <SettingsToggle
+              label="'Kundenstimmen' Seite anzeigen"
+              description="Zeigt den 'Kundenstimmen' Link in der Navigation."
+              name="show_testimonials_page"
+              isChecked={formData.show_testimonials_page}
+              onChange={handleFormChange}
+            />
+          </SectionCard>
           
-           {/* --- Profile Information Form --- */}
-           {/* We wrap all profile/design/legal sections in one form */}
-           <form onSubmit={handleSaveProfile} className="space-y-8">
-             
-             {/* Profile Section */}
-             <section className="pt-8 first:pt-0">
-                <h2 className="text-xl font-semibold text-white mb-6">Unternehmensprofil</h2>
-                <div className="space-y-6">
-                  {/* Business Name */}
-                  <div>
-                    <label htmlFor="business_name" className="mb-2 block text-sm font-medium text-slate-300"> Name des Betriebs * </label>
-                    <input type="text" id="business_name" name="business_name" value={profileData.business_name} onChange={handleInputChange} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"/>
-                  </div>
-                  {/* Slug */}
-                  <div>
-                    <label htmlFor="slug" className="mb-2 block text-sm font-medium text-slate-300"> Ihr Webseiten-Pfad (Slug) * </label>
-                    <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 sm:text-sm"> IhreDomain.de/ </span>
-                        <input type="text" id="slug" name="slug" value={profileData.slug} onChange={handleInputChange} required aria-describedby="slug-description slug-status-settings" style={{ paddingLeft: `${Math.max(60, 'IhreDomain.de/'.length * 7 + 12)}px` }} className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="z.b. tischlerei-mustermann"/>
-                        <div id="slug-status-settings" className="absolute inset-y-0 right-0 flex items-center pr-3"> {slugStatus === 'checking' && <ArrowPathIcon className="h-5 w-5 text-gray-400" />} {slugStatus === 'available' && <CheckIcon className="h-5 w-5 text-green-500" />} {(slugStatus === 'taken' || slugStatus === 'invalid') && <span className="text-red-500 text-xl font-bold">!</span>} </div>
-                    </div>
-                    <p id="slug-description" className="mt-1 text-xs text-slate-500"> Dies wird Teil Ihrer Webseiten-URL (nur Kleinbuchstaben, Zahlen und Bindestriche). Muss eindeutig sein. </p>
-                    {slugStatus === 'taken' && <p className="mt-1 text-xs text-red-600">Dieser Pfad ist leider schon vergeben.</p>}
-                    {slugStatus === 'invalid' && <p className="mt-1 text-xs text-red-600">Ungültige Zeichen oder leer. Nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt. Darf nicht mit '-' beginnen/enden.</p>}
-                  </div>
-                  {/* Address */}
-                  <div>
-                    <label htmlFor="address" className="mb-2 block text-sm font-medium text-slate-300"> Adresse * </label>
-                    <textarea id="address" name="address" value={profileData.address} onChange={handleInputChange} rows={3} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"/>
-                  </div>
-                  {/* Phone */}
-                  <div>
-                    <label htmlFor="phone" className="mb-2 block text-sm font-medium text-slate-300"> Telefonnummer * </label>
-                    <input type="tel" id="phone" name="phone" value={profileData.phone} onChange={handleInputChange} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"/>
-                  </div>
-                  
-                  {/* --- 6. THIS IS THE NEWLY ADDED FIELD --- */}
-                  <div>
-                    <label htmlFor="keywords" className="mb-2 block text-sm font-medium text-slate-300"> Wichtige Schlagworte (Optional) </label>
-                    <input 
-                      type="text" 
-                      id="keywords" 
-                      name="keywords"
-                      value={profileData.keywords} 
-                      onChange={handleInputChange} 
-                      className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" 
-                      placeholder="z.B. Badsanierung, Heizung, Solar, Möbelbau"
-                    />
-                    <p className="mt-1 text-xs text-slate-500">
-                       Helfen Sie der AI, bessere Texte zu generieren. Trennen Sie Begriffe mit Kommas.
-                     </p>
-                  </div>
-                  {/* --- END OF NEW FIELD --- */}
+          <SectionCard
+            title="Rechtliches"
+            description="WICHTIG: Diese Texte sind für den Betrieb einer Webseite in Deutschland gesetzlich vorgeschrieben."
+          >
+            {/* --- FIX 5: Add ?? '' to legal values --- */}
+            <SettingsInput label="Impressum" name="impressum_text" value={formData.impressum_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihr Impressum ein..." type="textarea" rows={10} />
+            <SettingsInput label="Datenschutzerklärung" name="datenschutz_text" value={formData.datenschutz_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihre Datenschutzerklärung ein..." type="textarea" rows={10} />
+          </SectionCard>
 
-                  {/* Services */}
-                  <div>
-                    <label htmlFor="services_description" className="mb-2 block text-sm font-medium text-slate-300"> Kurze Beschreibung Ihrer Leistungen * </label>
-                    <div className="relative"> <textarea id="services_description" name="services_description" value={profileData.services_description} onChange={handleInputChange} rows={4} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28"/> <button type="button" onClick={() => handleGenerateProfileText('services')} disabled={aiLoading === 'services' || !profileData.business_name} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'services' || !profileData.business_name ? 'bg-slate-600 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} > <SparklesIcon className={`h-4 w-4 ${aiLoading === 'services' ? 'animate-spin' : ''}`} /> {aiLoading === 'services' ? 'Generiere...' : 'Generieren'} </button> </div>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Tipp: Formatieren Sie jede Leistung in einer neuen Zeile als: <strong>Titel: Beschreibung</strong>
-                      <br/>
-                      (z.B. Heizungstechnik: Installation und Wartung von Heizsystemen.)
-                    </p>
-                  </div>
-                  {/* About */}
-                  <div>
-                    <label htmlFor="about_text" className="mb-2 block text-sm font-medium text-slate-300"> Über Ihren Betrieb * </label>
-                    <div className="relative"> <textarea id="about_text" name="about_text" value={profileData.about_text} onChange={handleInputChange} rows={5} required className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28"/> <button type="button" onClick={() => handleGenerateProfileText('about')} disabled={aiLoading === 'about' || !profileData.business_name} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'about' || !profileData.business_name ? 'bg-slate-600 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} > <SparklesIcon className={`h-4 w-4 ${aiLoading === 'about' ? 'animate-spin' : ''}`} /> {aiLoading === 'about' ? 'Generiere...' : 'Generieren'} </button> </div>
-                  </div>
-                </div>
-             </section>
-
-             {/* Website Appearance Section */}
-             <section className="pt-8">
-               <h2 className="text-xl font-semibold text-white mb-6">Webseiten-Design</h2>
-               <div className="space-y-6">
-                 {/* Logo */}
-                 <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">Logo</label>
-                    <div className="flex items-center gap-4">
-                        <div className="flex-shrink-0 h-16 w-32 flex items-center justify-center rounded-md border border-slate-700 bg-slate-800 text-slate-500 overflow-hidden"> {logoPreviewUrl ? ( <img src={logoPreviewUrl} alt="Logo Vorschau" className="h-full w-full object-contain" /> ) : ( <PhotoIcon className="h-8 w-8" /> )} </div>
-                        <div className="flex-grow"> <input type="file" id="logoUpload" accept="image/png, image/jpeg, image/webp, image/svg+xml, image/gif" onChange={handleLogoChange} className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 focus:ring-offset-slate-800"/> {profileData.logo_url && !isRemovingLogo && ( <button type="button" onClick={handleLogoRemoveIntent} className="mt-2 inline-flex items-center gap-x-1 text-xs text-red-400 hover:text-red-300"> <TrashIcon className="h-3 w-3" /> Aktuelles Logo entfernen </button> )} {isRemovingLogo && ( <p className="mt-2 text-xs text-yellow-400">Logo wird beim Speichern entfernt.</p> )} </div>
-                    </div>
-                    <p className="mt-1 text-xs text-slate-500">Empfohlen: Transparentes PNG oder SVG. Max. 2MB.</p>
-                 </div>
-                 {/* Primary Color */}
-                 <div>
-                    <label htmlFor="primary_color" className="mb-2 block text-sm font-medium text-slate-300">Primärfarbe</label>
-                    <div className="flex items-center gap-3"> <input type="color" id="primary_color" name="primary_color" value={profileData.primary_color} onChange={handleInputChange} className="h-10 w-10 p-0 border-0 rounded-md cursor-pointer bg-slate-800 focus:ring-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800"/> <input type="text" value={profileData.primary_color} onChange={handleInputChange} name="primary_color" className="w-24 rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="#ea580c"/> </div>
-                    <p className="mt-1 text-xs text-slate-500">Wird für Buttons und Akzente verwendet.</p>
-                 </div>
-                 {/* Secondary Color */}
-                 <div>
-                    <label htmlFor="secondary_color" className="mb-2 block text-sm font-medium text-slate-300">Sekundärfarbe</label>
-                    <div className="flex items-center gap-3"> <input type="color" id="secondary_color" name="secondary_color" value={profileData.secondary_color} onChange={handleInputChange} className="h-10 w-10 p-0 border-0 rounded-md cursor-pointer bg-slate-800 focus:ring-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800"/> <input type="text" value={profileData.secondary_color} onChange={handleInputChange} name="secondary_color" className="w-24 rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="#475569"/> </div>
-                    <p className="mt-1 text-xs text-slate-500">Wird für Hintergründe oder weniger prominente Elemente verwendet.</p>
-                 </div>
-               </div>
-             </section>
-
-             {/* --- Legal Texts Section --- */}
-             <section className="pt-8">
-                <h2 className="text-xl font-semibold text-white mb-6">Rechtstexte</h2>
-                <div className="space-y-6">
-                  
-                  {/* Legal Warning */}
-                  <div className="rounded-md bg-red-900/20 border border-red-500/30 p-4">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <ExclamationTriangleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-red-300">Rechtlicher Hinweis (Impressumspflicht)</h3>
-                        <div className="mt-2 text-sm text-red-300/80">
-                          <p>
-                            WARNUNG: Sie sind gesetzlich verpflichtet, ein vollständiges Impressum anzugeben. Falsche oder fehlende Angaben können zu Abmahnungen führen. Bitte lassen Sie diesen Text rechtlich prüfen.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Impressum Text Area */}
-                   <div>
-                      <label htmlFor="impressum_text" className="mb-2 block text-sm font-medium text-slate-300"> Impressum Text </label>
-                      <textarea id="impressum_text" name="impressum_text" value={profileData.impressum_text || ''} onChange={handleInputChange} rows={10} className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="Fügen Sie hier den vollständigen Text Ihres Impressums ein..."/>
-                      <p className="mt-1 text-xs text-slate-500">Dieser Text wird auf Ihrer /impressum Seite angezeigt.</p>
-                   </div>
-                   {/* Datenschutz Text Area */}
-                   <div>
-                      <label htmlFor="datenschutz_text" className="mb-2 block text-sm font-medium text-slate-300"> Datenschutzerklärung Text </label>
-                       <div className="rounded-md bg-yellow-900/50 border border-yellow-700 p-3 mb-2"> <p className="text-xs text-yellow-200"> <strong>Hinweis:</strong> Die folgende Vorlage deckt nur die von ArtisanCMS bereitgestellten Dienste (Hosting, E-Mail) ab. Sie sind **rechtlich verpflichtet**, diese Vorlage zu prüfen und alle zusätzlichen Dienste (z.B. Google Maps, YouTube, Calendly, Analyse-Tools) hinzuzufügen, die Sie selbst einbetten. </p> </div>
-                      <textarea id="datenschutz_text" name="datenschutz_text" value={profileData.datenschutz_text || ''} onChange={handleInputChange} rows={10} className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="Fügen Sie hier den vollständigen Text Ihrer Datenschutzerklärung ein..."/>
-                      <p className="mt-1 text-xs text-slate-500">Dieser Text wird auf Ihrer /datenschutz Seite angezeigt.</p>
-                   </div>
-                </div>
-             </section>
-
-             {/* Combined Save Button for All Settings */}
-             <div className="pt-8 flex justify-end">
-                 <button type="submit" disabled={saving || !!aiLoading || slugStatus !== 'available'} className={`inline-flex items-center gap-x-2 rounded-md px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors ${ saving || !!aiLoading || slugStatus !== 'available' ? 'bg-orange-300 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} >
-                      {saving ? <ArrowPathIcon className="h-5 w-5" /> : <CheckIcon className="h-5 w-5" />}
-                      {saving ? 'Wird gespeichert...' : 'Alle Einstellungen speichern'}
-                 </button>
-             </div>
-           </form>
-           
-           {/* --- Account Security Section --- */}
-           <section className="pt-8">
-              <h2 className="text-xl font-semibold text-white mb-6">Konto & Sicherheit</h2>
-              {/* Change Password Form */}
-              <form onSubmit={handleChangePassword} className="space-y-4 p-6 bg-slate-800 rounded-lg border border-slate-700">
-                <h3 className="text-base font-medium text-white">Passwort ändern</h3>
-                <div>
-                  <label htmlFor="newPassword" className="mb-2 block text-sm font-medium text-slate-300">Neues Passwort</label>
-                  <input 
-                    type="password" id="newPassword" 
-                    value={newPassword} 
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required minLength={6}
-                    className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" 
-                  />
-                </div>
-                <div>
-                  <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-slate-300">Neues Passwort bestätigen</label>
-                  <input 
-                    type="password" id="confirmPassword" 
-                    value={confirmPassword} 
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required minLength={6}
-                    className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" 
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <button type="submit" disabled={isSavingPassword || !newPassword || !confirmPassword} className="inline-flex items-center gap-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50">
-                    {isSavingPassword ? <ArrowPathIcon className="h-4 w-4" /> : <CheckIcon className="h-4 w-4" />}
-                    {isSavingPassword ? 'Wird gespeichert...' : 'Passwort speichern'}
-                  </button>
-                </div>
-              </form>
-              
-              {/* Account Info & Logout */}
-              <div className="p-6 bg-slate-800 rounded-lg border border-slate-700 mt-8">
-                <h3 className="text-base font-medium text-white">Konto-Info</h3>
-                <dl className="space-y-2 mt-4">
-                  <div className="flex justify-between">
-                    <dt className="text-sm font-medium text-slate-400">Email</dt>
-                    <dd className="text-sm text-white">{currentUser?.email}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-sm font-medium text-slate-400">Benutzer-ID</dt>
-                    <dd className="text-xs text-slate-500">{currentUser?.id}</dd>
-                  </div>
-                </dl>
-                <div className="border-t border-slate-700 mt-4 pt-4">
-                  <button type="button" onClick={handleLogout} disabled={logoutLoading} className={`inline-flex items-center gap-x-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors ${ logoutLoading ? 'bg-slate-600 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-600' }`} >
-                    <ArrowRightStartOnRectangleIcon className={`h-5 w-5 ${logoutLoading ? 'animate-spin' : ''}`} />
-                    {logoutLoading ? 'Abmelden...' : 'Abmelden'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Danger Zone */}
-              <div className="p-6 bg-red-900/20 rounded-lg border border-red-500/30 mt-8">
-                <h3 className="text-base font-semibold text-red-300">Danger Zone</h3>
-                <p className="text-sm text-red-300/80 mt-2">
-                  Das Löschen Ihres Kontos ist endgültig. Alle Ihre Daten, einschließlich Ihres Profils, 
-                  Ihrer Projekte, Kundenstimmen und Anfragen, werden unwiderruflich entfernt.
-                </p>
-                <div className="mt-4">
-                  <button type="button" onClick={() => setShowDeleteModal(true)} disabled={isDeletingAccount} className="inline-flex items-center gap-x-2 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-50">
-                    {isDeletingAccount ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />}
-                    {isDeletingAccount ? 'Wird gelöscht...' : 'Konto unwiderruflich löschen'}
-                  </button>
-                </div>
-              </div>
-           </section>
-
-           {/* Subscription Section (Placeholder) */}
-            <section className="pt-8">
-              <h2 className="text-xl font-semibold text-white mb-4">Abonnement</h2>
-              <div className="p-6 bg-slate-800 rounded-lg border border-slate-700">
-                <p className="text-sm text-slate-400">Aktueller Plan: <span className="text-white font-medium">Beta-Test</span></p>
-                <p className="mt-4 text-xs text-slate-500">Die Abonnementverwaltung wird in Kürze verfügbar sein.</p>
-              </div>
-            </section>
         </div>
-      )}
-      
-      {/* Confirmation Modal for Account Deletion */}
-      <ConfirmationModal
-        isOpen={showDeleteModal}
-        title="Konto unwiderruflich löschen?"
-        message="Sind Sie sicher? Alle Ihre Daten (Webseite, Projekte, etc.) werden sofort und endgültig gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
-        confirmText="Ja, mein Konto löschen"
-        onConfirm={handleDeleteAccount}
-        onCancel={() => setShowDeleteModal(false)}
-        isConfirming={isDeletingAccount}
-        confirmButtonClass="bg-red-600 text-white hover:bg-red-700"
-      />
+
+        {/* Right Column */}
+        <div className="lg:col-span-1 space-y-8">
+          <SectionCard
+            title="SEO & AI-Inhalte"
+            description="Helfen Sie der AI, bessere Texte für Sie zu generieren."
+          >
+            {/* --- FIX 6: Add ?? '' to SEO values --- */}
+            <SettingsInput label="Wichtige Keywords" name="keywords" value={formData.keywords ?? ''} onChange={handleFormChange} placeholder="z.B. Badsanierung, Heizung, Fliesenleger, Dresden..." type="textarea" rows={3} />
+            <SettingsInput label="Leistungsbeschreibung" name="services_description" value={formData.services_description ?? ''} onChange={handleFormChange} placeholder="Eine Zeile pro Leistung, z.B. Sanitär: Installation und Reparatur..." type="textarea" rows={6} />
+            <SettingsInput label="Über Uns Text" name="about_text" value={formData.about_text ?? ''} onChange={handleFormChange} placeholder="Ein kurzer Text über Ihre Firma, Ihre Werte und Ihre Geschichte..." type="textarea" rows={6} />
+          </SectionCard>
+          
+          <SectionCard
+            title="Account-Sicherheit"
+            description="Ändern Sie hier Ihre E-Mail-Adresse für den Login."
+          >
+            <form onSubmit={handleChangeEmail} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300">Aktuelle Login-E-Mail</label>
+                <p className="mt-2 text-sm text-slate-400 font-medium">{currentUser?.email}</p>
+              </div>
+              <div>
+                <label htmlFor="newEmail" className="block text-sm font-medium text-slate-300">Neue E-Mail-Adresse</label>
+                <div className="relative mt-2">
+                  <input type="email" name="newEmail" id="newEmail" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 pl-10 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="neue-email@beispiel.de" />
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><AtSymbolIcon className="h-5 w-5 text-slate-500" /></div>
+                </div>
+              </div>
+              <div className="text-right">
+                <button type="submit" disabled={isChangingEmail || !newEmail} className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-50">
+                  {isChangingEmail ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
+                  {isChangingEmail ? 'Wird gespeichert...' : 'E-Mail ändern'}
+                </button>
+              </div>
+            </form>
+          </SectionCard>
+
+          <DangerZone 
+            profile={profile} 
+            user={currentUser}
+            onUpdateProfile={handleProfileUpdate}
+          />
+        </div>
+
+      </div>
     </main>
   );
 }

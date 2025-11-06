@@ -1,16 +1,17 @@
+// src/app/dashboard/layout.tsx
 "use client";
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useState, useEffect, useRef, useMemo } from 'react'; // <-- FIX: Imports were missing, added useRef
+import React, { useState, useEffect, useRef, useMemo } from 'react'; 
 import { createSupabaseClient } from '@/lib/supabaseClient';
-import { User } from '@supabase/supabase-js'; // <-- FIX: Import for User type was missing
+import { User } from '@supabase/supabase-js'; 
 import { Toaster, toast } from 'react-hot-toast';
 import FeedbackWidget from '@/components/FeedbackWidget';
 import WelcomeModal from '@/components/WelcomeModal';
 
 // --- TYPE DEFINITIONS ---
-type SidebarLinkProps = { // <-- FIX: Type definition was missing
+type SidebarLinkProps = { 
   icon: React.ElementType;
   text: string;
   href: string;
@@ -22,7 +23,7 @@ type Profile = {
     slug: string | null;
     onboarding_complete?: boolean | null;
     has_seen_welcome_modal?: boolean | null;
-    role?: string | null; // <-- ADD 'role' TO TYPE
+    role?: string | null; 
 };
 
 // --- ICON COMPONENTS ---
@@ -37,6 +38,8 @@ const LockClosedIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 00-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
   </svg>
 );
+// --- ADD NEW ICON ---
+const UserGroupIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 00-3.741-.97m-3.741 0a9.094 9.094 0 00-3.741.97m7.482 0a9.094 9.094 0 01-3.741-.97m3.741 0c-.393.16-1.183.3-2.12.39m-3.741 0c-.937-.09-1.727-.23-2.12-.39m3.741 0a9.094 9.094 0 00-3.741-.97m0 0c-2.062 0-3.8-1.34-4.24-3.235a9.094 9.094 0 010-3.135 4.238 4.238 0 014.24-3.235m0 0c2.063 0 3.8 1.34 4.24 3.235m0 0a9.094 9.094 0 010 3.135m-4.24 0c-.44 1.895-2.177 3.235-4.24 3.235m12.731 0a9.094 9.094 0 00-3.741-.97m3.741 0c.393.16 1.183.3 2.12.39m3.741 0c.937-.09 1.727-.23 2.12-.39m-3.741 0a9.094 9.094 0 013.741-.97m0 0c2.063 0 3.8-1.34 4.24-3.235a9.094 9.094 0 000-3.135 4.238 4.238 0 00-4.24-3.235m0 0c-2.062 0-3.8 1.34-4.24 3.235m0 0a9.094 9.094 0 000 3.135m4.24 0c.44 1.895 2.177 3.235 4.24 3.235z" /> </svg> );
 
 // --- Adaptive color helpers ---
 function parseRgb(input: string): { r: number; g: number; b: number } | null {
@@ -56,8 +59,6 @@ function isDarkFromRGB(rgb: { r: number; g: number; b: number }): boolean {
 function Sidebar({ user, userSlug, isAdmin, isDarkBg }: { user: User | null, userSlug: string | null, isAdmin: boolean, isDarkBg: boolean }) {
   const pathname = usePathname();
   const websiteHref = userSlug ? `/${userSlug}` : '#'; 
-  // --- REMOVED: Old admin check
-  // const isAdmin = user?.id === process.env.NEXT_PUBLIC_ADMIN_USER_ID;
 
   const baseClasses = "flex items-center p-4 text-base font-normal rounded-lg transition duration-75 group w-full";
   const activeClasses = "bg-orange-600 text-white shadow-lg";
@@ -65,7 +66,7 @@ function Sidebar({ user, userSlug, isAdmin, isDarkBg }: { user: User | null, use
     ? "text-slate-300 hover:bg-slate-700 hover:text-white"
     : "text-slate-700 hover:bg-slate-100 hover:text-slate-900";
 
-  const isDisabled = false; // href always provided except for external with no href
+  const isDisabled = false; 
 
   return (
     <aside className={`w-64 flex-shrink-0 p-4 relative ${isDarkBg ? 'bg-slate-800' : 'bg-white border-r border-slate-200'}`}>
@@ -79,6 +80,10 @@ function Sidebar({ user, userSlug, isAdmin, isDarkBg }: { user: User | null, use
       <nav className="space-y-2">
         <SidebarLink icon={DashboardIcon} text="Dashboard" href="/dashboard" active={pathname === '/dashboard'} isDarkBg={isDarkBg} />
         <SidebarLink icon={ProjectsIcon} text="Projekte" href="/dashboard/projekte" active={pathname?.startsWith('/dashboard/projekte')} isDarkBg={isDarkBg} />
+        
+        {/* --- ADDED TEAM LINK --- */}
+        <SidebarLink icon={UserGroupIcon} text="Team / Über Uns" href="/dashboard/team" active={pathname === '/dashboard/team'} isDarkBg={isDarkBg} />
+        
         <SidebarLink icon={ChatBubbleLeftRightIcon} text="Kundenstimmen" href="/dashboard/testimonials" active={pathname === '/dashboard/testimonials'} isDarkBg={isDarkBg} />
         <SidebarLink icon={InboxIcon} text="Kontaktanfragen" href="/dashboard/contact" active={pathname === '/dashboard/contact'} isDarkBg={isDarkBg} />
         <SidebarLink icon={SettingsIcon} text="Einstellungen" href="/dashboard/einstellungen" active={pathname === '/dashboard/einstellungen'} isDarkBg={isDarkBg} />
@@ -91,7 +96,6 @@ function Sidebar({ user, userSlug, isAdmin, isDarkBg }: { user: User | null, use
                 isDarkBg={isDarkBg}
              />
          </div>
-         {/* --- UPDATE: This now uses the 'isAdmin' prop --- */}
          {isAdmin && (
            <div className="pt-4 mt-4 border-t border-slate-700">
              <SidebarLink
@@ -116,7 +120,7 @@ function Sidebar({ user, userSlug, isAdmin, isDarkBg }: { user: User | null, use
   );
 }
 
-// Update SidebarLink to accept isDarkBg prop and adjust classes accordingly
+// ... (SidebarLink component remains unchanged) ...
 function SidebarLink({ icon: Icon, text, href, active = false, isExternal = false, isDarkBg = true }: SidebarLinkProps & { isDarkBg?: boolean }) {
   const baseClasses = "flex items-center p-4 text-base font-normal rounded-lg transition duration-75 group w-full";
   const activeClasses = "bg-orange-600 text-white shadow-lg";
@@ -171,7 +175,7 @@ export default function DashboardLayout({
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false); // <-- ADD isAdmin STATE
+  const [isAdmin, setIsAdmin] = useState(false); 
   const router = useRouter(); 
   const pathname = usePathname(); 
 
@@ -193,7 +197,6 @@ export default function DashboardLayout({
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        // --- UPDATE: Add 'role' to the select query ---
         .select('onboarding_complete, slug, has_seen_welcome_modal, role') 
         .eq('id', currentUser.id)
         .maybeSingle(); 
@@ -208,11 +211,9 @@ export default function DashboardLayout({
                 setShowWelcomeModal(true);
               }
               
-              // --- ADD: Set admin state based on profile role ---
               if (profile.role === 'admin') {
                 setIsAdmin(true);
               }
-              // --- END ADD ---
 
               const onboardingCompleteValue = profile?.onboarding_complete;
               const needsOnboarding = !profile || onboardingCompleteValue !== true;
@@ -238,7 +239,7 @@ export default function DashboardLayout({
 
     return () => { isMounted = false; };
 
-  }, [router, pathname]);
+  }, [router, pathname, supabase.auth]); // <-- ADDED supabase.auth dependency
 
   useEffect(() => {
     if (!rootRef.current) return;
@@ -298,7 +299,6 @@ export default function DashboardLayout({
         />
       )}
       
-      {/* --- UPDATE: Pass 'isAdmin' and 'isDarkBg' prop to Sidebar --- */}
       <Sidebar user={user} userSlug={userSlug} isAdmin={isAdmin} isDarkBg={isDarkBg} />
       <div className="flex-1 overflow-y-auto">
         {children}
