@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react'; // <-- 1. Import useMemo
-import { createSupabaseClient } from '../../lib/supabaseClient'; // <-- 2. Import createSupabaseClient
+import React, { useState, useEffect, useMemo } from 'react'; // <-- IMPORTED useMemo
+import { createSupabaseClient } from '../../lib/supabaseClient'; // <-- CHANGED IMPORT
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js'; // Import User type
 import PlusIcon from '@/components/icons/PlusIcon';
@@ -68,7 +68,7 @@ function NewProjectCard() {
 // --- MAIN PAGE COMPONENT ---
 
 export default function DashboardPage() {
-  const supabase = useMemo(() => createSupabaseClient(), []); // <-- 3. Create client instance
+  const supabase = useMemo(() => createSupabaseClient(), []); // <-- CREATED CLIENT INSTANCE
   // === State Variables ===
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,7 +122,7 @@ export default function DashboardPage() {
     };
 
     fetchData();
-  }, []); // Run only once on mount
+  }, [supabase.auth]); // <-- ADDED supabase.auth dependency
 
   // === Calculate Stats (remains the same) ===
   const totalProjects = projects.length;

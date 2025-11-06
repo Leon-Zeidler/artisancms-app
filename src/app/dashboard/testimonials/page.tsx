@@ -1,9 +1,9 @@
 // src/app/dashboard/testimonials/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react'; // <-- IMPORTED useMemo
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabaseClient';
+import { createSupabaseClient } from '../../../lib/supabaseClient'; // <-- CHANGED IMPORT
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
@@ -71,6 +71,7 @@ function TestimonialModal({ modalState, onClose, onSave, isSaving }: Testimonial
 
 // --- MAIN PAGE COMPONENT ---
 export default function TestimonialsManagementPage() {
+    const supabase = useMemo(() => createSupabaseClient(), []); // <-- CREATED CLIENT INSTANCE
     const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
@@ -99,7 +100,7 @@ export default function TestimonialsManagementPage() {
             setCurrentTab(hasPending ? 'pending' : 'published');
         }
         setLoading(false);
-    }, []);
+    }, [supabase]); // <-- ADDED supabase as dependency
 
     // Initial Load useEffect
     useEffect(() => {
@@ -109,7 +110,7 @@ export default function TestimonialsManagementPage() {
             else { setCurrentUser(user); await fetchTestimonials(user); }
         };
         getUserAndData();
-    }, [router, fetchTestimonials]);
+    }, [router, fetchTestimonials, supabase.auth]); // <-- ADDED supabase.auth as dependency
 
     // Modal Handlers
     const openAddModal = () => setModalState({ isOpen: true, mode: 'add', data: null });

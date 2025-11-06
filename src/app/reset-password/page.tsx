@@ -1,13 +1,14 @@
 // src/app/reset-password/page.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react'; // <-- IMPORTED useMemo
 import { useRouter } from 'next/navigation';
-import Link from 'next/link'; // <--- ADD THIS IMPORT
-import { supabase } from '../../lib/supabaseClient'; // Adjust path if needed
+import Link from 'next/link';
+import { createSupabaseClient } from '../../lib/supabaseClient'; // <-- CHANGED IMPORT
 import toast from 'react-hot-toast';
 
 export default function ResetPasswordPage() {
+  const supabase = useMemo(() => createSupabaseClient(), []); // <-- CREATED CLIENT INSTANCE
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,7 +40,7 @@ export default function ResetPasswordPage() {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, supabase.auth]); // <-- ADDED supabase.auth dependency
 
   const handlePasswordUpdate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

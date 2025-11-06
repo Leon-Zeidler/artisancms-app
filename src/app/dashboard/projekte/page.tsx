@@ -1,10 +1,10 @@
 // src/app/dashboard/projekte/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react'; // <-- IMPORTED useMemo
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabaseClient';
+import { createSupabaseClient } from '../../../lib/supabaseClient'; // <-- CHANGED IMPORT
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
@@ -95,6 +95,7 @@ function ProjectListItem({
 
 // --- MAIN PAGE COMPONENT ---
 export default function ProjektePage() {
+  const supabase = useMemo(() => createSupabaseClient(), []); // <-- CREATED CLIENT INSTANCE
   // === State Variables ===
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,7 +156,7 @@ export default function ProjektePage() {
         await fetchProjects(user); 
     };
     getUserAndFetchData();
-  }, [router]);
+  }, [router, supabase.auth]); // <-- ADDED supabase.auth dependency
 
   // === Handle Status Toggle Function ===
   const handleStatusToggle = async (projectId: string, currentStatus: string | null) => {
