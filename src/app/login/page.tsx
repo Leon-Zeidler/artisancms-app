@@ -1,10 +1,10 @@
 // src/app/login/page.tsx
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react'; // <-- 1. Import useMemo
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabaseClient';
+import { createSupabaseClient } from '../../lib/supabaseClient'; // <-- 2. Import createSupabaseClient
 import toast from 'react-hot-toast';
 
 // --- Icons ---
@@ -36,6 +36,8 @@ const ExclamationCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 export default function LoginPage() {
+  const supabase = useMemo(() => createSupabaseClient(), []); // <-- 3. Create client instance
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

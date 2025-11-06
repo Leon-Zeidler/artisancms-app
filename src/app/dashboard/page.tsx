@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import React, { useState, useEffect, useMemo } from 'react'; // <-- 1. Import useMemo
+import { createSupabaseClient } from '../../lib/supabaseClient'; // <-- 2. Import createSupabaseClient
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js'; // Import User type
 import PlusIcon from '@/components/icons/PlusIcon';
@@ -68,6 +68,7 @@ function NewProjectCard() {
 // --- MAIN PAGE COMPONENT ---
 
 export default function DashboardPage() {
+  const supabase = useMemo(() => createSupabaseClient(), []); // <-- 3. Create client instance
   // === State Variables ===
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);

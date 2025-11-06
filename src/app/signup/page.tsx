@@ -3,12 +3,12 @@
 "use client"; 
 
 // Import necessary tools from React and Next.js
-import { useState } from 'react'; // To manage form inputs and messages
+import { useState, useMemo } from 'react'; // <-- 1. Import useMemo
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 // Corrected import path using relative path from src/app/signup/page.tsx
-import { supabase } from '../../lib/supabaseClient';
+import { createSupabaseClient } from '../../lib/supabaseClient';
 
 const EyeIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -37,6 +37,7 @@ const ExclamationCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 // This is the main function defining our React component for the signup page.
 export default function SignupPage() {
+  const supabase = useMemo(() => createSupabaseClient(), []);
   // === State Variables ===
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
