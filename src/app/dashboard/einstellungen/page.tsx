@@ -35,12 +35,18 @@ const ExclamationTriangleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg
 const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"> <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /> </svg> );
 const LockClosedIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 00-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /> </svg> );
 const AtSymbolIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25" /> </svg> );
+const BuildingOfficeIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18m-1.5-18h-12a1.5 1.5 0 00-1.5 1.5v16.5a1.5 1.5 0 001.5 1.5h12a1.5 1.5 0 001.5-1.5V4.5a1.5 1.5 0 00-1.5-1.5zM9 9h6v2H9V9z" /></svg>);
+const PaintBrushIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.450a4.5 4.5 0 008.9-2.766 3 3 0 00-1.72-2.812zM9.53 16.122a3 3 0 00.315-5.942a3 3 0 012.836-2.836a3 3 0 005.942-.315c0-1.606 1.488-2.659 2.96-2.659a2.25 2.25 0 012.4 2.45a4.5 4.5 0 00-2.767 8.901 3 3 0 00-2.81 1.721 3 3 0 01-2.836 2.836a3 3 0 00-5.942.315c-1.606 0-2.659-1.488-2.659-2.96z" /></svg>);
+const BookOpenIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" /></svg>);
+const ShieldCheckIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.24-.32 2.395-.88 3.428l-6.118 6.118-6.117-6.118C3.32 14.395 3 13.24 3 12c0-5.188 4.5-9.428 9-9.428s9 4.24 9 9.428z" /></svg>);
+const MagnifyingGlassIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>);
 
-// --- REUSABLE COMPONENTS ---
+
+// --- REUSABLE COMPONENTS (Kept from your file) ---
 const ColorInput = ({ label, name, value, onChange }: { label: string, name: string, value: string, onChange: (e: ChangeEvent<HTMLInputElement>) => void }) => (
-  <div>
-    <label htmlFor={name} className="block text-sm font-medium text-slate-300">{label}</label>
-    <div className="mt-2 flex items-center gap-3">
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <label htmlFor={name} className="block text-sm font-medium text-slate-300 sm:pt-2">{label}</label>
+    <div className="flex items-center gap-3">
       <input type="color" name={name} id={name} value={value || '#000000'} onChange={onChange} className="h-10 w-10 p-0 m-0 border-none rounded cursor-pointer bg-slate-800" />
       <input type="text" value={value || ''} onChange={onChange} className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 sm:text-sm" placeholder="#F97316" />
     </div>
@@ -48,9 +54,9 @@ const ColorInput = ({ label, name, value, onChange }: { label: string, name: str
 );
 
 const LogoUploader = ({ logoUrl, onFileChange, onRemoveLogo, isUploading }: { logoUrl: string | null, onFileChange: (e: ChangeEvent<HTMLInputElement>) => void, onRemoveLogo: () => void, isUploading: boolean }) => (
-  <div>
-    <label className="block text-sm font-medium text-slate-300">Logo</label>
-    <div className="mt-2 flex items-center gap-4">
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <label className="block text-sm font-medium text-slate-300 sm:pt-2">Logo</label>
+    <div className="flex items-center gap-4">
       <div className="flex-shrink-0 h-16 w-32 flex items-center justify-center rounded-md border border-slate-700 bg-slate-800 text-slate-500 overflow-hidden">
         {logoUrl ? <img src={logoUrl} alt="Logo preview" className="h-full w-full object-contain" /> : <span className="text-xs">Vorschau</span>}
       </div>
@@ -62,6 +68,7 @@ const LogoUploader = ({ logoUrl, onFileChange, onRemoveLogo, isUploading }: { lo
   </div>
 );
 
+// We keep SectionCard for the non-form items
 const SectionCard = ({ title, description, children }: { title: string, description: string, children: React.ReactNode }) => (
   <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg">
     <div className="px-6 py-5 border-b border-slate-700">
@@ -75,18 +82,18 @@ const SectionCard = ({ title, description, children }: { title: string, descript
 );
 
 const SettingsInput = ({ label, name, value, onChange, placeholder, type = 'text', rows = 3 }: { label: string, name: string, value: string, onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void, placeholder?: string, type?: string, rows?: number }) => (
-  <div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <label htmlFor={name} className="block text-sm font-medium text-slate-300">{label}</label>
     {type === 'textarea' ? (
-      <textarea name={name} id={name} rows={rows} value={value} onChange={onChange} className="mt-2 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder={placeholder} />
+      <textarea name={name} id={name} rows={rows} value={value} onChange={onChange} className="mt-0 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder={placeholder} />
     ) : (
-      <input type={type} name={name} id={name} value={value} onChange={onChange} className="mt-2 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder={placeholder} />
+      <input type={type} name={name} id={name} value={value} onChange={onChange} className="mt-0 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder={placeholder} />
     )}
   </div>
 );
 
 const SettingsToggle = ({ label, description, name, isChecked, onChange, disabled = false }: { label: string, description: string, name: string, isChecked: boolean, onChange: (e: ChangeEvent<HTMLInputElement>) => void, disabled?: boolean }) => (
-  <div className={`flex items-center justify-between ${disabled ? 'opacity-60' : ''}`}>
+  <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${disabled ? 'opacity-60' : ''}`}>
     <span className="flex flex-grow flex-col">
       <span className={`text-sm font-medium ${disabled ? 'text-slate-500' : 'text-slate-300'}`}>{label}</span>
       <span className="text-xs text-slate-500">{description}</span>
@@ -106,7 +113,7 @@ const SettingsToggle = ({ label, description, name, isChecked, onChange, disable
 );
 
 
-// --- DangerZone Component (with Publish Guard) ---
+// --- DangerZone Component (Kept from your file) ---
 function DangerZone({ profile, user, onUpdateProfile }: { profile: Profile | null, user: User | null, onUpdateProfile: (updatedProfile: Profile) => void }) {
   const supabase = useMemo(() => createSupabaseClient(), []);
   const router = useRouter();
@@ -164,11 +171,11 @@ function DangerZone({ profile, user, onUpdateProfile }: { profile: Profile | nul
 
   return (
     <>
+      {/* Publish UI */}
       <SectionCard
-        title="Gefahrenzone"
+        title="Veröffentlichung & Gefahrenzone"
         description="Wichtige Aktionen mit dauerhaften Konsequenzen."
       >
-        {/* Publish UI */}
         <div className="space-y-4 rounded-lg border border-slate-700 bg-slate-900/50 p-4">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -231,7 +238,7 @@ function DangerZone({ profile, user, onUpdateProfile }: { profile: Profile | nul
 }
 
 
-// --- MAIN PAGE COMPONENT ---
+// --- MAIN PAGE COMPONENT (ALL LOGIC IS THE SAME) ---
 export default function EinstellungenPage() {
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -242,12 +249,11 @@ export default function EinstellungenPage() {
   const [newEmail, setNewEmail] = useState('');
   const [isChangingEmail, setIsChangingEmail] = useState(false);
   
-  // --- FIX 1: Update Omit type ---
   const [formData, setFormData] = useState<Omit<Profile, 'id' | 'logo_url' | 'logo_storage_path'>>({
     business_name: '',
     address: '',
     phone: '',
-    email: '', // <-- Added email
+    email: '', 
     primary_color: '#F97316',
     secondary_color: '#F8FAFC',
     keywords: '',
@@ -263,7 +269,7 @@ export default function EinstellungenPage() {
 
   const router = useRouter();
 
-  // --- Fetch data ---
+  // --- Fetch data (same) ---
   useEffect(() => {
     const getUserAndProfile = async () => {
       setLoading(true);
@@ -284,12 +290,11 @@ export default function EinstellungenPage() {
         toast.error(`Profil-Fehler: ${error.message}`);
       } else if (profileData) {
         setProfile(profileData as Profile);
-        // --- FIX 2: Set all fields in formData ---
         setFormData({
           business_name: profileData.business_name || '',
           address: profileData.address || '',
           phone: profileData.phone || '',
-          email: profileData.email || '', // <-- Added email
+          email: profileData.email || '', 
           primary_color: profileData.primary_color || '#F97316',
           secondary_color: profileData.secondary_color || '#F8FAFC',
           keywords: profileData.keywords || '',
@@ -308,27 +313,23 @@ export default function EinstellungenPage() {
     getUserAndProfile();
   }, [router, supabase]);
 
-  // --- Handle form input changes ---
+  // --- Handle form input changes (same) ---
   const handleFormChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    
-    // Handle checkbox (toggle)
     if (type === 'checkbox') {
       const { checked } = e.target as HTMLInputElement;
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
-      // Handle text, color, textarea
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  // --- Handle Save Profile ---
+  // --- Handle Save Profile (same) ---
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
     setSaving(true);
     
-    // This now saves all fields in formData
     const { error, data: updatedProfile } = await supabase
       .from('profiles')
       .update(formData)
@@ -340,12 +341,12 @@ export default function EinstellungenPage() {
     if (error) {
       toast.error(`Fehler: ${error.message}`);
     } else {
-      setProfile(updatedProfile as Profile); // Update local profile state
+      setProfile(updatedProfile as Profile);
       toast.success("Einstellungen gespeichert!");
     }
   };
 
-  // --- Handle Logo Upload ---
+  // --- Handle Logo Upload (same) ---
   const handleLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !currentUser || !profile) return;
     const file = e.target.files[0];
@@ -386,7 +387,7 @@ export default function EinstellungenPage() {
     setIsUploading(false);
   };
 
-  // --- Handle Logo Removal ---
+  // --- Handle Logo Removal (same) ---
   const handleRemoveLogo = async () => {
     if (!currentUser || !profile || !profile.logo_storage_path) return;
     setIsUploading(true);
@@ -414,7 +415,7 @@ export default function EinstellungenPage() {
     setIsUploading(false);
   };
   
-  // --- Handle Change Email ---
+  // --- Handle Change Email (same) ---
   const handleChangeEmail = async (e: FormEvent) => {
     e.preventDefault();
     if (!newEmail || !currentUser || newEmail === currentUser.email) {
@@ -442,142 +443,157 @@ export default function EinstellungenPage() {
     }
   };
   
-  // --- Callback to update local profile state ---
+  // --- Callback to update local profile state (same) ---
   const handleProfileUpdate = (updatedProfile: Profile) => {
     setProfile(updatedProfile);
-    // Also update formData to match
     setFormData(prev => ({...prev, is_published: updatedProfile.is_published }));
   };
+
+  // --- Navigation Items for new layout ---
+  const navItems = [
+    { id: 'firmendaten', label: 'Firmendaten', icon: BuildingOfficeIcon },
+    { id: 'branding', label: 'Branding & Inhalt', icon: PaintBrushIcon },
+    { id: 'seo', label: 'SEO & AI', icon: MagnifyingGlassIcon },
+    { id: 'rechtliches', label: 'Rechtliches', icon: BookOpenIcon },
+    { id: 'sicherheit', label: 'Sicherheit', icon: ShieldCheckIcon },
+  ];
 
   if (loading) {
     return <div className="p-8 text-slate-400">Lade Einstellungen...</div>;
   }
 
-  // === Render Page ===
+  // === NEW MODERNIZED RENDER ===
   return (
     <main className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Einstellungen</h1>
-          <p className="text-slate-400 mt-1">Verwalten Sie hier Ihre globalen Webseiten-Einstellungen.</p>
-        </div>
-        <button
-          onClick={handleSaveProfile}
-          disabled={saving || isUploading}
-          className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-50"
-        >
-          {saving ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
-          {saving ? 'Wird gespeichert...' : 'Änderungen speichern'}
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl">
+      {/* This is the main 2-column layout */}
+      <div className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-x-12 gap-y-8">
         
-        {/* Left Column */}
-        <div className="lg:col-span-2 space-y-8">
-          <SectionCard
-            title="Firmendaten"
-            description="Diese Informationen werden auf Ihrer Webseite (z.B. im Impressum) angezeigt."
-          >
-            {/* --- FIX 3: Add ?? '' to all values --- */}
-            <SettingsInput label="Firmenname" name="business_name" value={formData.business_name ?? ''} onChange={handleFormChange} placeholder="z.B. Max Mustermann GmbH" />
-            <SettingsInput label="Adresse" name="address" value={formData.address ?? ''} onChange={handleFormChange} placeholder="z.B. Musterstraße 1, 12345 Musterstadt" type="textarea" rows={3} />
-            <SettingsInput label="Telefon" name="phone" value={formData.phone ?? ''} onChange={handleFormChange} placeholder="z.B. 01234 567890" />
-            <SettingsInput label="E-Mail (Öffentlich)" name="email" value={formData.email ?? ''} onChange={handleFormChange} placeholder="z.B. info@mustermann.de" />
-          </SectionCard>
+        {/* === LEFT COLUMN: STICKY NAV === */}
+        <aside className="lg:col-span-1">
+          <nav className="sticky top-24 space-y-1">
+            <h2 className="text-2xl font-bold text-white mb-4">Einstellungen</h2>
+            {navItems.map((item) => (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                className="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-orange-500 transition-colors"
+              >
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                <span>{item.label}</span>
+              </a>
+            ))}
+          </nav>
+        </aside>
 
-          <SectionCard
-            title="Webseiten-Branding & Inhalte"
-            description="Passen Sie das Aussehen Ihrer Webseite an."
-          >
-            {/* --- FIX 4: Add ?? 'default' to color values --- */}
-            <ColorInput label="Primärfarbe (Brand)" name="primary_color" value={formData.primary_color ?? '#F97316'} onChange={handleFormChange} />
-            <ColorInput label="Sekundärfarbe (Hintergrund)" name="secondary_color" value={formData.secondary_color ?? '#F8FAFC'} onChange={handleFormChange} />
-            <LogoUploader 
-              logoUrl={profile?.logo_url || null}
-              onFileChange={handleLogoUpload}
-              onRemoveLogo={handleRemoveLogo}
-              isUploading={isUploading}
-            />
-            <hr className="border-slate-700" />
-            <SettingsToggle
-              label="Leistungen anzeigen"
-              description="Zeigt den 'Leistungen' Abschnitt auf Ihrer Startseite."
-              name="show_services_section"
-              isChecked={formData.show_services_section}
-              onChange={handleFormChange}
-            />
-            <SettingsToggle
-              label="'Über Uns' Seite anzeigen"
-              description="Zeigt den 'Über Uns' Link in der Navigation."
-              name="show_team_page"
-              isChecked={formData.show_team_page}
-              onChange={handleFormChange}
-            />
-            <SettingsToggle
-              label="'Kundenstimmen' Seite anzeigen"
-              description="Zeigt den 'Kundenstimmen' Link in der Navigation."
-              name="show_testimonials_page"
-              isChecked={formData.show_testimonials_page}
-              onChange={handleFormChange}
-            />
-          </SectionCard>
+        {/* === RIGHT COLUMN: CONTENT === */}
+        <div className="lg:col-span-3 space-y-12">
           
-          <SectionCard
-            title="Rechtliches"
-            description="WICHTIG: Diese Texte sind für den Betrieb einer Webseite in Deutschland gesetzlich vorgeschrieben."
-          >
-            {/* --- FIX 5: Add ?? '' to legal values --- */}
-            <SettingsInput label="Impressum" name="impressum_text" value={formData.impressum_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihr Impressum ein..." type="textarea" rows={10} />
-            <SettingsInput label="Datenschutzerklärung" name="datenschutz_text" value={formData.datenschutz_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihre Datenschutzerklärung ein..." type="textarea" rows={10} />
-          </SectionCard>
+          {/* --- Main Form for Profile Data --- */}
+          <form onSubmit={handleSaveProfile} className="space-y-12">
+            
+            {/* Sticky Save Header */}
+            <div className="sticky top-16 z-10 bg-slate-900 -mx-1 -mt-1 py-4 border-b border-slate-700 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">Allgemeine Einstellungen</h2>
+              <button
+                type="submit"
+                disabled={saving || isUploading}
+                className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-50"
+              >
+                {saving ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
+                {saving ? 'Wird gespeichert...' : 'Änderungen speichern'}
+              </button>
+            </div>
 
-        </div>
-
-        {/* Right Column */}
-        <div className="lg:col-span-1 space-y-8">
-          <SectionCard
-            title="SEO & AI-Inhalte"
-            description="Helfen Sie der AI, bessere Texte für Sie zu generieren."
-          >
-            {/* --- FIX 6: Add ?? '' to SEO values --- */}
-            <SettingsInput label="Wichtige Keywords" name="keywords" value={formData.keywords ?? ''} onChange={handleFormChange} placeholder="z.B. Badsanierung, Heizung, Fliesenleger, Dresden..." type="textarea" rows={3} />
-            <SettingsInput label="Leistungsbeschreibung" name="services_description" value={formData.services_description ?? ''} onChange={handleFormChange} placeholder="Eine Zeile pro Leistung, z.B. Sanitär: Installation und Reparatur..." type="textarea" rows={6} />
-            <SettingsInput label="Über Uns Text" name="about_text" value={formData.about_text ?? ''} onChange={handleFormChange} placeholder="Ein kurzer Text über Ihre Firma, Ihre Werte und Ihre Geschichte..." type="textarea" rows={6} />
-          </SectionCard>
-          
-          <SectionCard
-            title="Account-Sicherheit"
-            description="Ändern Sie hier Ihre E-Mail-Adresse für den Login."
-          >
-            <form onSubmit={handleChangeEmail} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-300">Aktuelle Login-E-Mail</label>
-                <p className="mt-2 text-sm text-slate-400 font-medium">{currentUser?.email}</p>
+            {/* --- Section 1: Firmendaten --- */}
+            <section id="firmendaten" className="scroll-mt-32">
+              <h3 className="text-xl font-semibold text-white">Firmendaten</h3>
+              <p className="mt-1 text-sm text-slate-400">Diese Informationen werden auf Ihrer Webseite (z.B. im Impressum) angezeigt.</p>
+              <div className="mt-6 space-y-6 p-6 bg-slate-800 border border-slate-700 rounded-lg">
+                <SettingsInput label="Firmenname" name="business_name" value={formData.business_name ?? ''} onChange={handleFormChange} placeholder="z.B. Max Mustermann GmbH" />
+                <SettingsInput label="Adresse" name="address" value={formData.address ?? ''} onChange={handleFormChange} placeholder="z.B. Musterstraße 1, 12345 Musterstadt" type="textarea" rows={3} />
+                <SettingsInput label="Telefon" name="phone" value={formData.phone ?? ''} onChange={handleFormChange} placeholder="z.B. 01234 567890" />
+                <SettingsInput label="E-Mail (Öffentlich)" name="email" value={formData.email ?? ''} onChange={handleFormChange} placeholder="z.B. info@mustermann.de" />
               </div>
-              <div>
-                <label htmlFor="newEmail" className="block text-sm font-medium text-slate-300">Neue E-Mail-Adresse</label>
-                <div className="relative mt-2">
-                  <input type="email" name="newEmail" id="newEmail" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 pl-10 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="neue-email@beispiel.de" />
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><AtSymbolIcon className="h-5 w-5 text-slate-500" /></div>
+            </section>
+            
+            {/* --- Section 2: Branding --- */}
+            <section id="branding" className="scroll-mt-32">
+              <h3 className="text-xl font-semibold text-white">Webseiten-Branding & Inhalte</h3>
+              <p className="mt-1 text-sm text-slate-400">Passen Sie das Aussehen Ihrer Webseite an.</p>
+              <div className="mt-6 space-y-6 p-6 bg-slate-800 border border-slate-700 rounded-lg">
+                <ColorInput label="Primärfarbe (Brand)" name="primary_color" value={formData.primary_color ?? '#F97316'} onChange={handleFormChange} />
+                <ColorInput label="Sekundärfarbe (Hintergrund)" name="secondary_color" value={formData.secondary_color ?? '#F8FAFC'} onChange={handleFormChange} />
+                <LogoUploader 
+                  logoUrl={profile?.logo_url || null}
+                  onFileChange={handleLogoUpload}
+                  onRemoveLogo={handleRemoveLogo}
+                  isUploading={isUploading}
+                />
+                <hr className="border-slate-700" />
+                <SettingsToggle label="Leistungen anzeigen" description="Zeigt den 'Leistungen' Abschnitt auf Ihrer Startseite." name="show_services_section" isChecked={formData.show_services_section} onChange={handleFormChange} />
+                <SettingsToggle label="'Über Uns' Seite anzeigen" description="Zeigt den 'Über Uns' Link in der Navigation." name="show_team_page" isChecked={formData.show_team_page} onChange={handleFormChange} />
+                <SettingsToggle label="'Kundenstimmen' Seite anzeigen" description="Zeigt den 'Kundenstimmen' Link in der Navigation." name="show_testimonials_page" isChecked={formData.show_testimonials_page} onChange={handleFormChange} />
+              </div>
+            </section>
+            
+            {/* --- Section 3: SEO & AI --- */}
+            <section id="seo" className="scroll-mt-32">
+              <h3 className="text-xl font-semibold text-white">SEO & AI-Inhalte</h3>
+              <p className="mt-1 text-sm text-slate-400">Helfen Sie der AI, bessere Texte für Sie zu generieren.</p>
+              <div className="mt-6 space-y-6 p-6 bg-slate-800 border border-slate-700 rounded-lg">
+                <SettingsInput label="Wichtige Keywords" name="keywords" value={formData.keywords ?? ''} onChange={handleFormChange} placeholder="z.B. Badsanierung, Heizung, Fliesenleger, Dresden..." type="textarea" rows={3} />
+                <SettingsInput label="Leistungsbeschreibung" name="services_description" value={formData.services_description ?? ''} onChange={handleFormChange} placeholder="Eine Zeile pro Leistung, z.B. Sanitär: Installation und Reparatur..." type="textarea" rows={6} />
+                <SettingsInput label="Über Uns Text" name="about_text" value={formData.about_text ?? ''} onChange={handleFormChange} placeholder="Ein kurzer Text über Ihre Firma, Ihre Werte und Ihre Geschichte..." type="textarea" rows={6} />
+              </div>
+            </section>
+
+            {/* --- Section 4: Rechtliches --- */}
+            <section id="rechtliches" className="scroll-mt-32">
+              <h3 className="text-xl font-semibold text-white">Rechtliches</h3>
+              <p className="mt-1 text-sm text-slate-400">WICHTIG: Diese Texte sind für den Betrieb einer Webseite in Deutschland gesetzlich vorgeschrieben.</p>
+              <div className="mt-6 space-y-6 p-6 bg-slate-800 border border-slate-700 rounded-lg">
+                <SettingsInput label="Impressum" name="impressum_text" value={formData.impressum_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihr Impressum ein..." type="textarea" rows={10} />
+                <SettingsInput label="Datenschutzerklärung" name="datenschutz_text" value={formData.datenschutz_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihre Datenschutzerklärung ein..." type="textarea" rows={10} />
+              </div>
+            </section>
+          
+          </form> {/* End of main profile form */}
+
+          {/* --- Section 5: Sicherheit (Separate components) --- */}
+          <section id="sicherheit" className="scroll-mt-32 space-y-8">
+            <SectionCard
+              title="Account-Sicherheit"
+              description="Ändern Sie hier Ihre E-Mail-Adresse für den Login."
+            >
+              <form onSubmit={handleChangeEmail} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300">Aktuelle Login-E-Mail</label>
+                  <p className="mt-2 text-sm text-slate-400 font-medium">{currentUser?.email}</p>
                 </div>
-              </div>
-              <div className="text-right">
-                <button type="submit" disabled={isChangingEmail || !newEmail} className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-50">
-                  {isChangingEmail ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
-                  {isChangingEmail ? 'Wird gespeichert...' : 'E-Mail ändern'}
-                </button>
-              </div>
-            </form>
-          </SectionCard>
+                <div>
+                  <label htmlFor="newEmail" className="block text-sm font-medium text-slate-300">Neue E-Mail-Adresse</label>
+                  <div className="relative mt-2">
+                    <input type="email" name="newEmail" id="newEmail" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 pl-10 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="neue-email@beispiel.de" />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><AtSymbolIcon className="h-5 w-5 text-slate-500" /></div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <button type="submit" disabled={isChangingEmail || !newEmail} className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-50">
+                    {isChangingEmail ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
+                    {isChangingEmail ? 'Wird gespeichert...' : 'E-Mail ändern'}
+                  </button>
+                </div>
+              </form>
+            </SectionCard>
 
-          <DangerZone 
-            profile={profile} 
-            user={currentUser}
-            onUpdateProfile={handleProfileUpdate}
-          />
+            <DangerZone 
+              profile={profile} 
+              user={currentUser}
+              onUpdateProfile={handleProfileUpdate}
+            />
+          </section>
+
         </div>
-
       </div>
     </main>
   );
