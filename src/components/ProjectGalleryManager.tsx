@@ -5,7 +5,8 @@ import React, { useState, useMemo } from 'react';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
-import { Project } from './ProjectForm'; // <-- Make sure this is imported
+// --- FIX: Import aus der neuen types.ts Datei ---
+import type { Project } from '@/lib/types'; 
 
 // --- Icons (Omitted for brevity) ---
 const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /> </svg> );
@@ -15,10 +16,9 @@ const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props
 
 type GalleryImage = { url: string; path: string; };
 
-// --- (FIX 1: Update Props) ---
 interface ProjectGalleryManagerProps {
-  projectId: string; // <-- Changed from 'project'
-  userId: string; // <-- Changed from 'user'
+  projectId: string; 
+  userId: string; 
   initialGalleryImages: GalleryImage[];
   onGalleryUpdate: (newGallery: GalleryImage[]) => void;
 }
@@ -30,7 +30,7 @@ export default function ProjectGalleryManager({
   onGalleryUpdate 
 }: ProjectGalleryManagerProps) {
   const supabase = useMemo(() => createSupabaseClient(), []);
-  const [gallery, setGallery] = useState<GalleryImage[]>(initialGalleryImages); // <-- Use prop
+  const [gallery, setGallery] = useState<GalleryImage[]>(initialGalleryImages); 
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
@@ -38,7 +38,7 @@ export default function ProjectGalleryManager({
     const { error } = await supabase
       .from('projects')
       .update({ gallery_images: newGallery })
-      .eq('id', projectId); // <-- Use prop
+      .eq('id', projectId); 
     if (error) { toast.error(`Gallery update failed: ${error.message}`); return false; }
     return true;
   };
@@ -49,7 +49,7 @@ export default function ProjectGalleryManager({
     const files = Array.from(event.target.files);
     const uploadPromises = files.map(file => {
       const fileName = `${Date.now()}-${file.name}`;
-      const filePath = `${userId}/${projectId}/${fileName}`; // <-- Use props
+      const filePath = `${userId}/${projectId}/${fileName}`; 
 
       return supabase.storage
         .from('project-images')
@@ -68,7 +68,7 @@ export default function ProjectGalleryManager({
       const success = await updateGalleryInSupabase(newGallery);
       if (success) {
         setGallery(newGallery);
-        onGalleryUpdate(newGallery); // <-- (FIX 2: Call the callback)
+        onGalleryUpdate(newGallery); 
         toast.success(`Successfully added ${files.length} image(s)!`, { id: toastId });
       } else {
         toast.error('Failed to save new images to project.', { id: toastId });
@@ -93,7 +93,7 @@ export default function ProjectGalleryManager({
       const success = await updateGalleryInSupabase(newGallery);
       if (success) {
         setGallery(newGallery);
-        onGalleryUpdate(newGallery); // <-- (FIX 3: Call the callback)
+        onGalleryUpdate(newGallery); 
         toast.success('Image deleted.', { id: toastId });
       } else {
         toast.error('Failed to update gallery in database.', { id: toastId });

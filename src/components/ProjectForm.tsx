@@ -1,4 +1,3 @@
-// src/components/ProjectForm.tsx
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -6,41 +5,31 @@ import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid'; // v4 wird hier nicht mehr benötigt, kann aber bleiben
 import ProjectGalleryManager from './ProjectGalleryManager';
+import type { Project, ProjectFormProps } from '@/lib/types';
 
 // --- ICONS ---
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
 const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm1.5-3V8.25" /> </svg> );
 const XCircleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> );
+const InformationCircleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /> </svg> );
 
-// --- TYPE DEFINITION (FIXED) ---
-export type Project = {
-  id: string;
-  user_id: string;
-  title: string | null;
-  client?: string | null;
-  'project-date': string | null;
-  ai_description: string | null;
-  status: 'Published' | 'Draft' | string | null;
-  created_at: string;
-  notes: string | null;
-  
-  // --- Corrected Names ---
-  after_image_url: string | null;
-  after_image_storage_path: string | null;
-  before_image_url: string | null;
-  before_image_storage_path: string | null;
-  
-  gallery_images: { url: string; path: string }[] | null;
+// --- (NEUE HELFERFUNKTION) ---
+// Konvertiert ein File-Objekt in einen Base64-String
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      // Das Ergebnis ist "data:image/png;base64,..."
+      // Wir wollen nur den Teil nach dem Komma
+      const base64String = (reader.result as string).split(',')[1];
+      resolve(base64String);
+    };
+    reader.onerror = (error) => reject(error);
+  });
 };
-
-// --- PROPS ---
-interface ProjectFormProps {
-  currentUser: User;
-  userSlug: string | null;
-  initialData: Project | null;
-}
 
 // --- IMAGE UPLOAD CARD COMPONENT ---
 interface ImageUploadCardProps {
@@ -52,6 +41,7 @@ interface ImageUploadCardProps {
   onRemove: () => void;
 }
 function ImageUploadCard({ title, description, imageUrl, isUploading, onFileChange, onRemove }: ImageUploadCardProps) {
+  // (Code für ImageUploadCard ist identisch)
   return (
     <div className="border border-slate-700 rounded-xl bg-slate-800 shadow-sm">
       <div className="p-6">
@@ -98,6 +88,22 @@ function ImageUploadCard({ title, description, imageUrl, isUploading, onFileChan
   );
 }
 
+// --- Spotlight-Hinweis ---
+const SpotlightHint = () => (
+  <div className="mb-8 rounded-md bg-blue-600/10 p-4 border border-blue-500/30">
+    <div className="flex">
+      <div className="flex-shrink-0">
+        <InformationCircleIcon className="h-5 w-5 text-blue-400" aria-hidden="true" />
+      </div>
+      <div className="ml-3 flex-1 md:flex md:justify-between">
+        <p className="text-sm text-blue-300">
+          <span className="font-semibold text-white">Tipp für den Start:</span> Laden Sie als Erstes ein 'Nachher-Bild' hoch. Unsere KI generiert dann automatisch eine passende Projektbeschreibung für Sie!
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
 
 // --- MAIN PROJECT FORM COMPONENT ---
 export default function ProjectForm({ currentUser, userSlug, initialData }: ProjectFormProps) {
@@ -105,7 +111,6 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
   const router = useRouter();
 
   // === State ===
-  // --- (FIXED) ---
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     'project-date': initialData?.['project-date'] || '',
@@ -113,7 +118,6 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
     notes: initialData?.notes || '',
     status: initialData?.status || 'Draft',
     
-    // --- Corrected Names ---
     after_image_url: initialData?.after_image_url || null,
     after_image_storage_path: initialData?.after_image_storage_path || null,
     before_image_url: initialData?.before_image_url || null,
@@ -135,35 +139,29 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
   
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target;
-      // Ensure date is stored as YYYY-MM-DD string
       setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleImageUpload = async (file: File, type: 'before' | 'after'): Promise<{ url: string; path: string }> => {
+    // (Code ist identisch)
     const fileExt = file.name.split('.').pop();
     const newFileName = `${Date.now()}.${fileExt}`;
     const storagePath = `${currentUser.id}/${newFileName}`;
 
-    // --- (FIXED) ---
-    // 1. Remove old image if it exists
     try {
       if (type === 'before') {
         if (formData.before_image_storage_path) {
-          console.log("Removing old 'before' image:", formData.before_image_storage_path);
           await supabase.storage.from('project-images').remove([formData.before_image_storage_path]);
         }
-      } else { // 'after'
-        if (formData.after_image_storage_path) { // <-- Corrected name
-          console.log("Removing old 'after' image:", formData.after_image_storage_path); // <-- Corrected name
-          await supabase.storage.from('project-images').remove([formData.after_image_storage_path]); // <-- Corrected name
+      } else { 
+        if (formData.after_image_storage_path) { 
+          await supabase.storage.from('project-images').remove([formData.after_image_storage_path]); 
         }
       }
     } catch (removeError) {
       console.error("Error removing old image, proceeding with upload anyway:", removeError);
     }
 
-    // 2. Upload new image
-    console.log("Uploading new image to:", storagePath);
     const { error: uploadError } = await supabase.storage
       .from('project-images')
       .upload(storagePath, file);
@@ -173,7 +171,6 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
       throw new Error(`Fehler beim Hochladen des Bildes: ${uploadError.message}`);
     }
 
-    // 3. Get public URL
     const { data: publicUrlData } = supabase.storage
       .from('project-images')
       .getPublicUrl(storagePath);
@@ -182,7 +179,6 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
         throw new Error("Konnte öffentliche URL nach Upload nicht abrufen.");
     }
 
-    console.log("Upload success:", { url: publicUrlData.publicUrl, path: storagePath });
     return { url: publicUrlData.publicUrl, path: storagePath };
   };
 
@@ -200,23 +196,25 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
     try {
       const { url, path } = await handleImageUpload(file, type);
       
-      // --- (FIXED) ---
       if (type === 'before') {
         setFormData(prev => ({ 
             ...prev, 
             before_image_url: url, 
             before_image_storage_path: path 
         }));
-      } else { // 'after'
+      } else { 
         setFormData(prev => ({ 
             ...prev, 
-            after_image_url: url, // <-- Corrected name
-            after_image_storage_path: path // <-- Corrected name
+            after_image_url: url, 
+            after_image_storage_path: path 
         }));
         
-        // Auto-generate description if 'after' image is set and description is empty
         if (!formData.ai_description) {
-            handleGenerateDescription(url);
+            const base64Data = await fileToBase64(file);
+            handleGenerateDescription({
+                imageData: base64Data,
+                mimeType: file.type
+            });
         }
       }
       toast.success(`'${type === 'before' ? 'Vorher' : 'Nachher'}' Bild erfolgreich hochgeladen.`);
@@ -229,12 +227,9 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
     }
   };
   
-  const handleGenerateDescription = async (imageUrl?: string) => {
-      // --- (FIXED) ---
-      const url = imageUrl || formData.after_image_url; // <-- Corrected name
-      if (!url) {
-          toast.error("Bitte zuerst ein 'Nachher' Bild hochladen."); return;
-      }
+  const handleGenerateDescription = async (
+    imagePayload: { imageData: string; mimeType: string } | { imageUrl: string }
+  ) => {
       
       setIsGenerating(true);
       
@@ -242,7 +237,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
           const response = await fetch('/api/analyze-image', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ imageUrl: url })
+              body: JSON.stringify(imagePayload)
           });
           
           if (!response.ok) {
@@ -261,14 +256,23 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
           setIsGenerating(false);
       }
   };
+  
+  const handleGenerateDescriptionFromUrl = () => {
+    if (!formData.after_image_url) {
+        toast.error("Bitte zuerst ein 'Nachher' Bild hochladen."); return;
+    }
+    handleGenerateDescription({ imageUrl: formData.after_image_url });
+  };
 
+
+  // --- (FIXED) ---
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSaving(true);
     
-    // --- (FIXED) ---
-    const projectData = {
-        ...initialData, // Preserves ID if editing
+    // 1. Definiere das Objekt, das die DB-Spalten widerspiegelt
+    //    (OHNE 'id' und 'created_at', da diese von der DB generiert werden)
+    const dataToUpsert = {
         user_id: currentUser.id,
         title: formData.title,
         'project-date': formData['project-date'] || null,
@@ -276,21 +280,31 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
         notes: formData.notes,
         status: formData.status,
         
-        // --- Corrected Names ---
         after_image_url: formData.after_image_url,
         after_image_storage_path: formData.after_image_storage_path,
         before_image_url: formData.before_image_url,
         before_image_storage_path: formData.before_image_storage_path,
         
         gallery_images: formData.gallery_images,
-        id: initialData?.id || undefined, // Important: undefined for new, ID for updates
     };
+
+    // 2. Erstelle das finale Objekt für den upsert-Befehl
+    let finalUpsertData: any = dataToUpsert;
+
+    // 3. Füge die 'id' NUR HINZU, WENN wir ein bestehendes Projekt bearbeiten (Update)
+    if (initialData?.id) {
+        finalUpsertData = {
+            ...dataToUpsert,
+            id: initialData.id 
+        };
+    }
+    // WENN es ein NEUES Projekt ist (initialData ist null),
+    // wird das Objekt OHNE 'id' gesendet. Supabase generiert dann die 'bigint' ID.
     
-    // Use upsert: inserts if id is undefined, updates if id is provided
     const savePromise = async () => {
         const { data, error } = await supabase
             .from('projects')
-            .upsert(projectData)
+            .upsert(finalUpsertData) // Sende die korrigierten Daten
             .select()
             .single();
             
@@ -307,11 +321,13 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             loading: 'Projekt wird gespeichert...',
             success: (data) => {
                 setIsSaving(false);
-                // Redirect to the edit page for the *newly created* project
                 if (!initialData) {
+                    // Wenn es ein neues Projekt war, leite zur Edit-Seite weiter
                     router.push(`/dashboard/projekte/${data.id}/edit`);
                     return 'Projekt erfolgreich erstellt!';
                 }
+                // Wenn es ein Update war, lade die Daten neu
+                router.refresh(); 
                 return 'Projekt erfolgreich gespeichert!';
             },
             error: (err: any) => {
@@ -323,8 +339,8 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
   };
   
   const handleRemoveImage = async (type: 'before' | 'after') => {
-      // --- (FIXED) ---
-      const pathToRemove = type === 'before' ? formData.before_image_storage_path : formData.after_image_storage_path; // <-- Corrected name
+    // (Code ist identisch)
+    const pathToRemove = type === 'before' ? formData.before_image_storage_path : formData.after_image_storage_path; 
       
       if (!pathToRemove) {
           console.log("No image path to remove."); return;
@@ -333,22 +349,19 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
       const toastId = toast.loading('Bild wird gelöscht...');
       
       try {
-          // 1. Delete from Storage
           const { error } = await supabase.storage.from('project-images').remove([pathToRemove]);
           if (error) throw error;
 
-          // 2. Clear from state
           if (type === 'before') {
               setFormData(prev => ({ ...prev, before_image_url: null, before_image_storage_path: null }));
           } else {
-              setFormData(prev => ({ ...prev, after_image_url: null, after_image_storage_path: null })); // <-- Corrected names
+              setFormData(prev => ({ ...prev, after_image_url: null, after_image_storage_path: null })); 
           }
           
-          // 3. (Optional but good) Clear from DB if we are editing
           if (initialData?.id) {
               const updateData = type === 'before' 
                   ? { before_image_url: null, before_image_storage_path: null }
-                  : { after_image_url: null, after_image_storage_path: null }; // <-- Corrected names
+                  : { after_image_url: null, after_image_storage_path: null }; 
                   
               const { error: dbError } = await supabase.from('projects').update(updateData).eq('id', initialData.id);
               if (dbError) throw dbError;
@@ -367,185 +380,192 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
       ? `/${userSlug}/portfolio/${initialData.id}` 
       : null;
 
+  // --- (Render-Funktion) ---
   return (
-    <form onSubmit={handleSubmit} className="mt-8 space-y-12">
-      {/* --- Main Project Details --- */}
-      <div className="space-y-8 border-b border-slate-700 pb-12">
-        <h2 className="text-xl font-semibold leading-7 text-white">Projekt Details</h2>
-        <div className="grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2">
-            {/* Left Col */}
-            <div className="space-y-10">
-                <div>
-                    <label htmlFor="title" className="block text-sm font-medium leading-6 text-slate-300">Titel</label>
-                    <div className="mt-2">
-                        <input
-                            type="text"
-                            name="title"
-                            id="title"
-                            value={formData.title}
-                            onChange={handleChange}
-                            required
-                            disabled={isFormDisabled}
-                            className="block w-full rounded-md border-0 py-2.5 px-3.5 bg-white/5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6 transition"
-                            placeholder="z.B. Maßgefertigte Einbauküche"
-                        />
-                    </div>
-                </div>
-                <div>
-                    <label htmlFor="project-date" className="block text-sm font-medium leading-6 text-slate-300">Projektdatum</label>
-                    <div className="mt-2">
-                         <input
-                            type="date"
-                            name="project-date"
-                            id="project-date"
-                            value={formData['project-date'] || ''}
-                            onChange={handleDateChange}
-                            disabled={isFormDisabled}
-                            className="block w-full rounded-md border-0 py-2.5 px-3.5 bg-white/5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6 transition"
-                        />
-                    </div>
-                </div>
-            </div>
-            
-            {/* Right Col */}
-            <div>
-                <label htmlFor="status" className="block text-sm font-medium leading-6 text-slate-300">Status</label>
-                <div className="mt-2">
-                    <select
-                        id="status"
-                        name="status"
-                        value={formData.status || 'Draft'}
-                        onChange={handleChange}
-                        disabled={isFormDisabled}
-                        className="block w-full rounded-md border-0 py-2.5 px-3.5 bg-white/5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6 transition"
-                    >
-                        <option value="Draft">Entwurf (Nicht sichtbar)</option>
-                        <option value="Published">Veröffentlicht (Öffentlich)</option>
-                    </select>
-                </div>
-                {publicProjectUrl && (
-                    <p className="mt-3 text-sm text-slate-400">
-                        Öffentlicher Link: {' '}
-                        <a href={publicProjectUrl} target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline">
-                           Projekt ansehen
-                        </a>
-                    </p>
-                )}
-            </div>
-        </div>
-      </div>
-      
-      {/* --- Image Uploads --- */}
-      <div className="space-y-8 border-b border-slate-700 pb-12">
-        <h2 className="text-xl font-semibold leading-7 text-white">Projektbilder</h2>
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-          {/* --- (FIXED) --- */}
-          <ImageUploadCard
-            title="Nachher Bild (Titelbild)"
-            description="Das Hauptbild Ihres Projekts. Wird als Titelbild verwendet."
-            imageUrl={formData.after_image_url} // <-- Corrected name
-            isUploading={isUploadingAfter}
-            onFileChange={(e) => handleFileChange(e, 'after')}
-            onRemove={() => handleRemoveImage('after')}
-          />
-           <ImageUploadCard
-            title="Vorher Bild (Optional)"
-            description="Zeigen Sie den Ausgangszustand, falls vorhanden."
-            imageUrl={formData.before_image_url}
-            isUploading={isUploadingBefore}
-            onFileChange={(e) => handleFileChange(e, 'before')}
-            onRemove={() => handleRemoveImage('before')}
-          />
-        </div>
-      </div>
-      
-       {/* --- AI Description --- */}
-       <div className="space-y-8 border-b border-slate-700 pb-12">
-           <div className="flex items-center justify-between">
-                <div>
-                   <h2 className="text-xl font-semibold leading-7 text-white">KI Projektbeschreibung</h2>
-                   <p className="mt-1 text-sm text-slate-400">
-                       {/* --- (FIXED) --- */}
-                       Lassen Sie eine Beschreibung automatisch generieren, basierend auf dem 'Nachher'-Bild.
-                   </p>
-                </div>
-                 <button
-                    type="button"
-                    onClick={() => handleGenerateDescription()}
-                    disabled={isFormDisabled || !formData.after_image_url} // <-- Corrected name
-                    className="rounded-md bg-orange-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition"
-                >
-                    {isGenerating ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : 'Beschreibung generieren'}
-                </button>
-           </div>
-           
-            <div>
-                <textarea
-                    id="ai_description"
-                    name="ai_description"
-                    rows={10}
-                    value={formData.ai_description || ''}
-                    onChange={handleChange}
-                    disabled={isFormDisabled}
-                    className="block w-full rounded-md border-0 py-2.5 px-3.5 bg-white/5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6 transition"
-                    placeholder="Die KI-beschreibung wird hier erscheinen..."
-                />
-            </div>
-      </div>
-      
-      {/* --- Gallery Manager --- */}
-      {initialData?.id && (
-          <div className="space-y-8 border-b border-slate-700 pb-12">
-                <h2 className="text-xl font-semibold leading-7 text-white">Projekt Galerie</h2>
-                 <ProjectGalleryManager
-                    projectId={initialData.id}
-                    userId={currentUser.id}
-                    initialGalleryImages={formData.gallery_images || []}
-                    onGalleryUpdate={(newGallery: { url: string; path: string; }[]) => setFormData(prev => ({ ...prev, gallery_images: newGallery }))}
-                 />
+    <>
+      {initialData === null && <SpotlightHint />} 
+    
+      <form onSubmit={handleSubmit} className="mt-8 space-y-12">
+        {/* --- Main Project Details --- */}
+        <div className="space-y-8 border-b border-slate-700 pb-12">
+          {/* (Code ist identisch) */}
+          <h2 className="text-xl font-semibold leading-7 text-white">Projekt Details</h2>
+          <div className="grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2">
+              {/* Left Col */}
+              <div className="space-y-10">
+                  <div>
+                      <label htmlFor="title" className="block text-sm font-medium leading-6 text-slate-300">Titel</label>
+                      <div className="mt-2">
+                          <input
+                              type="text"
+                              name="title"
+                              id="title"
+                              value={formData.title}
+                              onChange={handleChange}
+                              required
+                              disabled={isFormDisabled}
+                              className="block w-full rounded-md border-0 py-2.5 px-3.5 bg-white/5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6 transition"
+                              placeholder="z.B. Maßgefertigte Einbauküche"
+                          />
+                      </div>
+                  </div>
+                  <div>
+                      <label htmlFor="project-date" className="block text-sm font-medium leading-6 text-slate-300">Projektdatum</label>
+                      <div className="mt-2">
+                           <input
+                              type="date"
+                              name="project-date"
+                              id="project-date"
+                              value={formData['project-date'] || ''}
+                              onChange={handleDateChange}
+                              disabled={isFormDisabled}
+                              className="block w-full rounded-md border-0 py-2.5 px-3.5 bg-white/5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6 transition"
+                          />
+                      </div>
+                  </div>
+              </div>
+              
+              {/* Right Col */}
+              <div>
+                  <label htmlFor="status" className="block text-sm font-medium leading-6 text-slate-300">Status</label>
+                  <div className="mt-2">
+                      <select
+                          id="status"
+                          name="status"
+                          value={formData.status || 'Draft'}
+                          onChange={handleChange}
+                          disabled={isFormDisabled}
+                          className="block w-full rounded-md border-0 py-2.5 px-3.5 bg-white/5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6 transition"
+                      >
+                          <option value="Draft">Entwurf (Nicht sichtbar)</option>
+                          <option value="Published">Veröffentlicht (Öffentlich)</option>
+                      </select>
+                  </div>
+                  {publicProjectUrl && (
+                      <p className="mt-3 text-sm text-slate-400">
+                          Öffentlicher Link: {' '}
+                          <a href={publicProjectUrl} target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline">
+                             Projekt ansehen
+                          </a>
+                      </p>
+                  )}
+              </div>
           </div>
-      )}
-      
-       {/* --- Private Notes --- */}
-       <div className="space-y-8">
-           <h2 className="text-xl font-semibold leading-7 text-white">Private Notizen</h2>
-            <div>
-                 <label htmlFor="notes" className="block text-sm font-medium leading-6 text-slate-300">
-                    Notizen (Nur für Sie sichtbar)
-                 </label>
-                <div className="mt-2">
-                    <textarea
-                        id="notes"
-                        name="notes"
-                        rows={3}
-                        value={formData.notes || ''}
-                        onChange={handleChange}
-                        disabled={isFormDisabled}
-                        className="block w-full rounded-md border-0 py-2.5 px-3.5 bg-white/5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6 transition"
-                        placeholder="Interne Notizen zum Kunden, Material, etc."
-                    />
-                </div>
+        </div>
+        
+        {/* --- Image Uploads --- */}
+        <div className="space-y-8 border-b border-slate-700 pb-12">
+          {/* (Code ist identisch) */}
+          <h2 className="text-xl font-semibold leading-7 text-white">Projektbilder</h2>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <ImageUploadCard
+              title="Nachher Bild (Titelbild)"
+              description="Das Hauptbild Ihres Projekts. Wird als Titelbild verwendet."
+              imageUrl={formData.after_image_url} 
+              isUploading={isUploadingAfter}
+              onFileChange={(e) => handleFileChange(e, 'after')}
+              onRemove={() => handleRemoveImage('after')}
+            />
+             <ImageUploadCard
+              title="Vorher Bild (Optional)"
+              description="Zeigen Sie den Ausgangszustand, falls vorhanden."
+              imageUrl={formData.before_image_url}
+              isUploading={isUploadingBefore}
+              onFileChange={(e) => handleFileChange(e, 'before')}
+              onRemove={() => handleRemoveImage('before')}
+            />
+          </div>
+        </div>
+        
+         {/* --- AI Description --- */}
+         <div className="space-y-8 border-b border-slate-700 pb-12">
+             <div className="flex items-center justify-between">
+                  <div>
+                     <h2 className="text-xl font-semibold leading-7 text-white">KI Projektbeschreibung</h2>
+                     <p className="mt-1 text-sm text-slate-400">
+                         Lassen Sie eine Beschreibung automatisch generieren, basierend auf dem 'Nachher'-Bild.
+                     </p>
+                  </div>
+                   <button
+                      type="button"
+                      onClick={handleGenerateDescriptionFromUrl} 
+                      disabled={isFormDisabled || !formData.after_image_url} 
+                      className="rounded-md bg-orange-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition"
+                  >
+                      {isGenerating ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : 'Beschreibung generieren'}
+                  </button>
+             </div>
+             
+              <div>
+                  <textarea
+                      id="ai_description"
+                      name="ai_description"
+                      rows={10}
+                      value={formData.ai_description || ''}
+                      onChange={handleChange}
+                      disabled={isFormDisabled}
+                      className="block w-full rounded-md border-0 py-2.5 px-3.5 bg-white/5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6 transition"
+                      placeholder="Die KI-beschreibung wird hier erscheinen..."
+                  />
+              </div>
+        </div>
+        
+        {/* --- Gallery Manager --- */}
+        {initialData?.id && (
+            <div className="space-y-8 border-b border-slate-700 pb-12">
+                  <h2 className="text-xl font-semibold leading-7 text-white">Projekt Galerie</h2>
+                   <ProjectGalleryManager
+                      projectId={initialData.id as string} // Sicherer Cast, da wir wissen, dass die DB bigint (number) oder string (uuid) verwendet
+                      userId={currentUser.id}
+                      initialGalleryImages={formData.gallery_images || []}
+                      onGalleryUpdate={(newGallery: { url: string; path: string; }[]) => setFormData(prev => ({ ...prev, gallery_images: newGallery }))}
+                   />
             </div>
-      </div>
-
-      {/* --- Form Actions --- */}
-      <div className="mt-6 flex items-center justify-end gap-x-6">
-        <button 
-            type="button" 
-            onClick={() => router.push('/dashboard/projekte')}
+        )}
+        
+         {/* --- Private Notes --- */}
+         <div className="space-y-8">
+             {/* (Code ist identisch) */}
+             <h2 className="text-xl font-semibold leading-7 text-white">Private Notizen</h2>
+              <div>
+                   <label htmlFor="notes" className="block text-sm font-medium leading-6 text-slate-300">
+                      Notizen (Nur für Sie sichtbar)
+                   </label>
+                  <div className="mt-2">
+                      <textarea
+                          id="notes"
+                          name="notes"
+                          rows={3}
+                          value={formData.notes || ''}
+                          onChange={handleChange}
+                          disabled={isFormDisabled}
+                          className="block w-full rounded-md border-0 py-2.5 px-3.5 bg-white/5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6 transition"
+                          placeholder="Interne Notizen zum Kunden, Material, etc."
+                      />
+                  </div>
+              </div>
+        </div>
+  
+        {/* --- Form Actions --- */}
+        <div className="mt-6 flex items-center justify-end gap-x-6">
+          {/* (Code ist identisch) */}
+          <button 
+              type="button" 
+              onClick={() => router.push('/dashboard/projekte')}
+              disabled={isFormDisabled}
+              className="text-sm font-semibold leading-6 text-slate-300 hover:text-white disabled:text-slate-500"
+          >
+            Abbrechen
+          </button>
+          <button
+            type="submit"
             disabled={isFormDisabled}
-            className="text-sm font-semibold leading-6 text-slate-300 hover:text-white disabled:text-slate-500"
-        >
-          Abbrechen
-        </button>
-        <button
-          type="submit"
-          disabled={isFormDisabled}
-          className="flex justify-center rounded-md bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition"
-        >
-          {isSaving ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : 'Projekt speichern'}
-        </button>
-      </div>
-    </form>
+            className="flex justify-center rounded-md bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition"
+          >
+            {isSaving ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : 'Projekt speichern'}
+          </button>
+        </div>
+      </form>
+    </>
   );
 }

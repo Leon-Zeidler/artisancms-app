@@ -1,101 +1,82 @@
 // src/app/api/analyze-image/route.ts
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
+import OpenAI from 'openai';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
-export async function POST(request: Request) {
-  
-  // --- 1. ADD AUTHENTICATION CHECK ---
-  const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-  if (userError || !user) {
-    return NextResponse.json({ error: 'You must be authenticated to use this service.' }, { status: 401 });
-  }
-  // --- END OF AUTH CHECK ---
+const prompt = `
+Du bist ein Experte für Handwerk und Marketing. Analysiere das BILD eines handwerklichen Projekts (z.B. Möbel, Bad, Wand).
+Erstelle eine professionelle, ansprechende Projektbeschreibung für die "Nachher"-Ansicht.
+Fasse dich kurz (ca. 3-5 Sätze). Beschreibe, was gemacht wurde und welches hochwertige Ergebnis erzielt wurde.
+Sei spezifisch, aber vermeide leere Phrasen.
+BEISPIEL: "Für diesen Altbau wurde ein maßgefertigter Einbauschrank realisiert. Die Fronten in mattem Weiß nutzen die Nischenhöhe voll aus und bieten maximalen Stauraum. Integrierte LED-Beleuchtung setzt die geölten Eichenfächer stilvoll in Szene."
+`;
 
-
-  // --- 2. Get Image Data and API Key ---
-  let requestData;
+export async function POST(req: NextRequest) {
   try {
-    requestData = await request.json();
-  } catch (error) {
-    console.error("Error parsing request body:", error);
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  }
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
+    }
 
-  const { imageData, mimeType } = requestData;
-  if (!imageData || !mimeType) {
-    return NextResponse.json({ error: "imageData and mimeType are required" }, { status: 400 });
-  }
+    const body = await req.json();
+    const { imageUrl, imageData, mimeType } = body;
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    console.error("OpenAI API key not found in environment variables.");
-    return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
-  }
+    let imageUrlToSend: string;
 
-  // --- 3. Construct the Image URL for the API ---
-  const imageUrl = `data:${mimeType};base64,${imageData}`;
+    if (imageData && mimeType) {
+      console.log("Image data received directly from client.");
+      imageUrlToSend = `data:${mimeType};base64,${imageData}`;
+    } else if (imageUrl) {
+      console.log("Image URL received:", imageUrl);
+      imageUrlToSend = imageUrl;
+    } else {
+      return NextResponse.json({ error: "imageUrl or imageData is required" }, { status: 400 });
+    }
 
-  // --- 4. Construct the Prompt ---
-  const prompt = `You are an expert Handwerker (German tradesperson). This is a photo from a completed project. 
-  Briefly describe the key materials, items, and work visible in the image.
-  Focus on facts, not marketing. Be concise. Respond in German.
-  Example: "Modernes Badezimmer mit weißen, großformatigen Fliesen, einer ebenerdigen Glasdusche und Chrom-Armaturen."`;
-
-  // --- 5. Call OpenAI API (gpt-4o) ---
-  const apiUrl = 'https://api.openai.com/v1/chat/completions';
-
-  try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o", // Use the gpt-4o model for image analysis
-        messages: [
-          {
-            role: "user",
-            content: [
-              { "type": "text", "text": prompt },
-              { 
-                "type": "image_url", 
-                "image_url": { "url": imageUrl } 
-              }
-            ]
-          }
-        ],
-        max_tokens: 100, // Keep the description concise
-      }),
+    const aiResponse = await openai.chat.completions.create({
+      // --- HIER IST DER FIX ---
+      model: "gpt-4o", // Ersetzt das veraltete "gpt-4-vision-preview"
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            {
+              type: "image_url",
+              image_url: {
+                "url": imageUrlToSend,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 300,
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("OpenAI API error response:", errorData);
-      throw new Error(`OpenAI API request failed: ${response.statusText}`);
-    }
+    const description = aiResponse.choices[0].message?.content;
 
-    const data = await response.json();
-
-    // --- 6. Extract and Return Description ---
-    const description = data.choices?.[0]?.message?.content?.trim();
-
-    if (!description) {
-      console.error("Could not extract description from OpenAI response:", data);
-      throw new Error("Failed to generate description");
-    }
-
-    console.log("Generated Image Analysis:", description);
     return NextResponse.json({ description });
 
-  } catch (error) {
-    console.error("Error calling OpenAI API:", error);
-    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-    return NextResponse.json({ error: `Failed to generate description: ${errorMessage}` }, { status: 500 });
+  } catch (error: any) {
+    console.error("Error in AI generation:", error);
+    let errorMessage = "Fehler bei der AI-Generierung.";
+    
+    if (error.response) {
+      errorMessage = error.response.data?.error?.message || error.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    if (errorMessage.includes("invalid_image_url") || errorMessage.includes("fetch") || errorMessage.includes("resolve")) {
+        errorMessage = "Bild-URL konnte nicht geladen werden. Bitte manuell generieren.";
+    }
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-

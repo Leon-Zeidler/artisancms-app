@@ -1,4 +1,3 @@
-// src/components/EmptyState.tsx
 "use client";
 
 import Link from 'next/link';
@@ -15,7 +14,7 @@ interface EmptyStateProps {
   icon: React.ElementType;
   title: string;
   message: string;
-  buttonText: string;
+  buttonText?: string; // <-- FIX 1: Optional gemacht
   buttonHref?: string; // Use href for links
   onButtonClick?: () => void; // Use onClick for modal actions
 }
@@ -24,7 +23,7 @@ export default function EmptyState({
   icon: Icon, 
   title, 
   message, 
-  buttonText, 
+  buttonText, // <-- buttonText ist jetzt optional
   buttonHref, 
   onButtonClick 
 }: EmptyStateProps) {
@@ -46,20 +45,23 @@ export default function EmptyState({
       </div>
       <h3 className="mt-4 text-lg font-semibold text-white">{title}</h3>
       <p className="mt-2 text-sm text-slate-400 max-w-sm mx-auto">{message}</p>
-      <div className="mt-6">
-        {buttonHref ? (
-          // If we pass a link, render a Link
-          <Link href={buttonHref} className={buttonClassName}>
-            <ButtonContent />
-          </Link>
-        ) : (
-          // Otherwise, render a button with an onClick handler
-          <button type="button" onClick={onButtonClick} className={buttonClassName}>
-            <ButtonContent />
-          </button>
-        )}
-      </div>
+      
+      {/* --- FIX 2: Button nur rendern, wenn buttonText übergeben wird --- */}
+      {buttonText && (
+        <div className="mt-6">
+          {buttonHref ? (
+            // If we pass a link, render a Link
+            <Link href={buttonHref} className={buttonClassName}>
+              <ButtonContent />
+            </Link>
+          ) : (
+            // Otherwise, render a button with an onClick handler
+            <button type="button" onClick={onButtonClick} className={buttonClassName}>
+              <ButtonContent />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
-// End of src/components/EmptyState.tsx 

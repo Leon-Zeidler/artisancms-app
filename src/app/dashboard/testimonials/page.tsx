@@ -1,307 +1,343 @@
 // src/app/dashboard/testimonials/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react'; // <-- IMPORTED useMemo
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSupabaseClient } from '../../../lib/supabaseClient'; // <-- CHANGED IMPORT
+import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import EmptyState from '@/components/EmptyState';
 
-// --- Icons ---
-const PlusIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /> </svg> );
-const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> );
-const EyeSlashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /> </svg> );
-const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
-const PencilIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /> </svg> );
-const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /> </svg> );
-const XMarkIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg>);
-const ChatBubbleLeftRightIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72 3.72a.75.75 0 01-1.06 0l-3.72-3.72C9.847 17.001 9 16.036 9 14.9v-4.286c0-.97.616-1.813 1.5-2.097L12 6.75l3.75 1.761zm-6 3.486l-3.72 3.72a.75.75 0 000 1.06l3.72 3.72C11.153 20.89 12 19.925 12 18.887v-7.135c0-1.038-.847-2-1.98-2.093l-3.72-1.761a.75.75 0 00-.63.123 7.48 7.48 0 00-.738.738A7.47 7.47 0 003 11.25v4.286c0 .97.616 1.813 1.5 2.097L6 18.311v-.757c0-1.28.624-2.43 1.65-3.181l.71-.533zM18.75 9.75h.008v.008h-.008V9.75z" /> </svg>);
-
-
 // --- TYPE DEFINITIONS ---
-type Testimonial = {
-    id: string;
-    created_at: string;
-    user_id: string;
-    author_name: string;
-    author_handle: string | null;
-    body: string;
-    is_published: boolean;
-};
-type TestimonialFormData = Omit<Testimonial, 'id' | 'created_at' | 'user_id'>;
-type ModalState = { isOpen: boolean; mode: 'add' | 'edit'; data: Testimonial | null; };
-type TabState = 'pending' | 'published'; // <-- 1. ADDED TAB STATE TYPE
+type ProjectTitle = {
+  title: string | null;
+} | null;
 
-// --- ADD/EDIT MODAL ---
-interface TestimonialModalProps {
-    modalState: ModalState;
-    onClose: () => void;
-    onSave: (data: TestimonialFormData, id?: string) => Promise<void>;
-    isSaving: boolean;
+type Testimonial = {
+  id: string;
+  created_at: string;
+  author_name: string | null;
+  rating: number | null;
+  content: string | null;
+  status: 'Pending' | 'Published' | string | null;
+  projects: ProjectTitle[] | null; // <-- FIX 1: Akzeptiert jetzt ein Array
+};
+
+// --- ICONS ---
+const StarIcon = (props: React.SVGProps<SVGSVGElement> & { filled: boolean }) => (
+  <svg className={`h-5 w-5 ${props.filled ? 'text-yellow-400' : 'text-slate-600'}`} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+  </svg>
+);
+const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
+const EyeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /> <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /> </svg> );
+const EyeSlashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /> </svg> );
+const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /> </svg> );
+const ChatBubbleLeftRightIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72 3.72a.75.75 0 01-1.06 0l-3.72-3.72C9.847 17.001 9 16.036 9 14.9v-4.286c0-.97.616-1.813 1.5-2.097m6.75 0a.75.75 0 00-1.5 0v.091c-1.13.418-2.317.822-3.5 1.209V8.511a.75.75 0 00-1.5 0v1.819c-1.183.387-2.37.79-3.5 1.209V8.511a.75.75 0 00-1.5 0v2.606c.091.024.18.05.27.081.09.032.18.066.27.101.09.034.18.07.27.106.09.035.18.072.27.11.09.037.18.075.27.114.09.038.18.077.27.117.09.039.18.08.27.122.09.04.18.082.27.124.09.042.18.085.27.128.09.043.18.087.27.132.09.044.18.09.27.135.09.045.18.092.27.138.09.046.18.094.27.142a.75.75 0 00.704 0c.09-.048.18-.096.27-.142.09-.046.18-.093.27-.138.09-.045.18-.09.27-.135.09-.045.18-.088.27-.132.09-.043.18-.086.27-.128.09-.042.18-.082.27-.124.09-.04.18-.082.27-.122.09-.04.18-.078.27-.117.09-.04.18-.077.27-.114.09-.038.18-.07.27-.11.09-.036.18-.07.27-.106.09-.035.18-.07.27-.101.09-.03.18-.057.27-.081V8.511zM3 15.004v-4.286c0-1.136.847-2.1 1.98-2.193l3.72-3.72a.75.75 0 011.06 0l3.72 3.72C14.153 8.801 15 9.766 15 10.9v4.286c0 .97-.616 1.813-1.5 2.097m-6.75 0a.75.75 0 001.5 0v-.091c1.13-.418 2.317-.822 3.5-1.209V15.004a.75.75 0 001.5 0v-1.819c1.183-.387 2.37-.79 3.5-1.209V15.004a.75.75 0 001.5 0v-2.606a1.012 1.012 0 00-.27-.69c-.09-.034-.18-.066-.27-.101-.09-.035-.18-.07-.27-.106-.09-.035-.18-.072-.27-.11-.09-.037-.18-.075-.27-.114-.09-.038-.18-.077-.27-.117-.09-.04-.18-.08-.27-.122-.09-.04-.18-.082-.27-.124-.09-.042-.18-.085-.27-.128-.09-.043-.18-.087-.27-.132-.09-.044-.18-.09-.27-.135-.09-.045-.18-.092-.27-.138-.09-.046-.18-.094-.27-.142a.75.75 0 00-.704 0c-.09.048-.18.096-.27.142-.09.046-.18.093-.27.138-.09.045-.18.09-.27.135-.09.045-.18.088-.27-.132-.09.043-.18.086-.27-.128-.09.042-.18.082-.27-.124-.09.04-.18.082-.27-.122-.09.04-.18.078-.27-.117-.09.04-.18.077-.27-.114-.09.038-.18.07-.27-.11-.09.036-.18.07-.27-.106-.09.035-.18.07-.27-.101-.09.03-.18.057-.27-.081V15.004z" /> </svg> );
+
+
+// --- RATING COMPONENT ---
+const RatingDisplay = ({ rating }: { rating: number | null }) => {
+  if (rating === null) return null;
+  return (
+    <div className="flex items-center">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <StarIcon key={star} filled={star <= rating} />
+      ))}
+      <span className="ml-2 text-sm text-slate-400">({rating} / 5)</span>
+    </div>
+  );
+};
+
+
+// --- TESTIMONIAL CARD COMPONENT ---
+interface TestimonialCardProps {
+  testimonial: Testimonial;
+  onStatusToggle: (testimonial: Testimonial) => void;
+  onDeleteRequest: (testimonial: Testimonial) => void;
+  isToggling: boolean;
+  isDeleting: boolean;
 }
-function TestimonialModal({ modalState, onClose, onSave, isSaving }: TestimonialModalProps) {
-    if (!modalState.isOpen) return null;
-    const [formData, setFormData] = useState<TestimonialFormData>(
-        modalState.mode === 'edit' && modalState.data
-        ? { author_name: modalState.data.author_name, author_handle: modalState.data.author_handle ?? '', body: modalState.data.body, is_published: modalState.data.is_published }
-        : { author_name: '', author_handle: '', body: '', is_published: false }
-    );
-    const [localError, setLocalError] = useState<string | null>(null);
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { const { name, value, type } = e.target; setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value })); setLocalError(null); };
-    const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); setLocalError(null); if (!formData.author_name.trim() || !formData.body.trim()) { setLocalError("Name des Autors und Text dürfen nicht leer sein."); return; } await onSave(formData, modalState.data?.id); };
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog">
-            <div className="bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-lg border border-slate-700 relative">
-                 <button onClick={onClose} disabled={isSaving} className="absolute top-4 right-4 text-slate-400 hover:text-white disabled:opacity-50"> <XMarkIcon className="h-6 w-6" /> </button>
-                <h2 className="text-xl font-semibold text-white mb-6"> {modalState.mode === 'add' ? 'Neue Kundenstimme hinzufügen' : 'Kundenstimme bearbeiten'} </h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div> <label htmlFor="author_name" className="block text-sm font-medium text-slate-300 mb-1">Name des Autors *</label> <input type="text" name="author_name" id="author_name" required value={formData.author_name} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" /> </div>
-                    <div> <label htmlFor="author_handle" className="block text-sm font-medium text-slate-300 mb-1">Zusatz (z.B. Firma, Ort)</label> <input type="text" name="author_handle" id="author_handle" value={formData.author_handle ?? ''} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" /> </div>
-                    <div> <label htmlFor="body" className="block text-sm font-medium text-slate-300 mb-1">Text der Kundenstimme *</label> <textarea name="body" id="body" rows={5} required value={formData.body} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" /> </div>
-                     <div className="relative flex items-start"> <div className="flex h-6 items-center"> <input id="is_published" name="is_published" type="checkbox" checked={formData.is_published} onChange={handleChange} className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-orange-600 focus:ring-orange-600 focus:ring-offset-slate-800" /> </div> <div className="ml-3 text-sm leading-6"> <label htmlFor="is_published" className="font-medium text-slate-300">Veröffentlicht</label> <p className="text-slate-500 text-xs">Soll diese Kundenstimme auf der Webseite angezeigt werden?</p> </div> </div>
-                    {localError && <p className="text-sm text-red-500">{localError}</p>}
-                    <div className="flex justify-end gap-3 pt-4"> <button type="button" onClick={onClose} disabled={isSaving} className="rounded-md px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-50"> Abbrechen </button> <button type="submit" disabled={isSaving} className={`inline-flex items-center gap-x-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors ${ isSaving ? 'bg-orange-800 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'}`}> {isSaving && <ArrowPathIcon className="h-4 w-4 animate-spin" />} {isSaving ? 'Wird gespeichert...' : 'Speichern'} </button> </div>
-                </form>
-            </div>
+
+function TestimonialCard({
+  testimonial,
+  onStatusToggle,
+  onDeleteRequest,
+  isToggling,
+  isDeleting,
+}: TestimonialCardProps) {
+  const { id, author_name, rating, content, status, created_at, projects } = testimonial;
+  const projectName = projects?.[0]?.title || 'Unbekanntes Projekt'; // <-- FIX 2: Zugriff auf das erste Element des Arrays
+  const receivedDate = new Date(created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const isPublished = status === 'Published';
+  const isDisabled = isToggling || isDeleting;
+
+  return (
+    <div className="bg-slate-800 rounded-lg border border-slate-700 shadow-md divide-y divide-slate-700">
+      <div className="p-5">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-semibold text-white">{author_name || 'Anonym'}</h3>
+            <p className="text-sm text-slate-400">
+              Für Projekt: <span className="font-medium text-slate-300">{projectName}</span>
+            </p>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+            isPublished
+              ? 'bg-green-500/20 text-green-400'
+              : 'bg-yellow-500/20 text-yellow-400'
+          }`}>
+            {isPublished ? 'Veröffentlicht' : 'Eingegangen'}
+          </span>
         </div>
-    );
+        <div className="mt-3">
+          <RatingDisplay rating={rating || 0} />
+        </div>
+        <p className="mt-4 text-slate-300 italic">"{content || 'Kein Inhalt'}"</p>
+        <p className="mt-3 text-xs text-slate-500">Eingegangen am: {receivedDate}</p>
+      </div>
+      <div className="p-4 flex justify-end space-x-3 bg-slate-800/50 rounded-b-lg">
+        <button
+          onClick={() => onStatusToggle(testimonial)}
+          disabled={isDisabled}
+          title={isPublished ? 'Verbergen' : 'Veröffentlichen'}
+          className={`inline-flex items-center gap-x-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+            isDisabled
+              ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+              : isPublished
+              ? 'bg-yellow-600/20 text-yellow-300 hover:bg-yellow-500/30'
+              : 'bg-green-600/20 text-green-300 hover:bg-green-500/30'
+          }`}
+        >
+          {isToggling ? (
+            <ArrowPathIcon className="h-4 w-4" />
+          ) : isPublished ? (
+            <EyeSlashIcon className="h-5 w-5" />
+          ) : (
+            <EyeIcon className="h-5 w-5" />
+          )}
+          <span>{isToggling ? 'Wird geändert...' : isPublished ? 'Verbergen' : 'Veröffentlichen'}</span>
+        </button>
+        <button
+          onClick={() => onDeleteRequest(testimonial)}
+          disabled={isDisabled}
+          title="Löschen"
+          className={`inline-flex items-center gap-x-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+            isDisabled
+              ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+              : 'bg-red-600/20 text-red-300 hover:bg-red-500/30'
+          }`}
+        >
+          {isDeleting ? (
+            <ArrowPathIcon className="h-4 w-4" />
+          ) : (
+            <TrashIcon className="h-5 w-5" />
+          )}
+          <span>{isDeleting ? 'Wird gelöscht...' : 'Löschen'}</span>
+        </button>
+      </div>
+    </div>
+  );
 }
+
 
 // --- MAIN PAGE COMPONENT ---
-export default function TestimonialsManagementPage() {
-    const supabase = useMemo(() => createSupabaseClient(), []); // <-- CREATED CLIENT INSTANCE
-    const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [actionLoading, setActionLoading] = useState<Record<string, 'publish' | 'delete' | 'save' | null>>({});
-    const [modalState, setModalState] = useState<ModalState>({ isOpen: false, mode: 'add', data: null });
-    const [deleteConfirmState, setDeleteConfirmState] = useState<{ isOpen: boolean; testimonial: Testimonial | null }>({ isOpen: false, testimonial: null });
-    const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-    
-    // --- 2. ADD TAB STATE ---
-    const [currentTab, setCurrentTab] = useState<TabState>('pending');
-    
-    const router = useRouter();
-    
-    // Fetch Testimonials
-    const fetchTestimonials = useCallback(async (user: User) => {
-        setLoading(true); setError(null);
-        console.log("Fetching testimonials for user:", user.id);
-        const { data, error: fetchError } = await supabase.from('testimonials').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-        if (fetchError) { console.error('Error fetching testimonials:', fetchError); setError(`Kundenstimmen konnten nicht geladen werden: ${fetchError.message}`); setTestimonials([]); }
-        else { 
-            console.log("Fetched testimonials:", data); 
-            setTestimonials(data || []);
-            // --- 3. SET DEFAULT TAB BASED ON DATA ---
-            const hasPending = (data || []).some(t => !t.is_published);
-            setCurrentTab(hasPending ? 'pending' : 'published');
-        }
+export default function TestimonialsPage() {
+  const supabase = useMemo(() => createSupabaseClient(), []);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deletingTestimonial, setDeletingTestimonial] = useState<Testimonial | null>(null);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+  const router = useRouter();
+
+  // --- Initial Data Fetch ---
+  useEffect(() => {
+    const getUserAndFetchData = async () => {
+      setLoading(true);
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error("Error fetching user:", userError);
+        setError("Fehler beim Laden der Benutzerdaten.");
         setLoading(false);
-    }, [supabase]); // <-- ADDED supabase as dependency
+        return;
+      }
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+      setCurrentUser(user);
 
-    // Initial Load useEffect
-    useEffect(() => {
-        const getUserAndData = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) router.push('/login');
-            else { setCurrentUser(user); await fetchTestimonials(user); }
-        };
-        getUserAndData();
-    }, [router, fetchTestimonials, supabase.auth]); // <-- ADDED supabase.auth as dependency
+      // Fetch testimonials WITH project title
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('testimonials')
+          .select(`
+            id,
+            created_at,
+            author_name,
+            rating,
+            content,
+            status,
+            projects ( title )
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
-    // Modal Handlers
-    const openAddModal = () => setModalState({ isOpen: true, mode: 'add', data: null });
-    const openEditModal = (testimonial: Testimonial) => setModalState({ isOpen: true, mode: 'edit', data: testimonial });
-    const closeModal = () => { if (actionLoading.modal === 'save') return; setModalState({ isOpen: false, mode: 'add', data: null }); }
-    const setLoadingState = (id: string | 'modal', type: 'publish' | 'delete' | 'save' | null) => { setActionLoading(prev => ({ ...prev, [id]: type })); };
+        if (fetchError) throw fetchError;
 
-    // Save Handler
-    const handleSaveTestimonial = async (formData: TestimonialFormData, id?: string) => {
-        if (!currentUser) return;
-        setLoadingState('modal', 'save');
-        const dataToUpsert: any = { ...formData, user_id: currentUser.id };
-        if (id) dataToUpsert.id = id;
-        console.log("Upserting testimonial:", dataToUpsert);
+        setTestimonials(data as Testimonial[]); // Der Cast `as Testimonial[]` ist jetzt korrekt
+      } catch (err: any) {
+        console.error("Error fetching testimonials:", err);
+        setError(`Kundenstimmen konnten nicht geladen werden: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getUserAndFetchData();
+  }, [router, supabase]);
 
-        const savePromise = async () => {
-            const { error: upsertError } = await supabase
-                .from('testimonials')
-                .upsert(dataToUpsert, { onConflict: 'id' });
-            if (upsertError) throw upsertError;
-        };
+  // --- Handle Status Toggle ---
+  const handleStatusToggle = async (testimonial: Testimonial) => {
+    if (!currentUser) {
+      toast.error("Fehler: Benutzer nicht gefunden.");
+      return;
+    }
+    
+    setTogglingId(testimonial.id);
+    const newStatus = testimonial.status === 'Published' ? 'Pending' : 'Published';
 
-        await toast.promise(savePromise(), {
-            loading: 'Wird gespeichert...',
-            success: () => { closeModal(); fetchTestimonials(currentUser); return "Kundenstimme erfolgreich gespeichert!"; },
-            error: (err: any) => `Fehler beim Speichern: ${err.message}`
-        });
-        setLoadingState('modal', null);
+    const togglePromise = async () => {
+      const { data, error } = await supabase
+        .from('testimonials')
+        .update({ status: newStatus })
+        .eq('id', testimonial.id)
+        .eq('user_id', currentUser.id) // Security check
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as Testimonial;
     };
 
-    // Publish Toggle Handler
-    const handlePublishToggle = async (testimonial: Testimonial) => {
-        if (!currentUser) return;
-        setLoadingState(testimonial.id, 'publish');
-        const newStatus = !testimonial.is_published;
-        const { error: updateError } = await supabase.from('testimonials').update({ is_published: newStatus }).eq('id', testimonial.id).eq('user_id', currentUser.id);
-        setLoadingState(testimonial.id, null);
-        if (updateError) toast.error(`Status konnte nicht geändert werden: ${updateError.message}`);
-        else { 
-            toast.success("Status erfolgreich geändert!"); 
-            // --- 4. UPDATE LOCAL STATE TO SWITCH TABS ---
-            const updatedTestimonials = testimonials.map(t => t.id === testimonial.id ? { ...t, is_published: newStatus } : t);
-            setTestimonials(updatedTestimonials);
-            
-            // If the last pending item was published, switch tabs
-            if (currentTab === 'pending' && !updatedTestimonials.some(t => !t.is_published)) {
-                setCurrentTab('published');
-            }
-        }
+    await toast.promise(togglePromise(), {
+      loading: 'Status wird geändert...',
+      success: (updatedTestimonial) => {
+        setTestimonials(current =>
+          current.map(t =>
+            // Hier wird der `projects`-Teil beibehalten, nur der Status wird aktualisiert
+            t.id === updatedTestimonial.id
+              ? { ...t, status: updatedTestimonial.status }
+              : t
+          )
+        );
+        return `Kundenstimme ${newStatus === 'Published' ? 'veröffentlicht' : 'verborgen'}.`;
+      },
+      error: (err: any) => `Fehler: ${err.message}`,
+    });
+
+    setTogglingId(null);
+  };
+
+  // --- Handle Delete ---
+  const handleDeleteRequest = (testimonial: Testimonial) => {
+    setDeletingTestimonial(testimonial);
+    setIsConfirmingDelete(false); // Ensure button is enabled
+  };
+
+  const handleCancelDelete = () => {
+    setDeletingTestimonial(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingTestimonial || !currentUser) return;
+
+    setIsConfirmingDelete(true);
+
+    const deletePromise = async () => {
+      const { error } = await supabase
+        .from('testimonials')
+        .delete()
+        .eq('id', deletingTestimonial.id)
+        .eq('user_id', currentUser.id); // Security check
+
+      if (error) throw error;
+      return deletingTestimonial.id;
     };
 
-    // Delete Handlers
-    const handleDeleteRequest = (testimonial: Testimonial) => { setDeleteConfirmState({ isOpen: true, testimonial: testimonial }); };
-    const handleConfirmDelete = async () => {
-        const testimonialToDelete = deleteConfirmState.testimonial; if (!testimonialToDelete || !currentUser) return;
-        setIsConfirmingDelete(true);
-        console.log(`Deleting testimonial ${testimonialToDelete.id}`);
-
-        const deletePromise = async () => {
-            const { error: deleteError } = await supabase.from('testimonials').delete().eq('id', testimonialToDelete.id).eq('user_id', currentUser.id);
-             if (deleteError) throw deleteError;
-             return testimonialToDelete.id;
-        };
-
-        await toast.promise(deletePromise(), {
-             loading: 'Wird gelöscht...',
-             success: (deletedId) => {
-                 setTestimonials(prev => prev.filter(t => t.id !== deletedId));
-                 return "Kundenstimme gelöscht!";
-             },
-             error: (err: any) => `Löschen fehlgeschlagen: ${err.message}`
-        });
-
+    await toast.promise(deletePromise(), {
+      loading: 'Kundenstimme wird gelöscht...',
+      success: (deletedId) => {
+        setTestimonials(current => current.filter(t => t.id !== deletedId));
+        setDeletingTestimonial(null);
         setIsConfirmingDelete(false);
-        setDeleteConfirmState({ isOpen: false, testimonial: null });
-    };
-    const handleCancelDelete = () => { setDeleteConfirmState({ isOpen: false, testimonial: null }); };
+        return 'Erfolgreich gelöscht!';
+      },
+      error: (err: any) => {
+        setIsConfirmingDelete(false);
+        return `Fehler: ${err.message}`;
+      },
+    });
+  };
 
+  // --- Render Logic ---
+  return (
+    <main className="p-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Kundenstimmen</h1>
+          <p className="text-slate-400 mt-1">Verwalten Sie hier alle erhaltenen Kundenbewertungen.</p>
+        </div>
+      </div>
 
-    // --- 5. NEW: Filtered lists for tabs ---
-    const pendingTestimonials = testimonials.filter(t => !t.is_published);
-    const publishedTestimonials = testimonials.filter(t => t.is_published);
-    const testimonialsToShow = currentTab === 'pending' ? pendingTestimonials : publishedTestimonials;
+      {loading && (
+        <p className="text-slate-400 mt-6 text-center">Lade Kundenstimmen...</p>
+      )}
 
-    // === Render Logic ===
-    return (
-        <main className="p-8">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-                <div> <h1 className="text-3xl font-bold text-white">Kundenstimmen</h1> <p className="text-slate-400 mt-1">Verwalten Sie hier Ihre Kundenreferenzen.</p> </div>
-                <button onClick={openAddModal} className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"> <PlusIcon className="h-5 w-5" /> Neue Kundenstimme </button>
-            </div>
+      {error && !loading && (
+        <p className="text-red-500 mt-6 text-center">{error}</p>
+      )}
 
-            {/* --- 6. NEW: Tab Navigation --- */}
-            <div className="mb-6">
-              <div className="border-b border-slate-700">
-                <nav className="-mb-px flex space-x-6" aria-label="Tabs">
-                  <button
-                    onClick={() => setCurrentTab('pending')}
-                    className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
-                      currentTab === 'pending'
-                        ? 'border-orange-500 text-orange-400'
-                        : 'border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-200'
-                    }`}
-                  >
-                    Ausstehende Freigabe
-                    {pendingTestimonials.length > 0 && (
-                      <span className="ml-1 rounded-full bg-orange-500/20 px-2.5 py-0.5 text-xs font-medium text-orange-400">
-                        {pendingTestimonials.length}
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setCurrentTab('published')}
-                    className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium ${
-                      currentTab === 'published'
-                        ? 'border-orange-500 text-orange-400'
-                        : 'border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-200'
-                    }`}
-                  >
-                    Veröffentlicht ({publishedTestimonials.length})
-                  </button>
-                </nav>
-              </div>
-            </div>
-            {/* --- END: Tab Navigation --- */}
+      {/* --- FIX 3: EmptyState-Aufruf ohne Button-Props (jetzt gültig) --- */}
+      {!loading && !error && testimonials.length === 0 && (
+        <EmptyState
+          icon={ChatBubbleLeftRightIcon}
+          title="Noch keine Kundenstimmen"
+          message="Sie haben noch keine Kundenstimmen erhalten. Fordern Sie welche an, indem Sie bei einem veröffentlichten Projekt auf das Sprechblasen-Icon klicken."
+        />
+      )}
 
+      {!loading && !error && testimonials.length > 0 && (
+        <div className="space-y-6">
+          {testimonials.map((testimonial) => (
+            <TestimonialCard
+              key={testimonial.id}
+              testimonial={testimonial}
+              onStatusToggle={handleStatusToggle}
+              onDeleteRequest={handleDeleteRequest}
+              isToggling={togglingId === testimonial.id}
+              isDeleting={deletingTestimonial?.id === testimonial.id && isConfirmingDelete}
+            />
+          ))}
+        </div>
+      )}
 
-            {/* Loading */}
-            {loading && (<p className="text-slate-400 mt-6 text-center">Lade Kundenstimmen...</p>)}
-            {/* General Error */}
-            {error && !loading && (<p className="text-red-500 mt-6 text-center">{error}</p>)}
-
-            {/* List */}
-            {!loading && (
-                <div className="space-y-4">
-                    {/* --- 7. UPDATE: Use testimonialsToShow --- */}
-                    {testimonialsToShow.length > 0 ? (
-                        testimonialsToShow.map((t) => {
-                             const isLoading = actionLoading[t.id];
-                             const isDisabled = !!isLoading || actionLoading.modal === 'save' || (deleteConfirmState.testimonial?.id === t.id && isConfirmingDelete);
-                            return (
-                                <div key={t.id} className={`p-4 bg-slate-800 rounded-lg border border-slate-700 transition-opacity ${isDisabled ? 'opacity-70 pointer-events-none' : ''}`}>
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="flex-1 min-w-0">
-                                            <blockquote className="text-slate-300 italic mb-2 text-sm">"{t.body}"</blockquote>
-                                            <p className="text-xs text-white font-semibold">{t.author_name} {t.author_handle && <span className="text-slate-400 font-normal ml-2">({t.author_handle})</span>} </p>
-                                            <p className="text-xs text-slate-500 mt-1">Erstellt: {new Date(t.created_at).toLocaleDateString('de-DE')}</p>
-                                        </div>
-                                        <div className="flex items-center space-x-2 flex-shrink-0">
-                                            {/* --- 8. UPDATE: Show green "publish" icon if on pending tab --- */}
-                                            <button 
-                                              onClick={() => handlePublishToggle(t)} 
-                                              disabled={!!isDisabled || isLoading === 'publish'} 
-                                              title={t.is_published ? 'Verbergen' : 'Veröffentlichen'} 
-                                              className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ 
-                                                isLoading === 'publish' ? 'bg-slate-600 text-slate-400 cursor-wait' 
-                                                : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' 
-                                                : t.is_published ? 'bg-yellow-600/20 text-yellow-300 hover:bg-yellow-500/30' 
-                                                : 'bg-green-600/20 text-green-300 hover:bg-green-500/30' 
-                                              }`}
-                                            > 
-                                              <span className="sr-only">{t.is_published ? 'Verbergen' : 'Veröffentlichen'}</span> 
-                                              {isLoading === 'publish' ? <ArrowPathIcon className="h-4 w-4" /> 
-                                                : t.is_published ? <EyeSlashIcon className="h-4 w-4" /> 
-                                                : <CheckCircleIcon className="h-4 w-4" />} 
-                                            </button>
-                                            <button onClick={() => openEditModal(t)} disabled={!!isDisabled} title="Bearbeiten" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600/20 text-blue-300 hover:bg-blue-500/30' }`}> <span className="sr-only">Bearbeiten</span> <PencilIcon className="h-4 w-4" /> </button>
-                                            <button onClick={() => handleDeleteRequest(t)} disabled={!!isDisabled || isLoading === 'delete'} title="Löschen" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isLoading === 'delete' ? 'bg-slate-600 text-slate-400 cursor-wait' : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-red-600/20 text-red-300 hover:bg-red-500/30' }`}> <span className="sr-only">Löschen</span> {isLoading === 'delete' ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />} </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        })
-                    ) : ( 
-                        !error && (
-                          <EmptyState
-                            icon={ChatBubbleLeftRightIcon}
-                            title={currentTab === 'pending' ? "Keine ausstehenden Kundenstimmen" : "Keine veröffentlichten Kundenstimmen"}
-                            message={currentTab === 'pending' ? "Sobald ein Kunde eine Bewertung abgibt, erscheint sie hier zur Freigabe." : "Fügen Sie manuell eine Referenz hinzu oder veröffentlichen Sie eine ausstehende."}
-                            buttonText="Kundenstimme hinzufügen"
-                            onButtonClick={openAddModal}
-                          />
-                        )
-                    )}
-                </div>
-            )}
-
-            {/* Modals */}
-            <TestimonialModal modalState={modalState} onClose={closeModal} onSave={handleSaveTestimonial} isSaving={actionLoading.modal === 'save'} />
-            <ConfirmationModal isOpen={deleteConfirmState.isOpen} title="Kundenstimme löschen" message={`Möchten Sie die Kundenstimme von "${deleteConfirmState.testimonial?.author_name || ''}" wirklich unwiderruflich löschen?`} confirmText="Ja, löschen" onConfirm={handleConfirmDelete} onCancel={handleCancelDelete} isConfirming={isConfirmingDelete} />
-        </main>
-    );
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={!!deletingTestimonial}
+        title="Kundenstimme löschen"
+        message={`Möchten Sie die Kundenstimme von "${deletingTestimonial?.author_name || 'Anonym'}" wirklich unwiderruflich löschen?`}
+        confirmText="Ja, löschen"
+        cancelText="Abbrechen"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isConfirming={isConfirmingDelete}
+      />
+    </main>
+  );
 }
