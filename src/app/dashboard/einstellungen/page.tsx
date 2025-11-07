@@ -470,7 +470,7 @@ export default function EinstellungenPage() {
         
         {/* === LEFT COLUMN: STICKY NAV === */}
         <aside className="lg:col-span-1">
-          <nav className="sticky top-0 space-y-1">
+          <nav className="sticky top-16 space-y-1">
             <h2 className="text-2xl font-bold text-white mb-4">Einstellungen</h2>
             {navItems.map((item) => (
               <a
@@ -492,7 +492,7 @@ export default function EinstellungenPage() {
           <form onSubmit={handleSaveProfile} className="space-y-12">
             
             {/* Sticky Save Header */}
-            <div className="sticky top-16 z-10 bg-slate-900 -mx-1 -mt-1 py-4 border-b border-slate-700 flex items-center justify-between">
+            <div className="sticky top-0 z-10 bg-slate-900 -mx-1 -mt-1 py-4 border-b border-slate-700 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">Allgemeine Einstellungen</h2>
               <button
                 type="submit"
