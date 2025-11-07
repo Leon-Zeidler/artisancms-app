@@ -5,7 +5,7 @@ import React, { useState, useMemo } from 'react';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
-// --- FIX: Import aus der neuen types.ts Datei ---
+// --- FIX: Import aus der new types.ts Datei ---
 import type { Project } from '@/lib/types'; 
 
 // --- Icons (Omitted for brevity) ---
@@ -17,7 +17,7 @@ const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props
 type GalleryImage = { url: string; path: string; };
 
 interface ProjectGalleryManagerProps {
-  projectId: string; 
+  projectId: string; // Akzeptiert jetzt string (für bigint/uuid)
   userId: string; 
   initialGalleryImages: GalleryImage[];
   onGalleryUpdate: (newGallery: GalleryImage[]) => void;

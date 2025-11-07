@@ -1,3 +1,4 @@
+// src/lib/types.ts
 import { User } from '@supabase/supabase-js';
 
 // Die zentrale Definition für ein Projekt

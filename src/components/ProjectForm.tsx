@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
-import { v4 as uuidv4 } from 'uuid'; // v4 wird hier nicht mehr benötigt, kann aber bleiben
+import { v4 as uuidv4 } from 'uuid';
 import ProjectGalleryManager from './ProjectGalleryManager';
 import type { Project, ProjectFormProps } from '@/lib/types';
 
@@ -15,7 +15,7 @@ const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fi
 const XCircleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> );
 const InformationCircleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /> </svg> );
 
-// --- (NEUE HELFERFUNKTION) ---
+// --- (FIX: FEHLENDE FUNKTION) ---
 // Konvertiert ein File-Objekt in einen Base64-String
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -30,6 +30,7 @@ const fileToBase64 = (file: File): Promise<string> => {
     reader.onerror = (error) => reject(error);
   });
 };
+// --- ENDE FIX ---
 
 // --- IMAGE UPLOAD CARD COMPONENT ---
 interface ImageUploadCardProps {
@@ -210,6 +211,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
         }));
         
         if (!formData.ai_description) {
+            // Hier wird die neue Funktion aufgerufen
             const base64Data = await fileToBase64(file);
             handleGenerateDescription({
                 imageData: base64Data,
@@ -265,14 +267,11 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
   };
 
 
-  // --- (FIXED) ---
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSaving(true);
     
-    // 1. Definiere das Objekt, das die DB-Spalten widerspiegelt
-    //    (OHNE 'id' und 'created_at', da diese von der DB generiert werden)
-    const dataToUpsert = {
+    const dataToUpsert: Omit<Project, 'id' | 'created_at'> = {
         user_id: currentUser.id,
         title: formData.title,
         'project-date': formData['project-date'] || null,
@@ -288,23 +287,19 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
         gallery_images: formData.gallery_images,
     };
 
-    // 2. Erstelle das finale Objekt für den upsert-Befehl
     let finalUpsertData: any = dataToUpsert;
 
-    // 3. Füge die 'id' NUR HINZU, WENN wir ein bestehendes Projekt bearbeiten (Update)
     if (initialData?.id) {
         finalUpsertData = {
             ...dataToUpsert,
             id: initialData.id 
         };
     }
-    // WENN es ein NEUES Projekt ist (initialData ist null),
-    // wird das Objekt OHNE 'id' gesendet. Supabase generiert dann die 'bigint' ID.
     
     const savePromise = async () => {
         const { data, error } = await supabase
             .from('projects')
-            .upsert(finalUpsertData) // Sende die korrigierten Daten
+            .upsert(finalUpsertData) 
             .select()
             .single();
             
@@ -322,11 +317,9 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             success: (data) => {
                 setIsSaving(false);
                 if (!initialData) {
-                    // Wenn es ein neues Projekt war, leite zur Edit-Seite weiter
                     router.push(`/dashboard/projekte/${data.id}/edit`);
                     return 'Projekt erfolgreich erstellt!';
                 }
-                // Wenn es ein Update war, lade die Daten neu
                 router.refresh(); 
                 return 'Projekt erfolgreich gespeichert!';
             },
@@ -515,7 +508,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             <div className="space-y-8 border-b border-slate-700 pb-12">
                   <h2 className="text-xl font-semibold leading-7 text-white">Projekt Galerie</h2>
                    <ProjectGalleryManager
-                      projectId={initialData.id as string} // Sicherer Cast, da wir wissen, dass die DB bigint (number) oder string (uuid) verwendet
+                      projectId={initialData.id as unknown as string} // Cast von 'bigint' zu string
                       userId={currentUser.id}
                       initialGalleryImages={formData.gallery_images || []}
                       onGalleryUpdate={(newGallery: { url: string; path: string; }[]) => setFormData(prev => ({ ...prev, gallery_images: newGallery }))}
