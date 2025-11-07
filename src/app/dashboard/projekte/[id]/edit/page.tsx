@@ -1,4 +1,3 @@
-// src/app/dashboard/projekte/[id]/edit/page.tsx
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -6,7 +5,12 @@ import { useRouter, useParams } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
-import ProjectForm, { type Project } from '@/components/ProjectForm';
+
+// --- HIER IST DER FIX ---
+import ProjectForm from '@/components/ProjectForm'; 
+// Typ-Import aus der neuen, zentralen Datei
+import type { Project } from '@/lib/types'; 
+// --- ENDE DES FIX ---
 
 export default function EditProjectPage() {
   const supabase = useMemo(() => createSupabaseClient(), []);
@@ -44,15 +48,17 @@ export default function EditProjectPage() {
       try {
         const { data, error } = await supabase
           .from('projects')
-          .select('*, gallery_images') // This correctly fetches all columns
-          .eq('id', projectId)
+          .select('*, gallery_images')
+          .eq('id', projectId) // projectId ist string, Supabase wandelt es für 'bigint' um
           .eq('user_id', user.id)
           .single();
 
         if (error) throw error;
         if (!data) throw new Error("Projekt nicht gefunden oder Zugriff verweigert.");
 
-        setProject(data as Project);
+        // Die Daten aus Supabase (data.id ist number)
+        // passen jetzt direkt zu unserem Project-Typ (id: number)
+        setProject(data as Project); 
 
       } catch (err: any) {
         console.error("Error fetching project:", err);

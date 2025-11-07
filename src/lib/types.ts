@@ -1,9 +1,8 @@
-// src/lib/types.ts
 import { User } from '@supabase/supabase-js';
 
 // Die zentrale Definition für ein Projekt
 export type Project = {
-  id: string;
+  id: number; // <-- FIX: Geändert von 'string' zu 'number'
   user_id: string;
   title: string | null;
   'project-date': string | null;
