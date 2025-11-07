@@ -470,7 +470,7 @@ export default function EinstellungenPage() {
         
         {/* === LEFT COLUMN: STICKY NAV === */}
         <aside className="lg:col-span-1">
-          <nav className="sticky top-16 space-y-1">
+          <nav className="sticky top-0 space-y-1">
             <h2 className="text-2xl font-bold text-white mb-4">Einstellungen</h2>
             {navItems.map((item) => (
               <a
