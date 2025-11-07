@@ -29,8 +29,8 @@
   }
 
   :focus-visible {
-    outline: 2px solid theme('colors.brand');
-    outline-offset: 3px;
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 3px;
   }
 
   ::selection {
@@ -47,4 +47,3 @@
     @apply rounded-3xl border border-slate-200/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur;
   }
 }
-
