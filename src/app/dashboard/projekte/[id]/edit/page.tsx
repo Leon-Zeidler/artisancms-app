@@ -1,3 +1,4 @@
+// src/app/dashboard/projekte/[id]/edit/page.tsx
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -43,7 +44,7 @@ export default function EditProjectPage() {
       try {
         const { data, error } = await supabase
           .from('projects')
-          .select('*, gallery_images')
+          .select('*, gallery_images') // This correctly fetches all columns
           .eq('id', projectId)
           .eq('user_id', user.id)
           .single();

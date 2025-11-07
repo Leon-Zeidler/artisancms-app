@@ -12,14 +12,14 @@ import EmptyState from '@/components/EmptyState';
 import RequestTestimonialModal from '@/components/RequestTestimonialModal';
 import PlusIcon from '@/components/icons/PlusIcon';
 
-// --- TYPE DEFINITIONS ---
+// --- TYPE DEFINITIONS (FIXED) ---
 type Project = {
   id: string;
   title: string | null;
   client?: string | null; 
   'project-date': string | null;
-  image_url: string | null;
-  image_storage_path: string | null;
+  after_image_url: string | null; // <-- Corrected name
+  after_image_storage_path: string | null; // <-- Corrected name
   status: 'Published' | 'Draft' | string | null;
   created_at: string;
   ai_description?: string | null;
@@ -56,7 +56,8 @@ function ProjectListItem({
   isDeleting 
 }: ProjectListItemProps) {
   const displayDate = project['project-date'] ? new Date(project['project-date']).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
-  const imageUrl = project.image_url || `https://placehold.co/48x48/334155/94a3b8?text=${encodeURIComponent(project.title?.charAt(0) || 'P')}`;
+  // --- (FIXED) ---
+  const imageUrl = project.after_image_url || `https://placehold.co/48x48/334155/94a3b8?text=${encodeURIComponent(project.title?.charAt(0) || 'P')}`;
   const isPublished = project.status === 'Published';
   const editUrl = `/dashboard/projekte/${project.id}/edit`;
 
@@ -117,10 +118,10 @@ export default function ProjektePage() {
 
     console.log(`All Projects: Fetching projects for user ${user.id}...`);
     
-    // --- UPDATED SELECT QUERY ---
+    // --- (FIXED) UPDATED SELECT QUERY ---
     const { data, error: fetchError } = await supabase
       .from('projects')
-      .select(`id, title, "project-date", image_url, image_storage_path, status, created_at, gallery_images`) // <-- ADDED gallery_images
+      .select(`id, title, "project-date", after_image_url, after_image_storage_path, status, created_at, gallery_images`) // <-- Corrected columns
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -207,7 +208,8 @@ export default function ProjektePage() {
     setIsConfirmingDelete(true);
     setTogglingProjectId(deletingProject.id); 
 
-    const imagePath = deletingProject.image_storage_path;
+    // --- (FIXED) ---
+    const imagePath = deletingProject.after_image_storage_path; // <-- Corrected name
     const galleryImagePaths = deletingProject.gallery_images?.map(img => img.path) || [];
 
     const deletePromise = async () => {

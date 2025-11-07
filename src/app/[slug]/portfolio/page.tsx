@@ -12,12 +12,12 @@ type Project = {
   id: string;
   title: string | null;
   'project-date': string | null;
-  after_image_url: string | null; // Renamed
+  after_image_url: string | null; // <-- Corrected name
   status: 'Published' | 'Draft' | string | null;
   created_at: string;
-  ai_description?: string | null;
+  ai_description: string | null;
+  gallery_images: { url: string; path: string }[] | null;
 };
-
 // --- PORTFOLIO CARD COMPONENT ---
 interface PortfolioCardProps {
   project: Project;
@@ -75,8 +75,8 @@ export default function ClientPortfolioPage() {
         // --- Updated select query ---
         const { data, error: fetchError } = await supabase
           .from('projects')
-          .select(`id, title, "project-date", after_image_url, status, created_at, ai_description`) // Renamed
-          .eq('user_id', profile.id) // <-- Use ID from context
+          .select(`id, title, "project-date", after_image_url, status, created_at, ai_description, gallery_images`)
+          .eq('user_id', profile.id) // <-- ADD THIS LINE BACK
           .eq('status', 'Published')
           .order('project-date', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false });

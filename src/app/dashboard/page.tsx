@@ -1,3 +1,4 @@
+// src/app/dashboard/page.tsx
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -6,12 +7,12 @@ import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
 import PlusIcon from '@/components/icons/PlusIcon';
 
-// --- TYPE DEFINITIONS ---
+// --- TYPE DEFINITIONS (FIXED) ---
 type Project = {
   id: string;
   title: string | null;
   'project-date': string | null;
-  image_url: string | null;
+  after_image_url: string | null; // <-- Corrected name
   status: 'Published' | 'Draft' | string | null;
   created_at: string;
 };
@@ -31,7 +32,8 @@ function StatCard({ title, value, description, icon: Icon }: StatCardProps) {
 
 function ProjectCard({ project }: ProjectCardProps) {
   const displayDate = project['project-date'] ? new Date(project['project-date']).toLocaleDateString('de-DE', { year: 'numeric', month: 'short', day: 'numeric' }) : 'No date';
-  const imageUrl = project.image_url || `https://placehold.co/600x400/334155/94a3b8?text=${encodeURIComponent(project.title || 'Project')}`;
+  // --- (FIXED) ---
+  const imageUrl = project.after_image_url || `https://placehold.co/600x400/334155/94a3b8?text=${encodeURIComponent(project.title || 'Project')}`;
 
   return (
     <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden group">
@@ -125,9 +127,10 @@ export default function DashboardPage() {
       }
       setCurrentUser(user);
 
+      // --- (FIXED) ---
       const { data, error: fetchError } = await supabase
         .from('projects')
-        .select(`id, title, "project-date", image_url, status, created_at`)
+        .select(`id, title, "project-date", after_image_url, status, created_at`) // <-- Corrected column
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
