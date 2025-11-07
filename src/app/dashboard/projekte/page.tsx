@@ -159,6 +159,10 @@ export default function ProjektePage() {
 
   // === Handle Status Toggle Function ===
   const handleStatusToggle = async (projectId: string, currentStatus: string | null) => {
+    if (!currentUser) {
+      toast.error("Fehler: Benutzer nicht gefunden. Bitte laden Sie die Seite neu.");
+      return;
+    }
     setTogglingProjectId(projectId);
     const newStatus = currentStatus === 'Published' ? 'Draft' : 'Published';
 
@@ -167,6 +171,7 @@ export default function ProjektePage() {
           .from('projects')
           .update({ status: newStatus })
           .eq('id', projectId)
+          .eq('user_id', currentUser.id) // This line is now safe
           .select()
           .single();
 
