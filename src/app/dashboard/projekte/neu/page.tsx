@@ -58,9 +58,17 @@ export default function NewProjectPage() {
 
       {loading ? (
         <p className="text-slate-400 mt-8 text-center">Lade Benutzerdaten...</p>
+      ) : currentUser ? ( // <-- 1. ADD THIS CHECK
+        // We are sure currentUser is a User here
+        <ProjectForm 
+          currentUser={currentUser} 
+          userSlug={userSlug} 
+          initialData={null} // <-- 2. ADD THIS PROP FOR A NEW PROJECT
+        />
       ) : (
-        // <-- 2. RENDER THE FORM COMPONENT -->
-        <ProjectForm currentUser={currentUser} userSlug={userSlug} />
+        // This case handles the brief moment before a redirect
+        // or if something failed. Returning null is safe.
+        null 
       )}
     </main>
   );
