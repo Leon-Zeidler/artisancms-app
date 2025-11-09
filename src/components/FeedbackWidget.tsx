@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useMemo } from 'react'; // Import React
 import { usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { createSupabaseClient } from '@/lib/supabaseClient'; // <-- 1. Import Supabase client
-import { User } from '@supabase/supabase-js'; // <-- 2. Import User type
+import { createSupabaseClient } from '@/lib/supabaseClient'; 
+import { User } from '@supabase/supabase-js'; 
 
 // --- Icons ---
+// (Hier ist das korrigierte Sprechblasen-Icon)
 const ChatBubbleLeftRightIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72 3.72a.75.75 0 01-1.06 0l-3.72-3.72C9.847 17.001 9 16.036 9 14.9v-4.286c0-.97.616-1.813 1.5-2.097L12 6.75l3.75 1.761zm-6 3.486l-3.72 3.72a.75.75 0 000 1.06l3.72 3.72C11.153 20.89 12 19.925 12 18.887v-7.135c0-1.038-.847-2-1.98-2.093l-3.72-1.761a.75.75 0 00-.63.123 7.48 7.48 0 00-.738.738A7.47 7.47 0 003 11.25v4.286c0 .97.616 1.813 1.5 2.097L6 18.311v-.757c0-1.28.624-2.43 1.65-3.181l.71-.533z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-3.86 8.25-8.625 8.25a9.06 9.06 0 01-5.17-1.71.75.75 0 01-.317-1.042l.713-1.426a.75.75 0 00-.317-1.042A8.99 8.99 0 013 12c0-4.556 3.86-8.25 8.625-8.25S21 7.444 21 12z" />
   </svg>
 );
 const XMarkIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -24,42 +25,39 @@ const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 // --- End Icons ---
 
-type FeedbackCategory = 'Bug Report' | 'Feature Request' | 'General Comment';
+type FeedbackCategory = 'Fehlerbericht' | 'Funktionswunsch' | 'Allgemeiner Kommentar';
 
 export default function FeedbackWidget() {
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [isOpen, setIsOpen] = useState(false);
-  const [category, setCategory] = useState<FeedbackCategory>('Bug Report');
+  const [category, setCategory] = useState<FeedbackCategory>('Fehlerbericht');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null); // <-- 3. Add state for user
+  const [currentUser, setCurrentUser] = useState<User | null>(null); 
   const pathname = usePathname();
 
-  // <-- 4. Get the authenticated user when the component loads -->
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUser(user);
     };
     getUser();
-  }, []);
+  }, [supabase.auth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // <-- 5. Check for user in the handler -->
     if (!currentUser) {
-      toast.error("User not found. Please try refreshing the page.");
+      toast.error("Benutzer nicht gefunden. Bitte laden Sie die Seite neu.");
       return;
     }
     if (!message.trim()) {
-      toast.error("Please enter a message.");
+      toast.error("Bitte geben Sie eine Nachricht ein.");
       return;
     }
 
     setIsLoading(true);
 
-    // <-- 6. Change from fetch() to supabase.from().insert() -->
     const { error } = await supabase
       .from('feedback')
       .insert({
@@ -71,11 +69,11 @@ export default function FeedbackWidget() {
 
     if (error) {
       console.error("Error submitting feedback:", error);
-      toast.error(`Error: ${error.message}`);
+      toast.error(`Fehler: ${error.message}`);
     } else {
-      toast.success("Thank you for your feedback!");
+      toast.success("Vielen Dank für Ihr Feedback!");
       setMessage('');
-      setCategory('Bug Report');
+      setCategory('Fehlerbericht');
       setIsOpen(false);
     }
     
@@ -96,11 +94,11 @@ export default function FeedbackWidget() {
             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
           >
             <div className="flex items-center justify-between border-b border-slate-700 p-4">
-              <h3 className="text-lg font-semibold text-white">Submit Beta Feedback</h3>
+              <h3 className="text-lg font-semibold text-white">Beta-Feedback abgeben</h3>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-slate-400 hover:text-white"
-                aria-label="Close feedback modal"
+                aria-label="Feedback-Modal schließen"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -108,7 +106,7 @@ export default function FeedbackWidget() {
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div>
                 <label htmlFor="feedback-category" className="block text-sm font-medium text-slate-300 mb-1">
-                  Category
+                  Kategorie
                 </label>
                 <select
                   id="feedback-category"
@@ -116,14 +114,14 @@ export default function FeedbackWidget() {
                   onChange={(e) => setCategory(e.target.value as FeedbackCategory)}
                   className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white focus:border-orange-500 focus:outline-none focus:ring-orange-500"
                 >
-                  <option>Bug Report</option>
-                  <option>Feature Request</option>
-                  <option>General Comment</option>
+                  <option>Fehlerbericht</option>
+                  <option>Funktionswunsch</option>
+                  <option>Allgemeiner Kommentar</option>
                 </select>
               </div>
               <div>
                 <label htmlFor="feedback-message" className="block text-sm font-medium text-slate-300 mb-1">
-                  Your Message
+                  Ihre Nachricht
                 </label>
                 <textarea
                   id="feedback-message"
@@ -131,11 +129,11 @@ export default function FeedbackWidget() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
-                  placeholder="Tell us what you think..."
+                  placeholder="Teilen Sie uns Ihre Meinung mit..."
                   required
                 />
                 <p className="text-xs text-slate-500 mt-1">
-                  Current page: <code className="bg-slate-700 px-1 py-0.5 rounded">{pathname}</code>
+                  Aktuelle Seite: <code className="bg-slate-700 px-1 py-0.5 rounded">{pathname}</code>
                 </p>
               </div>
               <div className="flex justify-end gap-3">
@@ -145,15 +143,15 @@ export default function FeedbackWidget() {
                   disabled={isLoading}
                   className="rounded-md px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-50"
                 >
-                  Cancel
+                  Abbrechen
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading || !currentUser} // <-- 7. Disable button if user isn't loaded
+                  disabled={isLoading || !currentUser} 
                   className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 disabled:bg-orange-800 disabled:cursor-not-allowed"
                 >
                   {isLoading && <ArrowPathIcon className="h-4 w-4" />}
-                  {isLoading ? 'Sending...' : 'Send Feedback'}
+                  {isLoading ? 'Wird gesendet...' : 'Feedback senden'}
                 </button>
               </div>
             </form>
@@ -165,7 +163,7 @@ export default function FeedbackWidget() {
       <button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-8 right-8 z-50 h-14 w-14 rounded-full bg-orange-600 p-3 text-white shadow-lg transition-transform hover:scale-110 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-900"
-        aria-label="Open feedback modal"
+        aria-label="Feedback-Modal öffnen"
       >
         <ChatBubbleLeftRightIcon className="h-full w-full" />
       </button>
