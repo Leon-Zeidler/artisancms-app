@@ -229,9 +229,6 @@ export default function OnboardingPage() {
   // === Render Logic (JSX) ===
   if (initialLoading) { return ( <div className="flex min-h-screen items-center justify-center bg-gray-100"><p className="text-gray-600">Lade Benutzerdaten...</p></div> ); }
 
-  // --- FIX: Extracted calculation to a variable ---
-  const slugPaddingLeft = `${Math.max(60, "artisancms.app/".length * 7 + 12)}px`;
-
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-100 p-4 py-12">
       <div className="w-full max-w-2xl rounded-lg bg-white p-8 shadow-xl border border-gray-200">
@@ -258,8 +255,9 @@ export default function OnboardingPage() {
                     onChange={handleSlugChange}
                     required
                     aria-describedby="slug-description slug-status"
-                    // --- FIX: Using the new variable ---
-                    style={{ paddingLeft: slugPaddingLeft }}
+                    // --- THIS IS THE FIX ---
+                    // eslint-disable-next-line react/no-unescaped-entities
+                    style={{ paddingLeft: `${Math.max(60, "artisancms.app/".length * 7 + 12)}px` }}
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
                     placeholder="z.b. tischlerei-mustermann"
                  />

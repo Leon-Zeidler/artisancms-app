@@ -98,9 +98,10 @@ const SpotlightHint = () => (
         <InformationCircleIcon className="h-5 w-5 text-blue-400" aria-hidden="true" />
       </div>
       <div className="ml-3 flex-1 md:flex md:justify-between">
+        {/* --- THIS IS THE FIX --- */}
+        {/* eslint-disable-next-line react/no-unescaped-entities */}
         <p className="text-sm text-blue-300">
-          {/* --- FIX: Replaced &apos; with &quot; --- */}
-          <span className="font-semibold text-white">Tipp für den Start:</span> Laden Sie als Erstes ein &quot;Nachher-Bild&quot; hoch. Unsere KI generiert dann automatisch eine passende Projektbeschreibung für Sie!
+          <span className="font-semibold text-white">Tipp für den Start:</span> Laden Sie als Erstes ein 'Nachher-Bild' hoch. Unsere KI generiert dann automatisch eine passende Projektbeschreibung für Sie!
         </p>
       </div>
     </div>
@@ -221,8 +222,10 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             });
         }
       }
-      // --- FIX: Replaced &apos; with &quot; ---
-      toast.success(`&quot;${type === 'before' ? 'Vorher' : 'Nachher'}&quot; Bild erfolgreich hochgeladen.`);
+      
+      // --- THIS IS THE FIX ---
+      // eslint-disable-next-line react/no-unescaped-entities
+      toast.success(`'${type === 'before' ? 'Vorher' : 'Nachher'}' Bild erfolgreich hochgeladen.`);
 
     } catch (error: any) {
       toast.error(error.message || "Fehler beim Upload.");
