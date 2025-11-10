@@ -28,20 +28,47 @@ export async function POST(req: NextRequest) {
     const { imageUrl, imageData, mimeType } = body;
 
     let imageUrlToSend: string;
+    let imageMimeType: string | null = mimeType;
 
-    if (imageData && mimeType) {
+    if (imageData && imageMimeType) {
+      // Pfad 1: Base64-Daten kommen direkt vom Client (z.B. bei Erst-Upload)
       console.log("Image data received directly from client.");
-      imageUrlToSend = `data:${mimeType};base64,${imageData}`;
+      imageUrlToSend = `data:${imageMimeType};base64,${imageData}`;
+    
     } else if (imageUrl) {
-      console.log("Image URL received:", imageUrl);
-      imageUrlToSend = imageUrl;
+      // Pfad 2: URL kommt vom Client (z.B. beim Klick auf "Generieren")
+      // --- START DER KORREKTUR ---
+      console.log("Image URL received. Fetching image on server to send as Base64...");
+      
+      const imageResponse = await fetch(imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to fetch image from Supabase: ${imageResponse.statusText}`);
+      }
+
+      if (!imageResponse.body) {
+        throw new Error("Image response has no body.");
+      }
+
+      imageMimeType = imageResponse.headers.get('Content-Type');
+      if (!imageMimeType) {
+        throw new Error("Could not determine image MIME type from response.");
+      }
+
+      // Wandelt das Bild in einen Base64-String um
+      const imageArrayBuffer = await imageResponse.arrayBuffer();
+      const imageBuffer = Buffer.from(imageArrayBuffer);
+      const base64String = imageBuffer.toString('base64');
+      
+      imageUrlToSend = `data:${imageMimeType};base64,${base64String}`;
+      console.log(`Successfully converted URL to Base64. Mime: ${imageMimeType}`);
+      // --- ENDE DER KORREKTUR ---
+
     } else {
       return NextResponse.json({ error: "imageUrl or imageData is required" }, { status: 400 });
     }
 
     const aiResponse = await openai.chat.completions.create({
-      // --- HIER IST DER FIX ---
-      model: "gpt-4o", // Ersetzt das veraltete "gpt-4-vision-preview"
+      model: "gpt-4o", // Bleibt gpt-4o
       messages: [
         {
           role: "user",
@@ -50,7 +77,7 @@ export async function POST(req: NextRequest) {
             {
               type: "image_url",
               image_url: {
-                "url": imageUrlToSend,
+                "url": imageUrlToSend, // Hier werden jetzt *immer* Base64-Daten gesendet
               },
             },
           ],
@@ -73,6 +100,7 @@ export async function POST(req: NextRequest) {
       errorMessage = error.message;
     }
     
+    // Diese Fehlermeldung wird jetzt seltener auftreten, ist aber als Fallback gut
     if (errorMessage.includes("invalid_image_url") || errorMessage.includes("fetch") || errorMessage.includes("resolve")) {
         errorMessage = "Bild-URL konnte nicht geladen werden. Bitte manuell generieren.";
     }
