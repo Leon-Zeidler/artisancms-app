@@ -248,23 +248,19 @@ export default function OnboardingPage() {
                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 sm:text-sm">
                    artisancms.app/
                  </span>
-                 
-                {/* --- THIS IS THE FIX --- 
-                    The eslint-disable comment must be a JS comment (//)
-                    placed on the line *immediately before* the line with the error.
-                    The invalid comments that caused the "'...' expected" error are removed. 
+                {/* NOTE: The `eslint-disable` comment for line 274 was incorrect.
+                  It is removed, as the real error was elsewhere.
                 */}
-                // eslint-disable-next-line react/no-unescaped-entities
-              <input
-    type="text" id="slug" name="slug"
-    value={slug}
-    onChange={handleSlugChange}
-    required
-    aria-describedby="slug-description slug-status"
-    style={{ paddingLeft: `${Math.max(60, "artisancms.app/".length * 7 + 12)}px` }}
-    className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
-    placeholder="z.b. tischlerei-mustermann"
- />
+                <input
+                    type="text" id="slug" name="slug"
+                    value={slug}
+                    onChange={handleSlugChange}
+                    required
+                    aria-describedby="slug-description slug-status"
+                    style={{ paddingLeft: `${Math.max(60, "artisancms.app/".length * 7 + 12)}px` }}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                    placeholder="z.b. tischlerei-mustermann"
+                 />
                  <div id="slug-status" className="absolute inset-y-0 right-0 flex items-center pr-3">
                     {slugStatus === 'checking' && <ArrowPathIcon className="h-5 w-5 text-gray-400" />}
                     {slugStatus === 'available' && <CheckIcon className="h-5 w-5 text-green-500" />}
@@ -275,7 +271,8 @@ export default function OnboardingPage() {
                 Dies wird Teil Ihrer Webseiten-URL (nur Kleinbuchstaben, Zahlen und Bindestriche).
             </p>
             {slugStatus === 'taken' && <p className="mt-1 text-xs text-red-600">Dieser Pfad ist leider schon vergeben.</p>}
-            {slugStatus === 'invalid' && <p className="mt-1 text-xs text-red-600">Ungültige Zeichen. Nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt. Darf nicht leer sein oder mit '-' beginnen/enden.</p>}
+            {/* --- THIS IS THE FIX --- */}
+            {slugStatus === 'invalid' && <p className="mt-1 text-xs text-red-600">Ungültige Zeichen. Nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt. Darf nicht leer sein oder mit &apos;-&apos; beginnen/enden.</p>}
           </div>
 
           {/* Address */}
@@ -325,9 +322,6 @@ export default function OnboardingPage() {
            <div>
             <label htmlFor="aboutText" className="mb-2 block text-sm font-medium text-gray-700"> Über Ihren Betrieb * </label>
              <div className="relative">
-                {/* --- THIS IS THE FIX ---
-                    Corrected the typo from e.g.target.value to e.target.value
-                */}
                 <textarea id="aboutText" value={aboutText} rows={5} onChange={(e) => setAboutText(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28" placeholder="Erzählen Sie etwas über Ihre Erfahrung..."/>
                  <button type="button" onClick={() => handleGenerateProfileText('about')} disabled={aiLoading === 'about' || !businessName} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'about' || !businessName ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} >
                    <SparklesIcon className={`h-4 w-4 ${aiLoading === 'about' ? 'animate-spin' : ''}`} />
