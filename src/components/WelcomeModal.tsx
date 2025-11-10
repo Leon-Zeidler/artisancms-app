@@ -136,7 +136,7 @@ export default function WelcomeModal({ onClose, isSaving }: WelcomeModalProps) {
                 <strong className="text-white">Stammdaten & Rechtliches eintragen:</strong>
                 <br />
                 Gehen Sie zu <Link href="/dashboard/einstellungen" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Einstellungen</Link>.
-                Füllen Sie unter \Firmendaten` Ihren Namen und Ihre Adresse aus und hinterlegen Sie Ihre Texte für `Impressum` sowie `Datenschutz`.`
+                Füllen Sie unter &apos;Firmendaten&apos; Ihren Namen und Ihre Adresse aus und hinterlegen Sie Ihre Texte für &apos;Impressum&apos; sowie &apos;Datenschutz&apos;.
               </li>
               <li>
                 <strong className="text-white">Branding & Farben festlegen:</strong>
@@ -147,14 +147,14 @@ export default function WelcomeModal({ onClose, isSaving }: WelcomeModalProps) {
               <li>
                 <strong className="text-white">Erstes Projekt mit AI erstellen:</strong>
                 <br />
-                Gehen Sie zu <Link href="/dashboard/projekte" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Projekte</Link> und klicken Sie auf `Neues Projekt`.
-                Laden Sie ein &quot;Nachher-Bild&quot; hoch – unsere KI schreibt automatisch eine passende Beschreibung. Setzen Sie den Status auf &quot;Veröffentlicht&quot; und speichern Sie.
+                Gehen Sie zu <Link href="/dashboard/projekte" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Projekte</Link> und klicken Sie auf &apos;Neues Projekt&apos;.
+                Laden Sie ein &apos;Nachher-Bild&apos; hoch – unsere KI schreibt automatisch eine passende Beschreibung. Setzen Sie den Status auf &apos;Veröffentlicht&apos; und speichern Sie.
               </li>
               <li>
                 <strong className="text-white">Webseite veröffentlichen:</strong>
                 <br />
                 Aktivieren Sie unter <Link href="/dashboard/einstellungen#sicherheit" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Gefahrenzone</Link>
-                den Schalter \Website veröffentlichen`. Fertig – Ihre Seite ist live!`
+                den Schalter &apos;Website veröffentlichen&apos;. Fertig – Ihre Seite ist live!
               </li>
             </ol>
           </section>
