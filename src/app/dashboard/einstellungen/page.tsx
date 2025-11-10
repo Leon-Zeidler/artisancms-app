@@ -29,6 +29,9 @@ type Profile = {
   show_testimonials_page: boolean;
 };
 
+// --- NEUER TYPE ---
+type AIGenerationType = 'services' | 'about';
+
 // --- ICONS ---
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
 const ExclamationTriangleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /> </svg> );
@@ -40,9 +43,11 @@ const PaintBrushIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="ht
 const BookOpenIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" /></svg>);
 const ShieldCheckIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.24-.32 2.395-.88 3.428l-6.118 6.118-6.117-6.118C3.32 14.395 3 13.24 3 12c0-5.188 4.5-9.428 9-9.428s9 4.24 9 9.428z" /></svg>);
 const MagnifyingGlassIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>);
+// --- NEUES ICON ---
+const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z" /> </svg> );
 
 
-// --- REUSABLE COMPONENTS (Kept from your file) ---
+// --- REUSABLE COMPONENTS ---
 const ColorInput = ({ label, name, value, onChange }: { label: string, name: string, value: string, onChange: (e: ChangeEvent<HTMLInputElement>) => void }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <label htmlFor={name} className="block text-sm font-medium text-slate-300 sm:pt-2">{label}</label>
@@ -68,7 +73,6 @@ const LogoUploader = ({ logoUrl, onFileChange, onRemoveLogo, isUploading }: { lo
   </div>
 );
 
-// We keep SectionCard for the non-form items
 const SectionCard = ({ title, description, children }: { title: string, description: string, children: React.ReactNode }) => (
   <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg">
     <div className="px-6 py-5 border-b border-slate-700">
@@ -107,16 +111,14 @@ const SettingsToggle = ({ label, description, name, isChecked, onChange, disable
         disabled={disabled}
         className="sr-only peer"
       />
-      <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${disabled ? 'cursor-not-allowed' : ''}`}></div>
+      <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${disabled ? 'cursor-not-allowed' : ''}`}></div>
     </label>
   </div>
 );
 
-
-// --- DangerZone Component (JETZT MIT KORREKTUR) ---
+// --- DangerZone Component ---
 function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profile | null, user: User | null, onUpdateProfile: (updatedProfile: Profile) => void, router: any }) {
   const supabase = useMemo(() => createSupabaseClient(), []);
-  // const router = useRouter(); // Nicht mehr nötig, wird übergeben
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -157,7 +159,6 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
     setIsPublishing(false);
   };
 
-  // --- KORRIGIERTE "KONTO LÖSCHEN" FUNKTION ---
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     
@@ -173,18 +174,14 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
       }
       
       toast.success("Konto wird gelöscht. Sie werden abgemeldet.");
-      // Die API-Route löscht das Cookie, aber wir leiten den Benutzer trotzdem sicher weiter
       router.push('/login'); 
-      router.refresh(); // Erzwingt einen vollständigen Neuladen der Session
+      router.refresh(); 
 
     } catch (err: any) {
       toast.error(`Fehler beim Löschen: ${err.message}`);
       setIsDeleting(false);
     }
-    // HINWEIS: setIsDeleting(false) wird im Erfolgsfall nicht mehr erreicht,
-    // da die Seite neu geladen wird. Das ist in Ordnung.
   };
-  // --- ENDE KORREKTUR ---
 
   return (
     <>
@@ -215,7 +212,7 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
                 disabled={isPublishing || (!isPublished && !canPublish)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+              <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${isPublishing || (!isPublished && !canPublish) ? 'cursor-not-allowed opacity-50' : ''}`}></div>
             </label>
           </div>
         </div>
@@ -255,7 +252,7 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
 }
 
 
-// --- MAIN PAGE COMPONENT (ALL LOGIC IS THE SAME) ---
+// --- MAIN PAGE COMPONENT ---
 export default function EinstellungenPage() {
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -265,6 +262,7 @@ export default function EinstellungenPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [isChangingEmail, setIsChangingEmail] = useState(false);
+  const [aiLoading, setAiLoading] = useState<AIGenerationType | null>(null); // <-- NEUES STATE
   
   const [formData, setFormData] = useState<Omit<Profile, 'id' | 'logo_url' | 'logo_storage_path'>>({
     business_name: '',
@@ -284,7 +282,7 @@ export default function EinstellungenPage() {
     show_testimonials_page: true,
   });
 
-  const router = useRouter(); // <-- Router hier initialisieren
+  const router = useRouter();
 
   // --- Fetch data (same) ---
   useEffect(() => {
@@ -362,6 +360,44 @@ export default function EinstellungenPage() {
       toast.success("Einstellungen gespeichert!");
     }
   };
+  
+  // --- NEUE FUNKTION ---
+  const handleGenerateProfileText = async (type: AIGenerationType) => { 
+    const context = formData.business_name || 'Handwerksbetrieb'; 
+    if (!context) { 
+      toast.error("Bitte geben Sie zuerst den Namen des Betriebs ein."); 
+      return; 
+    } 
+    setAiLoading(type);
+    
+    try { 
+      const response = await fetch('/api/generate-profile-text', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ context: context, type: type, keywords: formData.keywords }), 
+      }); 
+      
+      if (!response.ok) { 
+        const errorData = await response.json(); 
+        throw new Error(errorData.error || `Failed to generate ${type} text`); 
+      } 
+      
+      const data = await response.json(); 
+      if (type === 'services') { 
+        setFormData(prev => ({ ...prev, services_description: data.text }));
+      } else if (type === 'about') { 
+        setFormData(prev => ({ ...prev, about_text: data.text }));
+      } 
+      toast.success("Text erfolgreich generiert!");
+    } catch (err) { 
+        console.error(`Error calling ${type} generation API:`, err); 
+        const message = err instanceof Error ? err.message : "An unknown error occurred"; 
+        toast.error(`Fehler bei der Textgenerierung: ${message}`); 
+    } finally { 
+      setAiLoading(null); 
+    } 
+  };
+  // --- ENDE NEUE FUNKTION ---
 
   // --- Handle Logo Upload (same) ---
   const handleLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -479,7 +515,7 @@ export default function EinstellungenPage() {
     return <div className="p-8 text-slate-400">Lade Einstellungen...</div>;
   }
 
-  // === NEW MODERNIZED RENDER ===
+  // === RENDER ===
   return (
     <main className="p-8">
       {/* This is the main 2-column layout */}
@@ -513,7 +549,7 @@ export default function EinstellungenPage() {
               <h2 className="text-xl font-semibold text-white">Allgemeine Einstellungen</h2>
               <button
                 type="submit"
-                disabled={saving || isUploading}
+                disabled={saving || isUploading || !!aiLoading}
                 className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-50"
               >
                 {saving ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
@@ -553,14 +589,38 @@ export default function EinstellungenPage() {
               </div>
             </section>
             
-            {/* --- Section 3: SEO & AI --- */}
+            {/* --- Section 3: SEO & AI (MIT BUTTONS) --- */}
             <section id="seo" className="scroll-mt-32">
               <h3 className="text-xl font-semibold text-white">SEO & AI-Inhalte</h3>
               <p className="mt-1 text-sm text-slate-400">Helfen Sie der AI, bessere Texte für Sie zu generieren.</p>
               <div className="mt-6 space-y-6 p-6 bg-slate-800 border border-slate-700 rounded-lg">
+                
+                {/* Keywords (Bleibt ein einfaches Input) */}
                 <SettingsInput label="Wichtige Keywords" name="keywords" value={formData.keywords ?? ''} onChange={handleFormChange} placeholder="z.B. Badsanierung, Heizung, Fliesenleger, Dresden..." type="textarea" rows={3} />
-                <SettingsInput label="Leistungsbeschreibung" name="services_description" value={formData.services_description ?? ''} onChange={handleFormChange} placeholder="Eine Zeile pro Leistung, z.B. Sanitär: Installation und Reparatur..." type="textarea" rows={6} />
-                <SettingsInput label="Über Uns Text" name="about_text" value={formData.about_text ?? ''} onChange={handleFormChange} placeholder="Ein kurzer Text über Ihre Firma, Ihre Werte und Ihre Geschichte..." type="textarea" rows={6} />
+                
+                {/* Leistungsbeschreibung (MIT BUTTON) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label htmlFor="services_description" className="block text-sm font-medium text-slate-300">Leistungsbeschreibung</label>
+                  <div className="relative">
+                    <textarea name="services_description" id="services_description" rows={6} value={formData.services_description ?? ''} onChange={handleFormChange} className="mt-0 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="Eine Zeile pro Leistung, z.B. Sanitär: Installation und Reparatur..." />
+                    <button type="button" onClick={() => handleGenerateProfileText('services')} disabled={aiLoading === 'services' || !formData.business_name} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'services' || !formData.business_name ? 'bg-gray-500 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} >
+                      <SparklesIcon className={`h-4 w-4 ${aiLoading === 'services' ? 'animate-spin' : ''}`} />
+                      {aiLoading === 'services' ? 'Generiere...' : 'Generieren'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Über Uns Text (MIT BUTTON) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label htmlFor="about_text" className="block text-sm font-medium text-slate-300">Über Uns Text</label>
+                  <div className="relative">
+                    <textarea name="about_text" id="about_text" rows={6} value={formData.about_text ?? ''} onChange={handleFormChange} className="mt-0 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="Ein kurzer Text über Ihre Firma, Ihre Werte und Ihre Geschichte..." />
+                    <button type="button" onClick={() => handleGenerateProfileText('about')} disabled={aiLoading === 'about' || !formData.business_name} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'about' || !formData.business_name ? 'bg-gray-500 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} >
+                      <SparklesIcon className={`h-4 w-4 ${aiLoading === 'about' ? 'animate-spin' : ''}`} />
+                      {aiLoading === 'about' ? 'Generiere...' : 'Generieren'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </section>
 

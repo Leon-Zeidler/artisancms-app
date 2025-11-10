@@ -74,12 +74,12 @@ function isDarkFromRGB(rgb: { r: number; g: number; b: number }): boolean {
 // --- SIDEBAR COMPONENTS ---
 function Sidebar({ user, userSlug, isAdmin, isDarkBg }: { user: User | null, userSlug: string | null, isAdmin: boolean, isDarkBg: boolean }) {
   const pathname = usePathname();
-  const router = useRouter(); // <-- NEU
-  const supabase = useMemo(() => createSupabaseClient(), []); // <-- NEU
+  const router = useRouter(); // <-- HINZUGEFÜGT
+  const supabase = useMemo(() => createSupabaseClient(), []); // <-- HINZUGEFÜGT
   
   const websiteHref = userSlug ? `/${userSlug}` : '#'; 
 
-  // --- NEUE FUNKTION ---
+  // --- HINZUGEFÜGTE FUNKTION ---
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -89,7 +89,7 @@ function Sidebar({ user, userSlug, isAdmin, isDarkBg }: { user: User | null, use
       router.refresh(); // Wichtig, um den Cache zu leeren
     }
   };
-  // --- ENDE NEUE FUNKTION ---
+  // --- ENDE HINZUGEFÜGTE FUNKTION ---
 
   const baseClasses = "flex items-center p-4 text-base font-normal rounded-lg transition duration-75 group w-full";
   const activeClasses = "bg-orange-600 text-white shadow-lg";
@@ -102,7 +102,6 @@ function Sidebar({ user, userSlug, isAdmin, isDarkBg }: { user: User | null, use
   return (
     <aside className={`w-64 flex-shrink-0 p-4 relative ${isDarkBg ? 'bg-slate-800' : 'bg-white border-r border-slate-200'}`}>
       <div className="flex items-center mb-8">
-        {/* --- KORREKTUR LOGO-ICON --- */}
         <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md"> 
           <DashboardIcon className="h-6 w-6 text-white"/> 
         </div>
@@ -285,7 +284,7 @@ export default function DashboardLayout({
 
     return () => { isMounted = false; };
 
-  }, [router, pathname, supabase.auth]);
+  }, [router, pathname, supabase.auth]); 
 
   useEffect(() => {
     if (!rootRef.current) return;
