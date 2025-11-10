@@ -254,17 +254,17 @@ export default function OnboardingPage() {
                     placed on the line *immediately before* the line with the error.
                     The invalid comments that caused the "'...' expected" error are removed. 
                 */}
-                {/* eslint-disable-next-line react/no-unescaped-entities */}
-                <input
-                    type="text" id="slug" name="slug"
-                    value={slug}
-                    onChange={handleSlugChange}
-                    required
-                    aria-describedby="slug-description slug-status"
-                    style={{ paddingLeft: `${Math.max(60, "artisancms.app/".length * 7 + 12)}px` }}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
-                    placeholder="z.b. tischlerei-mustermann"
-                 />
+                // eslint-disable-next-line react/no-unescaped-entities
+              <input
+              type="text" id="slug" name="slug"
+              value={slug}
+              onChange={handleSlugChange}
+              required
+              aria-describedby="slug-description slug-status"
+              style={{ paddingLeft: `${Math.max(60, "artisancms.app/".length * 7 + 12)}px` }}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+              placeholder="z.b. tischlerei-mustermann"
+              />
                  <div id="slug-status" className="absolute inset-y-0 right-0 flex items-center pr-3">
                     {slugStatus === 'checking' && <ArrowPathIcon className="h-5 w-5 text-gray-400" />}
                     {slugStatus === 'available' && <CheckIcon className="h-5 w-5 text-green-500" />}
