@@ -4,18 +4,23 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
   try {
+    // --- START DER KORREKTUR ---
+    // Wir verwenden jetzt den Service Key (Admin-Client) statt des Anon Keys.
+    // Das umgeht alle RLS-Policies für diese Abfrage.
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Missing Supabase configuration for review token verification.');
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing Supabase Service Key configuration for review token verification.');
       return NextResponse.json({ error: 'Server configuration error (database).' }, { status: 500 });
     }
 
-    const supabase = createClient(
+    const supabaseAdmin = createClient(
       supabaseUrl,
-      supabaseAnonKey,
+      supabaseServiceKey,
+      { auth: { autoRefreshToken: false, persistSession: false } }
     );
+    // --- ENDE DER KORREKTUR ---
 
     const { token } = await request.json();
 
@@ -24,15 +29,15 @@ export async function POST(request: Request) {
     }
 
     // --- NEW STRATEGY ---
-    // 1. Fetch the request itself
-    const { data: requestData, error: requestError } = await supabase
+    // 1. Fetch the request itself (using the admin client)
+    const { data: requestData, error: requestError } = await supabaseAdmin
       .from('testimonial_requests')
       .select('status, project_id, profile_id')
       .eq('id', token)
       .single();
 
     if (requestError || !requestData) {
-      console.error('Verify token error:', requestError);
+      console.error('Verify token error (Admin Client):', requestError);
       return NextResponse.json({ error: 'Token not found' }, { status: 404 });
     }
 
@@ -40,27 +45,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'This review link has expired or already been used.' }, { status: 410 });
     }
 
-    // 2. Fetch the project details
-    const { data: projectData, error: projectError } = await supabase
+    // 2. Fetch the project details (using the admin client)
+    const { data: projectData, error: projectError } = await supabaseAdmin
       .from('projects')
       .select('title')
       .eq('id', requestData.project_id)
       .single();
 
     if (projectError) {
-      console.error('Project fetch error:', projectError);
+      console.error('Project fetch error (Admin Client):', projectError);
       return NextResponse.json({ error: 'Could not find project details' }, { status: 500 });
     }
 
-    // 3. Fetch the profile details
-    const { data: profileData, error: profileError } = await supabase
+    // 3. Fetch the profile details (using the admin client)
+    const { data: profileData, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('business_name')
       .eq('id', requestData.profile_id)
       .single();
 
     if (profileError) {
-      console.error('Profile fetch error:', profileError);
+      console.error('Profile fetch error (Admin Client):', profileError);
       return NextResponse.json({ error: 'Could not find business details' }, { status: 500 });
     }
     // --- END NEW STRATEGY ---
