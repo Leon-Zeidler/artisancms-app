@@ -6,13 +6,15 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 
 // --- Define Profile type for the joined data ---
-// --- FIX 1: Changed 'profiles' to be an array type to match TS inference ---
+// (Dieser Typ wird nicht mehr benötigt, da wir den Join entfernen)
+/*
 type ProjectWithProfile = {
   title: string | null;
   profiles: {
     business_name: string | null;
-  }[] | null; // profiles is inferred as an array, even if it's a single join
+  }[] | null; 
 };
+*/
 
 export async function POST(request: Request) {
   const cookieStore = cookies();
@@ -54,38 +56,53 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'projectId and clientEmail are required' }, { status: 400 });
     }
 
-    // We expect projectId to be a number (bigint) but it comes as a string from JSON
     const projectIdNum = parseInt(projectId, 10);
     if (isNaN(projectIdNum)) {
       return NextResponse.json({ error: 'Invalid projectId format' }, { status: 400 });
     }
 
     // 3. Get Project and Profile info (for the email)
+    // --- START DER KORREKTUR ---
+    // Wir rufen Projekt- und Profildaten in zwei getrennten, robusten Abfragen ab,
+    // anstatt uns auf einen potenziell fehlenden Foreign-Key-Join zu verlassen.
+
+    // Abfrage 1: Das Projekt abrufen
     const { data: projectData, error: projectError } = await supabase
       .from('projects')
-      .select('title, profiles ( business_name )')
-      .eq('id', projectIdNum) // Use the number
-      .eq('user_id', user.id)
+      .select('title') // Nur das auswählen, was wir aus dieser Tabelle brauchen
+      .eq('id', projectIdNum) 
+      .eq('user_id', user.id) // Sicherheitsprüfung
       .single();
 
     if (projectError || !projectData) {
-      console.error('Error fetching project data or no access:', projectError);
-      return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 });
+       console.error('Error fetching project data or no access:', projectError);
+       // Das ist die Fehlermeldung, die Sie sehen
+       return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 });
     }
+    
+    // Abfrage 2: Das Profil abrufen
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('business_name')
+      .eq('id', user.id) // Profil basierend auf dem authentifizierten Benutzer abrufen
+      .single();
 
-    // Cast the data to our type to help TypeScript
-    const typedProjectData = projectData as ProjectWithProfile;
+    if (profileError || !profileData) {
+        console.error('Error fetching profile data:', profileError);
+        return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
+    }
+    
+    const projectTitle = projectData.title || 'ein kürzliches Projekt';
+    const businessName = profileData.business_name || 'Ihrem Handwerksbetrieb';
+    // --- ENDE DER KORREKTUR ---
 
-    const projectTitle = typedProjectData.title || 'ein kürzliches Projekt';
-    // --- FIX 2: Access the first item in the 'profiles' array ---
-    const businessName = typedProjectData.profiles?.[0]?.business_name || 'Ihrem Handwerksbetrieb';
 
     // 4. Create the unique testimonial request token
     const { data: requestData, error: tokenError } = await supabaseAdmin
       .from('testimonial_requests')
       .insert({
         user_id: user.id,
-        project_id: projectIdNum, // Use the number
+        project_id: projectIdNum, // Die project_id wird jetzt korrekt gespeichert
         client_email: clientEmail
       })
       .select('id')
@@ -187,4 +204,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-
