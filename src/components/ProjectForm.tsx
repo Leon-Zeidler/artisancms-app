@@ -53,7 +53,6 @@ function ImageUploadCard({ title, description, imageUrl, isUploading, onFileChan
         <div className="w-full aspect-[16/9] rounded-lg border-2 border-dashed border-slate-600 flex items-center justify-center relative bg-slate-800/50">
           {imageUrl ? (
             <>
-              {/* --- FIX: Added eslint-disable for next/image warning --- */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={imageUrl} alt="Project image" className="object-cover w-full h-full rounded-lg" />
               <button
@@ -222,7 +221,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             });
         }
       }
-      // --- FIX: Replaced ' with &quot; ---
+      // --- FIX: Replaced ' with &apos; ---
       toast.success(`&apos;${type === 'before' ? 'Vorher' : 'Nachher'}&apos; Bild erfolgreich hochgeladen.`);
 
     } catch (error: any) {
@@ -342,7 +341,8 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
       if (!pathToRemove) {
           console.log("No image path to remove."); return;
       }
-
+      
+      // --- FIX: Replaced ' with " ---
       const toastId = toast.loading("Bild wird gelöscht...");
       
       try {
@@ -489,6 +489,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
                       disabled={isFormDisabled || !formData.after_image_url} 
                       className="rounded-md bg-orange-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition"
                   >
+                      {/* --- FIX: Replaced ' with " --- */}
                       {isGenerating ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : "Beschreibung generieren"}
                   </button>
              </div>
@@ -559,6 +560,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             disabled={isFormDisabled}
             className="flex justify-center rounded-md bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition"
           >
+            {/* --- FIX: Replaced ' with " --- */}
             {isSaving ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : "Projekt speichern"}
           </button>
         </div>

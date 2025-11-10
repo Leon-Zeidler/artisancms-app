@@ -102,7 +102,7 @@ export default function WelcomeModal({ onClose, isSaving }: WelcomeModalProps) {
               Willkommen zur ArtisanCMS Beta
             </p>
             <h2 id="welcome-modal-title" className="text-2xl font-bold text-white">
-              So funktioniert's: Von Null zur Live-Webseite
+              So funktioniert&apos;s: Von Null zur Live-Webseite
             </h2>
           </div>
         </div>
@@ -136,6 +136,7 @@ export default function WelcomeModal({ onClose, isSaving }: WelcomeModalProps) {
                 <strong className="text-white">Stammdaten & Rechtliches eintragen:</strong>
                 <br />
                 Gehen Sie zu <Link href="/dashboard/einstellungen" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Einstellungen</Link>.
+                {/* --- FIX: Replaced \` with &apos; --- */}
                 Füllen Sie unter &apos;Firmendaten&apos; Ihren Namen und Ihre Adresse aus und hinterlegen Sie Ihre Texte für &apos;Impressum&apos; sowie &apos;Datenschutz&apos;.
               </li>
               <li>
@@ -148,12 +149,13 @@ export default function WelcomeModal({ onClose, isSaving }: WelcomeModalProps) {
                 <strong className="text-white">Erstes Projekt mit AI erstellen:</strong>
                 <br />
                 Gehen Sie zu <Link href="/dashboard/projekte" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Projekte</Link> und klicken Sie auf &apos;Neues Projekt&apos;.
-                Laden Sie ein &apos;Nachher-Bild&apos; hoch – unsere KI schreibt automatisch eine passende Beschreibung. Setzen Sie den Status auf &apos;Veröffentlicht&apos; und speichern Sie.
+                Laden Sie ein &quot;Nachher-Bild&quot; hoch – unsere KI schreibt automatisch eine passende Beschreibung. Setzen Sie den Status auf &quot;Veröffentlicht&quot; und speichern Sie.
               </li>
               <li>
                 <strong className="text-white">Webseite veröffentlichen:</strong>
                 <br />
                 Aktivieren Sie unter <Link href="/dashboard/einstellungen#sicherheit" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Gefahrenzone</Link>
+                {/* --- FIX: Replaced \` with &apos; --- */}
                 den Schalter &apos;Website veröffentlichen&apos;. Fertig – Ihre Seite ist live!
               </li>
             </ol>
@@ -228,6 +230,7 @@ export default function WelcomeModal({ onClose, isSaving }: WelcomeModalProps) {
             className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400 disabled:bg-orange-800 disabled:cursor-not-allowed"
           >
             {isSaving && <ArrowPathIcon className="h-4 w-4" />}
+            {/* --- FIX: Replaced ' with &apos; --- */}
             {isSaving ? "Speichern..." : "Verstanden, los geht&apos;s!"}
           </button>
         </div>

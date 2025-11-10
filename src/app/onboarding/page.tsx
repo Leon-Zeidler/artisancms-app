@@ -255,6 +255,7 @@ export default function OnboardingPage() {
                     onChange={handleSlugChange}
                     required
                     aria-describedby="slug-description slug-status"
+                    // --- FIX: Replaced ' with " ---
                     style={{ paddingLeft: `${Math.max(60, "artisancms.app/".length * 7 + 12)}px` }}
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
                     placeholder="z.b. tischlerei-mustermann"
@@ -306,6 +307,7 @@ export default function OnboardingPage() {
                 <textarea id="servicesDescription" value={servicesDescription} rows={4} onChange={(e) => setServicesDescription(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28" placeholder="z.B. Badsanierung: Kompletterneuerung Ihres Badezimmers."/>
                  <button type="button" onClick={() => handleGenerateProfileText('services')} disabled={aiLoading === 'services' || !businessName} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'services' || !businessName ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} >
                    <SparklesIcon className={`h-4 w-4 ${aiLoading === 'services' ? 'animate-spin' : ''}`} />
+                   {/* --- FIX: Replaced ' with " --- */}
                    {aiLoading === 'services' ? "Generiere..." : "Generieren"}
                  </button>
              </div>
@@ -322,6 +324,7 @@ export default function OnboardingPage() {
                 <textarea id="aboutText" value={aboutText} rows={5} onChange={(e) => setAboutText(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28" placeholder="Erzählen Sie etwas über Ihre Erfahrung..."/>
                  <button type="button" onClick={() => handleGenerateProfileText('about')} disabled={aiLoading === 'about' || !businessName} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'about' || !businessName ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} >
                    <SparklesIcon className={`h-4 w-4 ${aiLoading === 'about' ? 'animate-spin' : ''}`} />
+                   {/* --- FIX: Replaced ' with " --- */}
                    {aiLoading === 'about' ? "Generiere..." : "Generieren"}
                  </button>
              </div>
@@ -333,6 +336,7 @@ export default function OnboardingPage() {
           {/* Submit Button */}
           <div className="pt-4">
             <button type="submit" disabled={loading || initialLoading || !currentUser || !!aiLoading || slugStatus !== 'available'} className={`w-full rounded-md px-5 py-3 text-base font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors ${ loading || initialLoading || !currentUser || !!aiLoading || slugStatus !== 'available' ? 'bg-orange-300 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 shadow-sm' }`} >
+              {/* --- FIX: Replaced ' with " --- */}
               {loading ? "Speichern..." : "Speichern und Weiter zum Dashboard"}
             </button>
           </div>
