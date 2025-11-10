@@ -160,8 +160,8 @@ export default function DatenschutzPage() {
               KI-gestützten Funktionen (Projekterstellung) bereitzustellen.
             </p>
             <p>
-              Wenn Sie die "Bild analysieren"-Funktion (Modell `gpt-4o`) oder 
-              die "Beschreibung generieren"-Funktion (Modell `gpt-3.5-turbo`) 
+              Wenn Sie die &quot;Bild analysieren&quot;-Funktion (Modell &quot;gpt-4o&quot;) oder
+              die &quot;Beschreibung generieren&quot;-Funktion (Modell &quot;gpt-3.5-turbo&quot;) 
               nutzen, werden die folgenden Daten zur Verarbeitung an OpenAI 
               übermittelt:
             </p>
@@ -204,7 +204,7 @@ export default function DatenschutzPage() {
             <h2>4. Löschung Ihrer Daten (Recht auf Vergessenwerden)</h2>
             <p>
               Sie haben das Recht, Ihr Konto jederzeit zu löschen. Wenn Sie 
-              in Ihren Einstellungen die Option "Konto unwiderruflich löschen" 
+              in Ihren Einstellungen die Option &quot;Konto unwiderruflich löschen&quot;
               wählen, werden alle Ihre personenbezogenen Daten (Ihr 
               Authentifizierungs-Eintrag, Ihr Profil, Ihre Projekte, Bilder, 
               Kundenstimmen und Feedback-Einträge) dauerhaft und 

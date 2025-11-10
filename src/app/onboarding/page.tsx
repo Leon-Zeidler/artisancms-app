@@ -85,7 +85,7 @@ export default function OnboardingPage() {
     };
     checkUserAndProfile();
   // --- FIX: Added supabase.auth to dependency array ---
-  }, [router, supabase.auth]);
+  }, [router, supabase]);
 
   // --- Auto-suggest slug based on business name ---
   useEffect(() => {

@@ -75,7 +75,7 @@ function TestimonialCard({
         
         {/* RatingDisplay entfernt */}
         
-        <p className="mt-4 text-slate-300 italic">"{body || 'Kein Inhalt'}"</p>
+        <p className="mt-4 text-slate-300 italic">&quot;{body || 'Kein Inhalt'}&quot;</p>
         <p className="mt-3 text-xs text-slate-500">Eingegangen am: {receivedDate}</p>
       </div>
       <div className="p-4 flex justify-end space-x-3 bg-slate-800/50 rounded-b-lg">

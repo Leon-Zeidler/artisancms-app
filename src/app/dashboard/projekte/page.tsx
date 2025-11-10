@@ -67,6 +67,7 @@ function ProjectListItem({
     <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg border border-slate-700 hover:bg-slate-700/50 transition-colors">
       {/* Project Info */}
       <div className="flex items-center space-x-4 flex-1 min-w-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={imageUrl} alt={project.title || 'Project image'} className="w-12 h-12 rounded-md object-cover flex-shrink-0" onError={(e) => ((e.target as HTMLImageElement).src = 'https://placehold.co/48x48/ef4444/ffffff?text=Err')} />
         <div className="min-w-0">
           <p className="font-semibold text-white truncate">{project.title || 'Untitled Project'}</p>
@@ -115,7 +116,7 @@ export default function ProjektePage() {
   const router = useRouter();
 
   // === Fetch Data Function ===
-  const fetchProjects = async (user: User) => { 
+  const fetchProjects = useCallback(async (user: User) => {
     setLoading(true);
     setError(null);
 
@@ -139,6 +140,7 @@ export default function ProjektePage() {
     }
     setLoading(false);
   };
+  , [supabase]);
 
   // === Initial Data Fetch ===
   useEffect(() => {
@@ -169,7 +171,7 @@ export default function ProjektePage() {
         await fetchProjects(user);
     };
     getUserAndFetchData();
-  }, [router, supabase.auth]); // <-- ADDED supabase.auth dependency
+  }, [router, supabase, fetchProjects]); // <-- ADDED supabase.auth dependency
 
   // === Handle Status Toggle Function ===
   const handleStatusToggle = async (projectId: string, currentStatus: string | null) => {
