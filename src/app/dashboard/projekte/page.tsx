@@ -37,7 +37,7 @@ const PencilIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} f
 const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /> </svg> );
 const ProjectsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" strokeLinecap="round" strokeLinejoin="round" /> </svg> );
 const ChatBubbleOvalLeftEllipsisIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M18 10.5c0 .902-.32 1.75-.85 2.433m-3.72 4.781a3.75 3.75 0 01-5.105-2.094m0 0a3.73 3.73 0 01-3.296 2.094 3.75 3.75 0 01-3.433-5.133A3.75 3.75 0 016 6.643v-1.897a3.75 3.75 0 117.5 0v1.897a3.75 3.75 0 01-1.148 2.684 3.73 3.73 0 01-3.296-2.094zM18 10.5c-.218 0-.43.02-.639.058m-5.82 5.17A3.75 3.75 0 0115 13.5v-3c0-.902.32-1.75.85-2.433m4.303 8.366a3.75 3.75 0 01-.85 2.433m.02-6.681a3.73 3.73 0 013.296-2.094 3.75 3.75 0 013.433 5.133 3.75 3.75 0 01-6.43 2.684z" /> </svg> );
-
+const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /> </svg> );
 
 // --- PROJECT LIST ITEM COMPONENT ---
 interface ProjectListItemProps { 
@@ -429,7 +429,7 @@ export default function ProjektePage() {
             {projects.length > 0 ? (
               <div className="space-y-4">
                 {projects.map((project) => (
-                  <ProjectListItem
+                  <ProjectListItem 
                     key={project.id}
                     project={project}
                     onStatusToggle={handleStatusToggle}
