@@ -1,7 +1,7 @@
 // src/app/dashboard/projekte/page.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react'; // <-- ADDED useMemo
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '../../../lib/supabaseClient'; // <-- CHANGED IMPORT
@@ -117,10 +117,10 @@ export default function ProjektePage() {
 
   // === Fetch Data Function ===
   const fetchProjects = useCallback(async (user: User) => {
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    console.log(`All Projects: Fetching projects for user ${user.id}...`);
+  console.log(`All Projects: Fetching projects for user ${user.id}...`);
     
     // --- (FIXED) UPDATED SELECT QUERY ---
     const { data, error: fetchError } = await supabase
@@ -135,12 +135,11 @@ export default function ProjektePage() {
       console.error('Error fetching projects:', fetchError);
       setError(`Projekte konnten nicht geladen werden: ${fetchError.message}`);
       setProjects([]);
-    } else {
-      setProjects(data || []);
-    }
-    setLoading(false);
-  };
-  , [supabase]);
+  } else {
+    setProjects(data || []);
+  }
+  setLoading(false);
+}, [supabase]); // <-- The dependency array now correctly closes the useCallback hook
 
   // === Initial Data Fetch ===
   useEffect(() => {
