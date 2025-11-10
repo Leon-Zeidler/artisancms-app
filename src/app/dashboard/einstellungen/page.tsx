@@ -101,8 +101,8 @@ const SettingsToggle = ({ label, description, name, isChecked, onChange, disable
       <span className={`text-sm font-medium ${disabled ? 'text-slate-500' : 'text-slate-300'}`}>{label}</span>
       <span className="text-xs text-slate-500">{description}</span>
     </span>
-    {/* KORREKTUR: Wrapper `div` entfernt, `label` ist nun der Flex-Container für die Ausrichtung */}
-    <label className="relative flex items-center justify-start sm:justify-end cursor-pointer">
+    {/* KORREKTUR: sm:justify-self-end richtet den Schalter rechtsbündig aus */}
+    <label className="relative inline-flex items-center cursor-pointer sm:justify-self-end">
       <input
         type="checkbox"
         name={name}
@@ -111,14 +111,15 @@ const SettingsToggle = ({ label, description, name, isChecked, onChange, disable
         disabled={disabled}
         className="sr-only peer"
       />
-      <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${disabled ? 'cursor-not-allowed' : ''}`}></div>
+      {/* KORREKTUR: after:border-gray-300 und after:border wieder hinzugefügt */}
+      <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${disabled ? 'cursor-not-allowed' : ''}`}></div>
     </label>
   </div>
 );
 // --- ENDE KORRIGIERTE TOGGLE KOMPONENTE ---
 
 
-// --- DangerZone Component ---
+// --- DangerZone Component (mit `router` Prop) ---
 function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profile | null, user: User | null, onUpdateProfile: (updatedProfile: Profile) => void, router: any }) {
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
@@ -192,9 +193,9 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
         title="Veröffentlichung & Gefahrenzone"
         description="Wichtige Aktionen mit dauerhaften Konsequenzen."
       >
-        {/* KORREKTUR: Hier wurde das 2-Spalten-Layout entfernt, damit der Toggle korrekt angezeigt wird */}
         <div className="space-y-4 rounded-lg border border-slate-700 bg-slate-900/50 p-4">
-          <div className="flex items-start justify-between gap-4">
+          {/* KORREKTUR: sm:grid-cols-2 und sm:gap-4 hinzugefügt für korrekte Ausrichtung */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 sm:gap-4 items-start justify-between gap-4">
             <div>
               <h4 className="text-base font-semibold text-white">Website veröffentlichen</h4>
               <p className="mt-1 text-sm text-slate-400">
@@ -207,7 +208,8 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
                 </p>
               )}
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+            {/* KORREKTUR: sm:justify-self-end hinzugefügt */}
+            <label className="relative inline-flex items-center cursor-pointer sm:justify-self-end">
               <input
                 type="checkbox"
                 checked={isPublished}
@@ -215,7 +217,8 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
                 disabled={isPublishing || (!isPublished && !canPublish)}
                 className="sr-only peer"
               />
-              <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${isPublishing || (!isPublished && !canPublish) ? 'cursor-not-allowed opacity-50' : ''}`}></div>
+              {/* KORREKTUR: Border-Klassen wiederhergestellt */}
+              <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${isPublishing || (!isPublished && !canPublish) ? 'cursor-not-allowed opacity-50' : ''}`}></div>
             </label>
           </div>
         </div>
@@ -228,7 +231,6 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
               Diese Aktion ist endgültig und kann nicht rückgängig gemacht werden. Alle Ihre Daten, Projekte und Einstellungen werden dauerhaft gelöscht.
             </p>
           </div>
-          {/* KORREKTUR: "text-right" stellt sicher, dass der Button rechts ist */}
           <div className="text-right">
             <button
               type="button"
@@ -288,7 +290,7 @@ export default function EinstellungenPage() {
 
   const router = useRouter();
 
-  // --- Fetch data (same) ---
+  // --- Fetch data ---
   useEffect(() => {
     const getUserAndProfile = async () => {
       setLoading(true);
@@ -332,7 +334,7 @@ export default function EinstellungenPage() {
     getUserAndProfile();
   }, [router, supabase]);
 
-  // --- Handle form input changes (same) ---
+  // --- Handle form input changes ---
   const handleFormChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     if (type === 'checkbox') {
@@ -343,7 +345,7 @@ export default function EinstellungenPage() {
     }
   };
 
-  // --- Handle Save Profile (same) ---
+  // --- Handle Save Profile ---
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
@@ -401,7 +403,7 @@ export default function EinstellungenPage() {
     } 
   };
 
-  // --- Handle Logo Upload (same) ---
+  // --- Handle Logo Upload ---
   const handleLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !currentUser || !profile) return;
     const file = e.target.files[0];
@@ -442,7 +444,7 @@ export default function EinstellungenPage() {
     setIsUploading(false);
   };
 
-  // --- Handle Logo Removal (same) ---
+  // --- Handle Logo Removal ---
   const handleRemoveLogo = async () => {
     if (!currentUser || !profile || !profile.logo_storage_path) return;
     setIsUploading(true);
@@ -470,7 +472,7 @@ export default function EinstellungenPage() {
     setIsUploading(false);
   };
   
-  // --- Handle Change Email (same) ---
+  // --- Handle Change Email ---
   const handleChangeEmail = async (e: FormEvent) => {
     e.preventDefault();
     if (!newEmail || !currentUser || newEmail === currentUser.email) {
