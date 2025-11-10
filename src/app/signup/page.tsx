@@ -11,6 +11,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false); // <-- NEUES STATE
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,10 +26,18 @@ export default function SignupPage() {
 
   const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setError(null); setMessage(null);
+    
+    // --- NEUE PRÜFUNG ---
     if (password !== confirmPassword) { setError("Passwörter stimmen nicht überein."); return; }
     if (password.length < 6) { setError("Passwort muss mindestens 6 Zeichen lang sein."); return; }
+    if (!agreedToTerms) {
+      setError("Bitte stimmen Sie den AGB und der Datenschutzerklärung zu, um fortzufahren.");
+      return;
+    }
+    // --- ENDE NEUE PRÜFUNG ---
     
-    setLoading(true); setError(null); setMessage(null);
+    setLoading(true); 
 
     const baseUrl = resolveSiteUrl();
     if (!baseUrl) {
@@ -92,10 +101,34 @@ export default function SignupPage() {
               <input type="password" id="confirmPassword" name="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} className="mt-2 w-full rounded-xl border border-slate-200/70 bg-white/90 px-4 py-3 text-base text-gray-900 shadow-sm transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand" placeholder="Passwort erneut eingeben" />
             </div>
             
+            {/* --- NEUE CHECKBOX --- */}
+            <div className="relative flex items-start">
+              <div className="flex h-6 items-center">
+                <input
+                  id="agb"
+                  name="agb"
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-600"
+                />
+              </div>
+              <div className="ml-3 text-sm leading-6">
+                <label htmlFor="agb" className="text-gray-700">
+                  Ich habe die <Link href="/agb" target="_blank" className="font-semibold text-brand hover:text-brand-dark underline">AGB</Link> und die <Link href="/datenschutz" target="_blank" className="font-semibold text-brand hover:text-brand-dark underline">Datenschutzerklärung</Link> gelesen und stimme ihnen zu.
+                </label>
+              </div>
+            </div>
+            {/* --- ENDE NEUE CHECKBOX --- */}
+
             {error && <p className="text-center text-sm text-red-600">{error}</p>}
             {message && <p className="text-center text-sm text-green-600">{message}</p>}
             
-            <button type="submit" disabled={loading} className="w-full rounded-xl bg-brand px-4 py-3 text-base font-semibold text-white shadow-lg shadow-brand/20 transition hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60">
+            <button 
+              type="submit" 
+              disabled={loading || !agreedToTerms} 
+              className="w-full rounded-xl bg-brand px-4 py-3 text-base font-semibold text-white shadow-lg shadow-brand/20 transition hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60"
+            >
               {loading ? 'Konto wird erstellt…' : 'Kostenlos registrieren'}
             </button>
           </form>

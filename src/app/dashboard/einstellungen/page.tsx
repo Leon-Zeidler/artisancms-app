@@ -113,10 +113,10 @@ const SettingsToggle = ({ label, description, name, isChecked, onChange, disable
 );
 
 
-// --- DangerZone Component (Kept from your file) ---
-function DangerZone({ profile, user, onUpdateProfile }: { profile: Profile | null, user: User | null, onUpdateProfile: (updatedProfile: Profile) => void }) {
+// --- DangerZone Component (JETZT MIT KORREKTUR) ---
+function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profile | null, user: User | null, onUpdateProfile: (updatedProfile: Profile) => void, router: any }) {
   const supabase = useMemo(() => createSupabaseClient(), []);
-  const router = useRouter();
+  // const router = useRouter(); // Nicht mehr nötig, wird übergeben
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -157,17 +157,34 @@ function DangerZone({ profile, user, onUpdateProfile }: { profile: Profile | nul
     setIsPublishing(false);
   };
 
+  // --- KORRIGIERTE "KONTO LÖSCHEN" FUNKTION ---
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
-    const { error } = await supabase.rpc('delete_user_account');
-    if (error) {
-      toast.error(`Fehler beim Löschen: ${error.message}`);
-      setIsDeleting(false);
-    } else {
+    
+    try {
+      const response = await fetch('/api/delete-user', {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Ein unbekannter Fehler ist aufgetreten.');
+      }
+      
       toast.success("Konto wird gelöscht. Sie werden abgemeldet.");
-      router.push('/login');
+      // Die API-Route löscht das Cookie, aber wir leiten den Benutzer trotzdem sicher weiter
+      router.push('/login'); 
+      router.refresh(); // Erzwingt einen vollständigen Neuladen der Session
+
+    } catch (err: any) {
+      toast.error(`Fehler beim Löschen: ${err.message}`);
+      setIsDeleting(false);
     }
+    // HINWEIS: setIsDeleting(false) wird im Erfolgsfall nicht mehr erreicht,
+    // da die Seite neu geladen wird. Das ist in Ordnung.
   };
+  // --- ENDE KORREKTUR ---
 
   return (
     <>
@@ -267,7 +284,7 @@ export default function EinstellungenPage() {
     show_testimonials_page: true,
   });
 
-  const router = useRouter();
+  const router = useRouter(); // <-- Router hier initialisieren
 
   // --- Fetch data (same) ---
   useEffect(() => {
@@ -590,6 +607,7 @@ export default function EinstellungenPage() {
               profile={profile} 
               user={currentUser}
               onUpdateProfile={handleProfileUpdate}
+              router={router} 
             />
           </section>
 
