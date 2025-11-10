@@ -343,7 +343,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
           console.log("No image path to remove."); return;
       }
 
-      const toastId = toast.loading('Bild wird gelöscht...');
+      const toastId = toast.loading("Bild wird gelöscht...");
       
       try {
           const { error } = await supabase.storage.from('project-images').remove([pathToRemove]);
@@ -489,7 +489,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
                       disabled={isFormDisabled || !formData.after_image_url} 
                       className="rounded-md bg-orange-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition"
                   >
-                      {isGenerating ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : 'Beschreibung generieren'}
+                      {isGenerating ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : "Beschreibung generieren"}
                   </button>
              </div>
              
@@ -559,7 +559,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             disabled={isFormDisabled}
             className="flex justify-center rounded-md bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition"
           >
-            {isSaving ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : 'Projekt speichern'}
+            {isSaving ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : "Projekt speichern"}
           </button>
         </div>
       </form>
