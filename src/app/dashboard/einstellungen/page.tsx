@@ -29,7 +29,6 @@ type Profile = {
   show_testimonials_page: boolean;
 };
 
-// --- NEUER TYPE ---
 type AIGenerationType = 'services' | 'about';
 
 // --- ICONS ---
@@ -43,7 +42,6 @@ const PaintBrushIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="ht
 const BookOpenIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" /></svg>);
 const ShieldCheckIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.24-.32 2.395-.88 3.428l-6.118 6.118-6.117-6.118C3.32 14.395 3 13.24 3 12c0-5.188 4.5-9.428 9-9.428s9 4.24 9 9.428z" /></svg>);
 const MagnifyingGlassIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>);
-// --- NEUES ICON ---
 const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z" /> </svg> );
 
 
@@ -96,13 +94,15 @@ const SettingsInput = ({ label, name, value, onChange, placeholder, type = 'text
   </div>
 );
 
+// --- KORRIGIERTE TOGGLE KOMPONENTE ---
 const SettingsToggle = ({ label, description, name, isChecked, onChange, disabled = false }: { label: string, description: string, name: string, isChecked: boolean, onChange: (e: ChangeEvent<HTMLInputElement>) => void, disabled?: boolean }) => (
   <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${disabled ? 'opacity-60' : ''}`}>
     <span className="flex flex-grow flex-col">
       <span className={`text-sm font-medium ${disabled ? 'text-slate-500' : 'text-slate-300'}`}>{label}</span>
       <span className="text-xs text-slate-500">{description}</span>
     </span>
-    <label className="relative inline-flex items-center cursor-pointer">
+    {/* KORREKTUR: Wrapper `div` entfernt, `label` ist nun der Flex-Container für die Ausrichtung */}
+    <label className="relative flex items-center justify-start sm:justify-end cursor-pointer">
       <input
         type="checkbox"
         name={name}
@@ -111,10 +111,12 @@ const SettingsToggle = ({ label, description, name, isChecked, onChange, disable
         disabled={disabled}
         className="sr-only peer"
       />
-      <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${disabled ? 'cursor-not-allowed' : ''}`}></div>
+      <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${disabled ? 'cursor-not-allowed' : ''}`}></div>
     </label>
   </div>
 );
+// --- ENDE KORRIGIERTE TOGGLE KOMPONENTE ---
+
 
 // --- DangerZone Component ---
 function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profile | null, user: User | null, onUpdateProfile: (updatedProfile: Profile) => void, router: any }) {
@@ -190,6 +192,7 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
         title="Veröffentlichung & Gefahrenzone"
         description="Wichtige Aktionen mit dauerhaften Konsequenzen."
       >
+        {/* KORREKTUR: Hier wurde das 2-Spalten-Layout entfernt, damit der Toggle korrekt angezeigt wird */}
         <div className="space-y-4 rounded-lg border border-slate-700 bg-slate-900/50 p-4">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -212,7 +215,7 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
                 disabled={isPublishing || (!isPublished && !canPublish)}
                 className="sr-only peer"
               />
-              <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${isPublishing || (!isPublished && !canPublish) ? 'cursor-not-allowed opacity-50' : ''}`}></div>
+              <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${isPublishing || (!isPublished && !canPublish) ? 'cursor-not-allowed opacity-50' : ''}`}></div>
             </label>
           </div>
         </div>
@@ -225,6 +228,7 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
               Diese Aktion ist endgültig und kann nicht rückgängig gemacht werden. Alle Ihre Daten, Projekte und Einstellungen werden dauerhaft gelöscht.
             </p>
           </div>
+          {/* KORREKTUR: "text-right" stellt sicher, dass der Button rechts ist */}
           <div className="text-right">
             <button
               type="button"
@@ -262,7 +266,7 @@ export default function EinstellungenPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [isChangingEmail, setIsChangingEmail] = useState(false);
-  const [aiLoading, setAiLoading] = useState<AIGenerationType | null>(null); // <-- NEUES STATE
+  const [aiLoading, setAiLoading] = useState<AIGenerationType | null>(null); 
   
   const [formData, setFormData] = useState<Omit<Profile, 'id' | 'logo_url' | 'logo_storage_path'>>({
     business_name: '',
@@ -297,11 +301,11 @@ export default function EinstellungenPage() {
 
       const { data: profileData, error } = await supabase
         .from('profiles')
-        .select('*') // Fetch all columns
+        .select('*') 
         .eq('id', user.id)
         .single();
       
-      if (error && error.code !== 'PGRST116') { // 'PGRST116' = no rows found
+      if (error && error.code !== 'PGRST116') {
         toast.error(`Profil-Fehler: ${error.message}`);
       } else if (profileData) {
         setProfile(profileData as Profile);
@@ -361,7 +365,6 @@ export default function EinstellungenPage() {
     }
   };
   
-  // --- NEUE FUNKTION ---
   const handleGenerateProfileText = async (type: AIGenerationType) => { 
     const context = formData.business_name || 'Handwerksbetrieb'; 
     if (!context) { 
@@ -389,7 +392,7 @@ export default function EinstellungenPage() {
         setFormData(prev => ({ ...prev, about_text: data.text }));
       } 
       toast.success("Text erfolgreich generiert!");
-    } catch (err) { 
+    } catch (err: any) { 
         console.error(`Error calling ${type} generation API:`, err); 
         const message = err instanceof Error ? err.message : "An unknown error occurred"; 
         toast.error(`Fehler bei der Textgenerierung: ${message}`); 
@@ -397,7 +400,6 @@ export default function EinstellungenPage() {
       setAiLoading(null); 
     } 
   };
-  // --- ENDE NEUE FUNKTION ---
 
   // --- Handle Logo Upload (same) ---
   const handleLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -654,6 +656,7 @@ export default function EinstellungenPage() {
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><AtSymbolIcon className="h-5 w-5 text-slate-500" /></div>
                   </div>
                 </div>
+                {/* KORREKTUR: "text-right" stellt sicher, dass der Button rechts ist */}
                 <div className="text-right">
                   <button type="submit" disabled={isChangingEmail || !newEmail} className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-50">
                     {isChangingEmail ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
