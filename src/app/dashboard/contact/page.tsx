@@ -8,12 +8,23 @@ import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import EmptyState from '@/components/EmptyState';
 import SubmissionModal from '@/components/SubmissionModal';
+import { DashboardHero } from '@/components/dashboard/DashboardHero';
+import { DashboardStatCard } from '@/components/dashboard/DashboardStatCard';
 
 // --- Icons ---
 const InboxIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.121-1.58H6.881a2.25 2.25 0 00-2.121 1.58L2.35 13.177a2.25 2.25 0 00-.1.661z" /> </svg>);
 const EnvelopeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /> </svg>);
 // --- No longer used, but fine to keep ---
 const EnvelopeOpenIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 9v.906a2.25 2.25 0 01-1.183 1.981l-6.47 3.791a2.25 2.25 0 01-2.18 0l-6.47-3.791A2.25 2.25 0 012.25 9.906V9m19.5 0a2.25 2.25 0 00-2.25-2.25H4.5A2.25 2.25 0 002.25 9m19.5 0v.906a2.25 2.25 0 01-1.183 1.981l-6.47 3.791a2.25 2.25 0 01-2.18 0l-6.47-3.791A2.25 2.25 0 012.25 9.906V9m0 0a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 9V6.75a2.25 2.25 0 00-2.25-2.25H4.5A2.25 2.25 0 002.25 6.75v2.25z" /> </svg>);
+const UsersIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M18 20a4 4 0 00-8 0m8 0v-.5a6.5 6.5 0 00-13 0v.5m8-9a3 3 0 100-6 3 3 0 000 6zm-5 0a3 3 0 100-6 3 3 0 000 6z"
+    />
+  </svg>
+);
 
 
 // --- TYPE DEFINITIONS ---
@@ -154,58 +165,136 @@ export default function ContactInboxPage() {
   const homepageHref = userSlug ? `/${userSlug}` : '/';
 
   // --- Render Logic ---
+  const totalSubmissions = submissions.length;
+  const submissionsThisWeek = submissions.filter((submission) => {
+    const created = new Date(submission.created_at);
+    const now = new Date();
+    const diffInDays = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+    return diffInDays <= 7;
+  }).length;
+  const uniqueSenders = new Set(submissions.map((submission) => submission.sender_email)).size;
+
   return (
-    <main className="p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Kontaktanfragen</h1>
-          <p className="text-slate-400 mt-1">Hier sehen Sie alle Anfragen von Ihrer Webseite.</p>
+    <main className="space-y-10 px-6 py-10 lg:px-10">
+      <DashboardHero
+        eyebrow="Kontakt"
+        title="Kontaktanfragen"
+        subtitle="Bleiben Sie nah an Ihren Interessenten – sehen Sie auf einen Blick, wer sich gemeldet hat und antworten Sie schneller."
+        actions={[
+          {
+            label: 'Zur Live-Webseite',
+            href: homepageHref,
+            variant: 'secondary',
+            target: '_blank',
+          },
+        ]}
+      >
+        <div className="grid gap-4 md:grid-cols-3">
+          <DashboardStatCard
+            title="Gesamtanfragen"
+            value={totalSubmissions}
+            description="Alle Nachrichten"
+            icon={InboxIcon}
+            trend={totalSubmissions > 0 ? `${totalSubmissions} Kontakte bisher` : 'Noch keine Einträge'}
+          />
+          <DashboardStatCard
+            title="Diese Woche"
+            value={submissionsThisWeek}
+            description="Neue Nachrichten"
+            icon={EnvelopeIcon}
+            accent="indigo"
+            trend={submissionsThisWeek > 0 ? 'Aktive Nachfrage' : 'Noch ruhig – teilen Sie Ihre Seite!'}
+          />
+          <DashboardStatCard
+            title="Einzigartige Absender"
+            value={uniqueSenders}
+            description="Unterschiedliche E-Mail-Adressen"
+            icon={UsersIcon}
+            accent="emerald"
+            trend={uniqueSenders > 0 ? 'Neue Kontakte gesammelt' : 'Keine Kontakte vorhanden'}
+          />
         </div>
-      </div>
+      </DashboardHero>
 
-      {/* Loading State */}
-      {loading && (<p className="text-slate-400 mt-6 text-center">Lade Anfragen...</p>)}
-      
-      {/* General Error Display */}
-      {error && !loading && (<p className="text-red-500 mt-6 text-center">{error}</p>)}
-
-      {/* List */}
-      {!loading && !error && (
-        <div className="space-y-4">
-          {submissions.length > 0 ? (
-            submissions.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleOpenModal(item)}
-                className="w-full p-4 bg-slate-800 rounded-lg border border-slate-700 text-left transition-all hover:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-semibold text-white flex items-center gap-2">
-                    <EnvelopeIcon className="h-4 w-4 text-slate-400" />
-                    {item.sender_name}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    {new Date(item.created_at).toLocaleDateString('de-DE')}
-                  </span>
-                </div>
-                <p className="text-sm text-slate-300 mb-2 truncate">{item.message}</p>
-                <p className="text-xs text-orange-400 hover:underline">{item.sender_email}</p>
-              </button>
-            ))
-          ) : (
-            <EmptyState
-              icon={InboxIcon}
-              title="Keine Kontaktanfragen"
-              message="Sobald ein Besucher Ihrer Webseite das Kontaktformular ausfüllt, erscheint die Nachricht hier."
-              buttonText="Zur Webseite"
-              buttonHref={homepageHref} 
-            />
-          )}
+      {loading && (
+        <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-10 text-center text-sm text-slate-300">
+          Lade Anfragen...
         </div>
       )}
-      
-      {/* --- 3. Pass new props to the Modal --- */}
+
+      {error && !loading && (
+        <div className="rounded-2xl border border-red-500/40 bg-red-900/30 p-6 text-center text-sm text-red-100">{error}</div>
+      )}
+
+      {!loading && !error && (
+        <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+          <div className="space-y-4">
+            {submissions.length > 0 ? (
+              submissions.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleOpenModal(item)}
+                  className="group flex w-full flex-col gap-3 rounded-2xl border border-slate-700/70 bg-slate-800/70 p-5 text-left transition hover:-translate-y-0.5 hover:border-orange-500/60 hover:bg-slate-800/90 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-300"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-white">
+                      <EnvelopeIcon className="h-4 w-4 text-orange-300" />
+                      {item.sender_name}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      {new Date(item.created_at).toLocaleDateString('de-DE', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-300 line-clamp-2">{item.message}</p>
+                  <span className="inline-flex items-center gap-2 text-xs font-semibold text-orange-300">
+                    {item.sender_email}
+                  </span>
+                </button>
+              ))
+            ) : (
+              <EmptyState
+                icon={InboxIcon}
+                title="Keine Kontaktanfragen"
+                message="Sobald ein Besucher Ihrer Webseite das Kontaktformular ausfüllt, erscheint die Nachricht hier."
+                buttonText="Zur Webseite"
+                buttonHref={homepageHref}
+              />
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <div className="overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900/60">
+              <div className="border-b border-slate-800/70 bg-gradient-to-r from-slate-900 via-slate-900/60 to-orange-900/30 px-5 py-4">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-200">Antwort-Tipps</h2>
+              </div>
+              <div className="space-y-3 px-5 py-4 text-sm text-slate-300">
+                <p>Nutzen Sie den KI-Entwurf im Nachrichtendialog, um schnell eine freundliche Antwort zu formulieren.</p>
+                <p>Verlinken Sie in Ihrer Antwort direkt auf relevante Projekte oder Testimonials, um Vertrauen zu stärken.</p>
+                <p>Aktualisieren Sie Ihre Kontaktzeiten im Impressum, damit Anfragende wissen, wann sie mit Ihnen rechnen können.</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-5 text-sm text-slate-300">
+              <h3 className="text-base font-semibold text-white">Mehr Leads gewünscht?</h3>
+              <p className="mt-2 text-sm text-slate-400">
+                Teilen Sie Ihre ArtisanCMS-Seite in sozialen Netzwerken oder binden Sie den Link in Ihrer E-Mail-Signatur ein, um mehr Kontakte zu gewinnen.
+              </p>
+              <button
+                onClick={() => router.push('/dashboard/projekte/neu')}
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-orange-900/40 transition hover:bg-orange-400"
+              >
+                Jetzt neues Projekt hervorheben
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <SubmissionModal
         item={selectedSubmission}
         onClose={handleCloseModal}

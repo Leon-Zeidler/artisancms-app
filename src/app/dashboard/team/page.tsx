@@ -7,6 +7,8 @@ import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import EmptyState from '@/components/EmptyState';
+import { DashboardHero } from '@/components/dashboard/DashboardHero';
+import { DashboardStatCard } from '@/components/dashboard/DashboardStatCard';
 
 // --- Icons ---
 const PlusIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /> </svg> );
@@ -258,50 +260,161 @@ export default function TeamManagementPage() {
     };
     const handleCancelDelete = () => { setDeleteConfirmState({ isOpen: false, member: null }); };
 
-    return (
-        <main className="p-8">
-            <div className="flex items-center justify-between mb-8">
-                <div> <h1 className="text-3xl font-bold text-white">Team / Über Uns</h1> <p className="text-slate-400 mt-1">Verwalten Sie hier Ihre Team-Mitglieder.</p> </div>
-                <button onClick={openAddModal} className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"> <PlusIcon className="h-5 w-5" /> Neues Mitglied </button>
-            </div>
+    const totalMembers = teamMembers.length;
+    const distinctRoles = new Set(teamMembers.map((member) => member.role).filter(Boolean)).size;
+    const membersWithBio = teamMembers.filter((member) => (member.bio ?? '').trim().length > 0).length;
+    const bioCoverage = totalMembers ? Math.round((membersWithBio / totalMembers) * 100) : 0;
 
-            {loading && (<p className="text-slate-400 mt-6 text-center">Lade Team-Mitglieder...</p>)}
-            {error && !loading && (<p className="text-red-500 mt-6 text-center">{error}</p>)}
+    return (
+        <main className="space-y-10 px-6 py-10 lg:px-10">
+            <DashboardHero
+                eyebrow="Team"
+                title="Ihr Unternehmen erlebbar machen"
+                subtitle="Präsentieren Sie Ihr Team, stellen Sie Expertise heraus und schaffen Sie Vertrauen bei neuen Kundinnen und Kunden."
+                actions={[
+                    {
+                        label: 'Neues Mitglied',
+                        icon: PlusIcon,
+                        onClick: openAddModal,
+                    },
+                ]}
+            >
+                <div className="grid gap-4 md:grid-cols-3">
+                    <DashboardStatCard
+                        title="Teammitglieder"
+                        value={totalMembers}
+                        description="Aktiv in der Übersicht"
+                        icon={UserGroupIcon}
+                        trend={totalMembers > 0 ? `${totalMembers} Personen sichtbar` : 'Fügen Sie Ihr erstes Mitglied hinzu'}
+                    />
+                    <DashboardStatCard
+                        title="Unterschiedliche Rollen"
+                        value={distinctRoles}
+                        description="Verfügbare Expertisen"
+                        icon={PencilIcon}
+                        accent="indigo"
+                        trend={distinctRoles > 0 ? 'Vielfältiges Team' : 'Rollen noch nicht gepflegt'}
+                    />
+                    <DashboardStatCard
+                        title="Bio-Abdeckung"
+                        value={`${bioCoverage}%`}
+                        description="Mit kurzer Vorstellung"
+                        icon={CheckCircleIcon}
+                        accent="emerald"
+                        trend={
+                            totalMembers === 0
+                                ? 'Beginnen Sie mit einer Vorstellung'
+                                : bioCoverage === 100
+                                ? 'Alle Profile vollständig'
+                                : `${membersWithBio}/${totalMembers} mit Bio`
+                        }
+                    />
+                </div>
+            </DashboardHero>
+
+            {loading && (<div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-10 text-center text-sm text-slate-300">Lade Team-Mitglieder...</div>)}
+            {error && !loading && (<div className="rounded-2xl border border-red-500/40 bg-red-900/30 p-6 text-center text-sm text-red-100">{error}</div>)}
 
             {!loading && (
-                <div className="space-y-4">
-                    {teamMembers.length > 0 ? (
-                        teamMembers.map((member: TeamMember) => { // <-- Explicit type
-                             const isLoading = !!actionLoading[member.id];
-                             const isDisabled = isLoading || actionLoading.modal === 'save' || (deleteConfirmState.member?.id === member.id && isConfirmingDelete);
-                            return (
-                                <div key={member.id} className={`flex items-center justify-between p-4 bg-slate-800 rounded-lg border border-slate-700 transition-opacity ${isDisabled ? 'opacity-70 pointer-events-none' : ''}`}>
-                                    <div className="flex items-center space-x-4 flex-1 min-w-0">
-                                        <img src={member.avatar_url || `https://placehold.co/48x48/475569/94a3b8?text=${encodeURIComponent(member.name.charAt(0) || 'P')}`} alt={member.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
-                                        <div className="min-w-0">
-                                            <p className="font-semibold text-white truncate">{member.name}</p>
-                                            <p className="text-sm text-slate-400 truncate">{member.role || 'Keine Position'}</p>
+                <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+                    <div className="space-y-4">
+                        {teamMembers.length > 0 ? (
+                            teamMembers.map((member: TeamMember) => {
+                                const isLoading = !!actionLoading[member.id];
+                                const isDisabled = isLoading || actionLoading.modal === 'save' || (deleteConfirmState.member?.id === member.id && isConfirmingDelete);
+                                return (
+                                    <div
+                                        key={member.id}
+                                        className={`flex items-center justify-between rounded-2xl border border-slate-700/70 bg-slate-800/70 p-4 transition hover:-translate-y-0.5 hover:border-orange-500/60 hover:bg-slate-800/90 ${isDisabled ? 'opacity-70 pointer-events-none' : ''}`}
+                                    >
+                                        <div className="flex items-center space-x-4 flex-1 min-w-0">
+                                            <img
+                                                src={
+                                                    member.avatar_url ||
+                                                    `https://placehold.co/64x64/475569/94a3b8?text=${encodeURIComponent(member.name.charAt(0) || 'P')}`
+                                                }
+                                                alt={member.name}
+                                                className="h-14 w-14 flex-shrink-0 rounded-full object-cover"
+                                            />
+                                            <div className="min-w-0">
+                                                <p className="font-semibold text-white truncate">{member.name}</p>
+                                                <p className="text-sm text-slate-400 truncate">{member.role || 'Keine Position'}</p>
+                                                {member.bio && <p className="mt-1 line-clamp-2 text-sm text-slate-400">{member.bio}</p>}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center space-x-2 flex-shrink-0 pl-4">
+                                            <span className="text-xs text-slate-500" title="Sortier-Reihenfolge">
+                                                #{member.display_order}
+                                            </span>
+                                            <button
+                                                onClick={() => openEditModal(member)}
+                                                disabled={!!isDisabled}
+                                                title="Bearbeiten"
+                                                className={`inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors ${
+                                                    isDisabled
+                                                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                                                        : 'bg-blue-600/20 text-blue-300 hover:bg-blue-500/30'
+                                                }`}
+                                            >
+                                                <span className="sr-only">Bearbeiten</span>
+                                                <PencilIcon className="h-4 w-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteRequest(member)}
+                                                disabled={!!isDisabled || actionLoading[member.id] === 'delete'}
+                                                title="Löschen"
+                                                className={`inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors ${
+                                                    actionLoading[member.id] === 'delete'
+                                                        ? 'bg-slate-600 text-slate-400 cursor-wait'
+                                                        : isDisabled
+                                                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                                                        : 'bg-red-600/20 text-red-300 hover:bg-red-500/30'
+                                                }`}
+                                            >
+                                                <span className="sr-only">Löschen</span>
+                                                {actionLoading[member.id] === 'delete' ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />}
+                                            </button>
                                         </div>
                                     </div>
-                                    <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
-                                        <span className="text-xs text-slate-500 font-mono" title="Sortier-Reihenfolge">({member.display_order})</span>
-                                        <button onClick={() => openEditModal(member)} disabled={!!isDisabled} title="Bearbeiten" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600/20 text-blue-300 hover:bg-blue-500/30' }`}> <span className="sr-only">Bearbeiten</span> <PencilIcon className="h-4 w-4" /> </button>
-                                        <button onClick={() => handleDeleteRequest(member)} disabled={!!isDisabled || actionLoading[member.id] === 'delete'} title="Löschen" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ actionLoading[member.id] === 'delete' ? 'bg-slate-600 text-slate-400 cursor-wait' : isDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-red-600/20 text-red-300 hover:bg-red-500/30' }`}> <span className="sr-only">Löschen</span> {actionLoading[member.id] === 'delete' ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />} </button>
-                                    </div>
-                                </div>
+                                );
+                            })
+                        ) : (
+                            !error && (
+                                <EmptyState
+                                    icon={UserGroupIcon}
+                                    title="Noch keine Team-Mitglieder"
+                                    message="Fügen Sie sich selbst und Ihre Mitarbeiter hinzu, um Vertrauen auf Ihrer öffentlichen Webseite aufzubauen."
+                                    buttonText="Erstes Mitglied hinzufügen"
+                                    onButtonClick={openAddModal}
+                                />
                             )
-                        })
-                    ) : ( 
-                        !error && (
-                          <EmptyState
-                            icon={UserGroupIcon}
-                            title="Noch keine Team-Mitglieder"
-                            message="Fügen Sie sich selbst und Ihre Mitarbeiter hinzu, um Vertrauen auf Ihrer öffentlichen Webseite aufzubauen."
-                            buttonText="Erstes Mitglied hinzufügen"
-                            onButtonClick={openAddModal}
-                          />
-                        )
-                    )}
+                        )}
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900/60">
+                            <div className="border-b border-slate-800/70 bg-gradient-to-r from-slate-900 via-slate-900/60 to-orange-900/30 px-5 py-4">
+                                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-200">Storytelling-Tipps</h2>
+                            </div>
+                            <div className="space-y-3 px-5 py-4 text-sm text-slate-300">
+                                <p>Schreiben Sie kurze Bios, die Fachgebiete und persönliche Highlights kombinieren – so wirkt Ihr Team nahbar.</p>
+                                <p>Nutzen Sie hochwertige Porträts oder Arbeitsfotos mit identischem Hintergrund, um einen einheitlichen Eindruck zu schaffen.</p>
+                                <p>Positionieren Sie Ihr wichtigstes Teammitglied an erster Stelle durch die Sortier-Reihenfolge.</p>
+                            </div>
+                        </div>
+                        <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-5 text-sm text-slate-300">
+                            <h3 className="text-base font-semibold text-white">Mehr Vertrauen aufbauen</h3>
+                            <p className="mt-2 text-sm text-slate-400">
+                                Ergänzen Sie Ihre Teamseite mit Testimonials und Projektlinks, damit Besucher direkt sehen, welche Qualität sie erwartet.
+                            </p>
+                            <button
+                                onClick={() => router.push('/dashboard/testimonials')}
+                                className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-orange-900/40 transition hover:bg-orange-400"
+                            >
+                                Kundenstimmen hinzufügen
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
             <TeamMemberModal modalState={modalState} onClose={closeModal} onSave={handleSaveMember} isSaving={actionLoading.modal === 'save'} />
