@@ -6,6 +6,8 @@ import { createSupabaseClient } from '../../lib/supabaseClient';
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
 import PlusIcon from '@/components/icons/PlusIcon';
+import { DashboardHero } from '@/components/dashboard/DashboardHero';
+import { DashboardStatCard } from '@/components/dashboard/DashboardStatCard';
 
 // --- TYPE DEFINITIONS ---
 type Project = {
@@ -15,14 +17,6 @@ type Project = {
   after_image_url: string | null;
   status: 'Published' | 'Draft' | string | null;
   created_at: string;
-};
-
-type StatCardProps = {
-  title: string;
-  value: string | number;
-  description: string;
-  icon: React.ElementType;
-  trend?: string;
 };
 
 type ProjectCardProps = { project: Project };
@@ -127,33 +121,6 @@ const resourceLinks: ResourceLink[] = [
     href: '/dashboard/admin',
   },
 ];
-
-// --- UI COMPONENTS ---
-function StatCard({ title, value, description, icon: Icon, trend }: StatCardProps) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-800/80 p-6 shadow-lg shadow-slate-900/30">
-      <div
-        className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-br from-orange-500/10 via-transparent to-transparent blur-2xl"
-        aria-hidden="true"
-      />
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400/80">{title}</p>
-          <p className="mt-2 text-3xl font-bold text-white">{value}</p>
-          <p className="mt-2 text-sm text-slate-400">{description}</p>
-          {trend && (
-            <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-green-500/10 px-3 py-1 text-xs font-semibold text-green-300">
-              {trend}
-            </p>
-          )}
-        </div>
-        <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900/80 ring-1 ring-slate-700">
-          <Icon className="h-6 w-6 text-orange-400" />
-        </span>
-      </div>
-    </div>
-  );
-}
 
 function ProjectCard({ project }: ProjectCardProps) {
   const displayDate = project['project-date']
@@ -429,53 +396,50 @@ export default function DashboardPage() {
 
   return (
     <main className="space-y-10 px-6 py-10 lg:px-10">
-      <section className="relative overflow-hidden rounded-3xl border border-slate-700/70 bg-slate-900/70 p-8 shadow-2xl shadow-slate-900/40">
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-2/3 bg-[radial-gradient(circle_at_top,rgba(249,115,22,0.35),transparent_60%)]" aria-hidden="true" />
-        <div className="relative z-10 flex flex-col gap-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-3">
-              <span className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-200">
-                Dashboard
-              </span>
-              <h1 className="text-3xl font-bold text-white lg:text-4xl">Willkommen zurück, {greeting}!</h1>
-              <p className="text-base text-slate-300 lg:max-w-2xl">
-                Behalten Sie Ihre wichtigsten Kennzahlen im Blick und führen Sie Besucher in wenigen Minuten zu einer eindrucksvollen Referenzseite.
-              </p>
-              {currentUser && <p className="text-xs text-slate-400">Angemeldet als: {currentUser.email}</p>}
-            </div>
-            <Link
-              href="/dashboard/projekte/neu"
-              className="inline-flex items-center justify-center rounded-full bg-orange-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-900/40 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200"
-            >
-              Neues Projekt erstellen
-            </Link>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <StatCard
-              title="Alle Projekte"
-              value={totalProjects}
-              description="Gesamt erstellt"
-              icon={DocumentDuplicateIcon}
-              trend={hasProjects ? `${totalProjects} Projekte aktiv` : 'Noch keine Projekte angelegt'}
-            />
-            <StatCard
-              title="Entwürfe"
-              value={draftProjects}
-              description="Noch in Bearbeitung"
-              icon={PencilSquareIcon}
-              trend={draftProjects > 0 ? 'Feinschliff empfohlen' : 'Alle Projekte sind veröffentlicht'}
-            />
-            <StatCard
-              title="Veröffentlicht"
-              value={publishedProjects}
-              description="Öffentlich sichtbar"
-              icon={CheckBadgeIcon}
-              trend={publishedProjects > 0 ? 'Sichtbar auf Ihrer Webseite' : 'Noch nichts live geschaltet'}
-            />
-          </div>
+      <DashboardHero
+        eyebrow="Dashboard"
+        title={`Willkommen zurück, ${greeting}!`}
+        subtitle="Behalten Sie Ihre wichtigsten Kennzahlen im Blick und führen Sie Besucher in wenigen Minuten zu einer eindrucksvollen Referenzseite."
+        actions={[
+          {
+            label: 'Neues Projekt erstellen',
+            href: '/dashboard/projekte/neu',
+            icon: PlusIcon,
+          },
+          {
+            label: 'Hilfe-Center öffnen',
+            href: '/dashboard/hilfe',
+            variant: 'secondary',
+          },
+        ]}
+      >
+        {currentUser && <p className="text-xs text-slate-400">Angemeldet als: {currentUser.email}</p>}
+        <div className="grid gap-4 md:grid-cols-3">
+          <DashboardStatCard
+            title="Alle Projekte"
+            value={totalProjects}
+            description="Gesamt erstellt"
+            icon={DocumentDuplicateIcon}
+            trend={hasProjects ? `${totalProjects} Projekte aktiv` : 'Noch keine Projekte angelegt'}
+          />
+          <DashboardStatCard
+            title="Entwürfe"
+            value={draftProjects}
+            description="Noch in Bearbeitung"
+            icon={PencilSquareIcon}
+            accent="indigo"
+            trend={draftProjects > 0 ? 'Feinschliff empfohlen' : 'Alle Projekte sind veröffentlicht'}
+          />
+          <DashboardStatCard
+            title="Veröffentlicht"
+            value={publishedProjects}
+            description="Öffentlich sichtbar"
+            icon={CheckBadgeIcon}
+            accent="emerald"
+            trend={publishedProjects > 0 ? 'Sichtbar auf Ihrer Webseite' : 'Noch nichts live geschaltet'}
+          />
         </div>
-      </section>
+      </DashboardHero>
 
       <section className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

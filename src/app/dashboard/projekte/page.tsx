@@ -11,6 +11,8 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import EmptyState from '@/components/EmptyState';
 import RequestTestimonialModal from '@/components/RequestTestimonialModal';
 import PlusIcon from '@/components/icons/PlusIcon';
+import { DashboardHero } from '@/components/dashboard/DashboardHero';
+import { DashboardStatCard } from '@/components/dashboard/DashboardStatCard';
 
 // --- TYPE DEFINITIONS (FIXED) ---
 type Project = {
@@ -105,6 +107,7 @@ export default function ProjektePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [userSlug, setUserSlug] = useState<string | null>(null);
   
   const [requestModalProject, setRequestModalProject] = useState<Project | null>(null);
   const [isRequestingTestimonial, setIsRequestingTestimonial] = useState(false);
@@ -151,8 +154,19 @@ export default function ProjektePage() {
             router.push('/login');
             return; 
         }
-        setCurrentUser(user); 
-        await fetchProjects(user); 
+        setCurrentUser(user);
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('slug')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error fetching user slug:', profileError);
+        } else {
+          setUserSlug(profile?.slug ?? null);
+        }
+        await fetchProjects(user);
     };
     getUserAndFetchData();
   }, [router, supabase.auth]); // <-- ADDED supabase.auth dependency
@@ -326,46 +340,143 @@ export default function ProjektePage() {
 
 
   // === Render Logic ===
+  const totalProjects = projects.length;
+  const publishedProjects = projects.filter((project) => project.status === 'Published').length;
+  const draftProjects = totalProjects - publishedProjects;
+  const projectsWithGallery = projects.filter((project) => project.gallery_images && project.gallery_images.length > 0);
+  const averageGalleryImages = projectsWithGallery.length
+    ? Math.round(
+        projectsWithGallery.reduce((sum, project) => sum + (project.gallery_images?.length ?? 0), 0) /
+          projectsWithGallery.length,
+      )
+    : 0;
+  const latestUpdate = projects[0]?.created_at
+    ? new Date(projects[0].created_at).toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
+    : null;
+  const homepageHref = userSlug ? `/${userSlug}` : '/';
+
   return (
-    <main className="p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div> <h1 className="text-3xl font-bold text-white">Alle Projekte</h1> <p className="text-slate-400 mt-1">Verwalten Sie hier alle Ihre erstellten Projekte.</p> </div>
-        <Link href="/dashboard/projekte/neu" className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"> <PlusIcon className="h-5 w-5" /> Neues Projekt </Link>
-      </div>
+    <main className="space-y-10 px-6 py-10 lg:px-10">
+      <DashboardHero
+        eyebrow="Projekte"
+        title="Alle Projekte verwalten"
+        subtitle="Veröffentlichen Sie Ihre besten Arbeiten, steuern Sie Sichtbarkeit und sammeln Sie Testimonials – alles an einem Ort."
+        actions={[
+          {
+            label: 'Neues Projekt',
+            href: '/dashboard/projekte/neu',
+            icon: PlusIcon,
+          },
+          {
+            label: 'Live-Seite ansehen',
+            href: homepageHref,
+            variant: 'secondary',
+            target: '_blank',
+          },
+        ]}
+      >
+        <div className="grid gap-4 md:grid-cols-4">
+          <DashboardStatCard
+            title="Gesamt"
+            value={totalProjects}
+            description="Angelegte Projekte"
+            icon={ProjectsIcon}
+            trend={latestUpdate ? `Zuletzt aktualisiert am ${latestUpdate}` : 'Jetzt erstes Projekt anlegen'}
+          />
+          <DashboardStatCard
+            title="Veröffentlicht"
+            value={publishedProjects}
+            description="Live sichtbar"
+            icon={CheckCircleIcon}
+            accent="emerald"
+            trend={publishedProjects > 0 ? 'Auf Ihrer Seite aktiv' : 'Noch nichts live'}
+          />
+          <DashboardStatCard
+            title="Entwürfe"
+            value={draftProjects}
+            description="In Vorbereitung"
+            icon={PencilIcon}
+            accent="indigo"
+            trend={draftProjects > 0 ? 'Bereit für den letzten Schliff' : 'Keine offenen Entwürfe'}
+          />
+          <DashboardStatCard
+            title="Galerie-Bilder"
+            value={averageGalleryImages}
+            description="Ø Bilder pro Projekt"
+            icon={PhotoIcon}
+            trend={projectsWithGallery.length > 0 ? `${projectsWithGallery.length} Projekte mit Galerie` : 'Fügen Sie Bilder für mehr Vertrauen hinzu'}
+          />
+        </div>
+      </DashboardHero>
 
-      {/* Loading State */}
-      {loading && ( <p className="text-slate-400 mt-6 text-center">Lade Projekte...</p> )}
+      {loading && (
+        <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-10 text-center text-sm text-slate-300">
+          Lade Projekte...
+        </div>
+      )}
 
-      {/* General Error Display */}
-      {error && !loading && ( <p className="text-red-500 mt-6 text-center">{error}</p> )}
+      {error && !loading && (
+        <div className="rounded-2xl border border-red-500/40 bg-red-900/30 p-6 text-center text-sm text-red-100">{error}</div>
+      )}
 
-      {/* Project List */}
       {!loading && (
-        <div className="space-y-4">
-          {projects.length > 0 ? (
-            projects.map((project) => (
-              <ProjectListItem
-                key={project.id}
-                project={project}
-                onStatusToggle={handleStatusToggle}
-                onDeleteRequest={handleDeleteRequest}
-                onRequestTestimonial={handleOpenRequestModal}
-                isToggling={togglingProjectId === project.id && !isConfirmingDelete}
-                isDeleting={deletingProject?.id === project.id && isConfirmingDelete}
-              />
-            ))
-          ) : (
-            !error && (
-              <EmptyState
-                icon={ProjectsIcon}
-                title="Sie haben noch keine Projekte erstellt"
-                message="Legen Sie los und erstellen Sie Ihr erstes Projekt. Laden Sie ein Foto hoch und lassen Sie unsere AI die Beschreibung erstellen."
-                buttonText="Erstes Projekt hinzufügen"
-                buttonHref="/dashboard/projekte/neu"
-              />
-            )
-          )}
+        <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+          <div className="space-y-4">
+            {projects.length > 0 ? (
+              <div className="space-y-4">
+                {projects.map((project) => (
+                  <ProjectListItem
+                    key={project.id}
+                    project={project}
+                    onStatusToggle={handleStatusToggle}
+                    onDeleteRequest={handleDeleteRequest}
+                    onRequestTestimonial={handleOpenRequestModal}
+                    isToggling={togglingProjectId === project.id && !isConfirmingDelete}
+                    isDeleting={deletingProject?.id === project.id && isConfirmingDelete}
+                  />
+                ))}
+              </div>
+            ) : (
+              !error && (
+                <EmptyState
+                  icon={ProjectsIcon}
+                  title="Sie haben noch keine Projekte erstellt"
+                  message="Legen Sie los und erstellen Sie Ihr erstes Projekt. Laden Sie ein Foto hoch und lassen Sie unsere AI die Beschreibung erstellen."
+                  buttonText="Erstes Projekt hinzufügen"
+                  buttonHref="/dashboard/projekte/neu"
+                />
+              )
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <div className="overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900/60">
+              <div className="border-b border-slate-800/70 bg-gradient-to-r from-slate-900 via-slate-900/60 to-orange-900/30 px-5 py-4">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-200">Best-Practice Checkliste</h2>
+              </div>
+              <div className="space-y-3 px-5 py-4 text-sm text-slate-300">
+                <p>Nutzen Sie aussagekräftige Vorher-/Nachher-Bilder, um die Qualität Ihrer Arbeit hervorzuheben.</p>
+                <p>Aktivieren Sie veröffentlichte Projekte, sobald Texte und Bilder final sind, damit sie auf Ihrer Seite erscheinen.</p>
+                <p>Fordern Sie nach Abschluss eines Projektes Kundenstimmen an, um soziale Beweise zu sammeln.</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-5 text-sm text-slate-300">
+              <h3 className="text-base font-semibold text-white">Vorlagen für schnelle Veröffentlichungen</h3>
+              <p className="mt-2 text-sm text-slate-400">
+                Wiederverwenden Sie bestehende Projekte als Vorlage: duplizieren Sie ein Projekt, passen Sie Text und Bilder an und sparen Sie Zeit beim nächsten Upload.
+              </p>
+              <button
+                onClick={() => router.push('/dashboard/projekte/neu')}
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-orange-900/40 transition hover:bg-orange-400"
+              >
+                Projekt duplizieren & anpassen
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
