@@ -28,7 +28,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
-    // --- NEW STRATEGY ---
     // 1. Fetch the request itself (using the admin client)
     const { data: requestData, error: requestError } = await supabaseAdmin
       .from('testimonial_requests')
@@ -68,7 +67,6 @@ export async function POST(request: Request) {
       console.error('Profile fetch error (Admin Client):', profileError);
       return NextResponse.json({ error: 'Could not find business details' }, { status: 500 });
     }
-    // --- END NEW STRATEGY ---
 
     // Success! Return the non-sensitive project info
     return NextResponse.json({
