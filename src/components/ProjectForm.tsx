@@ -99,8 +99,8 @@ const SpotlightHint = () => (
       </div>
       <div className="ml-3 flex-1 md:flex md:justify-between">
         <p className="text-sm text-blue-300">
-          {/* --- FIX: Replaced ' with &apos; --- */}
-          <span className="font-semibold text-white">Tipp für den Start:</span> Laden Sie als Erstes ein &apos;Nachher-Bild&apos; hoch. Unsere KI generiert dann automatisch eine passende Projektbeschreibung für Sie!
+          {/* --- FIX: Replaced &apos; with &quot; --- */}
+          <span className="font-semibold text-white">Tipp für den Start:</span> Laden Sie als Erstes ein &quot;Nachher-Bild&quot; hoch. Unsere KI generiert dann automatisch eine passende Projektbeschreibung für Sie!
         </p>
       </div>
     </div>
@@ -221,8 +221,8 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             });
         }
       }
-      // --- FIX: Replaced ' with &apos; ---
-      toast.success(`&apos;${type === 'before' ? 'Vorher' : 'Nachher'}&apos; Bild erfolgreich hochgeladen.`);
+      // --- FIX: Replaced &apos; with &quot; ---
+      toast.success(`&quot;${type === 'before' ? 'Vorher' : 'Nachher'}&quot; Bild erfolgreich hochgeladen.`);
 
     } catch (error: any) {
       toast.error(error.message || "Fehler beim Upload.");
@@ -316,15 +316,15 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
     await toast.promise(
         savePromise(),
         {
-            loading: 'Projekt wird gespeichert...',
+            loading: "Projekt wird gespeichert...",
             success: (data) => {
                 setIsSaving(false);
                 if (!initialData) {
                     router.push(`/dashboard/projekte/${data.id}/edit`);
-                    return 'Projekt erfolgreich erstellt!';
+                    return "Projekt erfolgreich erstellt!";
                 }
                 router.refresh(); 
-                return 'Projekt erfolgreich gespeichert!';
+                return "Projekt erfolgreich gespeichert!";
             },
             error: (err: any) => {
                 setIsSaving(false);
@@ -341,8 +341,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
       if (!pathToRemove) {
           console.log("No image path to remove."); return;
       }
-      
-      // --- FIX: Replaced ' with " ---
+
       const toastId = toast.loading("Bild wird gelöscht...");
       
       try {
@@ -489,7 +488,6 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
                       disabled={isFormDisabled || !formData.after_image_url} 
                       className="rounded-md bg-orange-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition"
                   >
-                      {/* --- FIX: Replaced ' with " --- */}
                       {isGenerating ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : "Beschreibung generieren"}
                   </button>
              </div>
@@ -560,7 +558,6 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             disabled={isFormDisabled}
             className="flex justify-center rounded-md bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition"
           >
-            {/* --- FIX: Replaced ' with " --- */}
             {isSaving ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : "Projekt speichern"}
           </button>
         </div>
