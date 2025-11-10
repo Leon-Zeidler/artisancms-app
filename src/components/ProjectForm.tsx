@@ -99,7 +99,6 @@ const SpotlightHint = () => (
       </div>
       <div className="ml-3 flex-1 md:flex md:justify-between">
         {/* --- THIS IS THE FIX --- */}
-        {/* eslint-disable-next-line react/no-unescaped-entities */}
         <p className="text-sm text-blue-300">
           <span className="font-semibold text-white">Tipp für den Start:</span> Laden Sie als Erstes ein &lsquo;Nachher-Bild&rsquo; hoch. Unsere KI generiert dann automatisch eine passende Projektbeschreibung für Sie!
         </p>
@@ -514,11 +513,11 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             <div className="space-y-8 border-b border-slate-700 pb-12">
                   <h2 className="text-xl font-semibold leading-7 text-white">Projekt Galerie</h2>
                    <ProjectGalleryManager
-                    projectId={initialData.id as unknown as string} // Cast von "bigint" zu string
-                    userId={currentUser.id}
-                    initialGalleryImages={formData.gallery_images || []}
-                    onGalleryUpdate={(newGallery: { url: string; path: string; }[]) => setFormData(prev => ({ ...prev, gallery_images: newGallery }))}
-                  />
+                      projectId={initialData.id as unknown as string} // Cast von "bigint" zu string
+                      userId={currentUser.id}
+                      initialGalleryImages={formData.gallery_images || []}
+                      onGalleryUpdate={(newGallery: { url: string; path: string; }[]) => setFormData(prev => ({ ...prev, gallery_images: newGallery }))}
+                   />
             </div>
         )}
         
