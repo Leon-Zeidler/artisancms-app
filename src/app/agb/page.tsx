@@ -33,9 +33,9 @@ export default function AGBPage() {
             <h2>1. Geltungsbereich und Anbieter</h2>
             <p>
               Diese Allgemeinen Geschäftsbedingungen (AGB) regeln das Vertragsverhältnis zwischen
-              Leon Zeidler, Alter Dorfrand 50, 01454 Radeberg (im Folgenden "Anbieter" oder "ArtisanCMS") 
-              und den registrierten Nutzern (im Folgenden "Nutzer") der Software-Plattform ArtisanCMS 
-              (im Folgenden "Dienst") in ihrer Beta-Version.
+              Leon Zeidler, Alter Dorfrand 50, 01454 Radeberg (im Folgenden &quot;Anbieter&quot; oder &quot;ArtisanCMS&quot;) 
+              und den registrierten Nutzern (im Folgenden &quot;Nutzer&quot;) der Software-Plattform ArtisanCMS 
+              (im Folgenden &quot;Dienst&quot;) in ihrer Beta-Version.
             </p>
             <p>
               Diese Bedingungen gelten ausschließlich für die Dauer der geschlossenen Beta-Testphase.
@@ -44,7 +44,7 @@ export default function AGBPage() {
             <h2>2. Vertragsgegenstand (Beta-Test)</h2>
             <p>
               Gegenstand dieses Vertrages ist die unentgeltliche Bereitstellung des Dienstes 
-              in einer "Beta-Version" zum Zwecke des Tests durch den Nutzer.
+              in einer &quot;Beta-Version&quot; zum Zwecke des Tests durch den Nutzer.
             </p>
             <p>
               Der Dienst ist eine Software-as-a-Service (SaaS) Plattform, die es Nutzern (Handwerksbetrieben) 
@@ -122,7 +122,7 @@ export default function AGBPage() {
               jederzeit einstellen.
             </p>
             <p>
-              Der Nutzer kann sein Konto jederzeit über die Funktion "Konto unwiderruflich löschen" 
+              Der Nutzer kann sein Konto jederzeit über die Funktion &quot;Konto unwiderruflich löschen&quot; 
               in den Einstellungen (`/dashboard/einstellungen`) löschen. 
               Hierbei werden alle vom Nutzer gespeicherten Daten (gemäß unserer 
               Datenschutzerklärung) dauerhaft und unwiderruflich von der Plattform entfernt.

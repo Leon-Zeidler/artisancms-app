@@ -84,7 +84,8 @@ export default function OnboardingPage() {
         setInitialLoading(false);
     };
     checkUserAndProfile();
-  }, [router]);
+  // --- FIX: Added supabase.auth to dependency array ---
+  }, [router, supabase.auth]);
 
   // --- Auto-suggest slug based on business name ---
   useEffect(() => {
@@ -113,7 +114,8 @@ export default function OnboardingPage() {
         else if (data && data.length > 0) setSlugStatus('taken');
         else setSlugStatus('available');
     } catch (err) { console.error("Exception checking slug:", err); setSlugStatus('idle'); setError("Fehler bei der Slug-Prüfung."); }
-  }, [currentUser]);
+  // --- FIX: Added supabase to dependency array ---
+  }, [currentUser, supabase]);
 
 
   // --- Handle Slug Input Change with Debounce ---

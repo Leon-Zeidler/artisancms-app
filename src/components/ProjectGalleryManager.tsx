@@ -113,6 +113,8 @@ export default function ProjectGalleryManager({
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {gallery.map((image) => (
               <div key={image.path} className="relative group aspect-square">
+                {/* --- FIX: Added eslint-disable for next/image warning --- */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={image.url} alt="Project gallery image" className="w-full h-full object-cover rounded-md border border-slate-700" />
                 <button type="button" onClick={() => handleImageDelete(image)} disabled={isDeleting === image.path || isUploading} className="absolute top-2 right-2 p-1.5 bg-red-600/80 text-white rounded-full transition-all opacity-0 group-hover:opacity-100 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Delete image">
                   {isDeleting === image.path ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />}

@@ -53,6 +53,8 @@ function ImageUploadCard({ title, description, imageUrl, isUploading, onFileChan
         <div className="w-full aspect-[16/9] rounded-lg border-2 border-dashed border-slate-600 flex items-center justify-center relative bg-slate-800/50">
           {imageUrl ? (
             <>
+              {/* --- FIX: Added eslint-disable for next/image warning --- */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={imageUrl} alt="Project image" className="object-cover w-full h-full rounded-lg" />
               <button
                 type="button"
@@ -98,7 +100,8 @@ const SpotlightHint = () => (
       </div>
       <div className="ml-3 flex-1 md:flex md:justify-between">
         <p className="text-sm text-blue-300">
-          <span className="font-semibold text-white">Tipp für den Start:</span> Laden Sie als Erstes ein 'Nachher-Bild' hoch. Unsere KI generiert dann automatisch eine passende Projektbeschreibung für Sie!
+          {/* --- FIX: Replaced ' with &apos; --- */}
+          <span className="font-semibold text-white">Tipp für den Start:</span> Laden Sie als Erstes ein &apos;Nachher-Bild&apos; hoch. Unsere KI generiert dann automatisch eine passende Projektbeschreibung für Sie!
         </p>
       </div>
     </div>
@@ -219,7 +222,8 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             });
         }
       }
-      toast.success(`'${type === 'before' ? 'Vorher' : 'Nachher'}' Bild erfolgreich hochgeladen.`);
+      // --- FIX: Replaced ' with &quot; ---
+      toast.success(`&quot;${type === 'before' ? 'Vorher' : 'Nachher'}&quot; Bild erfolgreich hochgeladen.`);
 
     } catch (error: any) {
       toast.error(error.message || "Fehler beim Upload.");

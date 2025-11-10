@@ -78,7 +78,7 @@ export default function DashboardHelpPage() {
                 <br />
                 Gehen Sie zu <Link href="/dashboard/projekte" className="text-orange-400 underline hover:text-orange-300">Projekte</Link> und
                 erstellen Sie ein `Neues Projekt`. Laden Sie ein Bild hoch und testen Sie die AI-Funktion, um
-                eine Beschreibung generieren zu lassen. Setzen Sie das Projekt auf "Veröffentlicht".
+                eine Beschreibung generieren zu lassen. Setzen Sie das Projekt auf &quot;Veröffentlicht&quot;.
               </li>
               <li>
                 <strong className="text-white">Webseite veröffentlichen:</strong>
@@ -101,7 +101,7 @@ export default function DashboardHelpPage() {
               <div>
                 <p className="font-semibold text-white">Seite nicht veröffentlichbar?</p>
                 <p>
-                  Um den Schalter "Website veröffentlichen" (in <Link href="/dashboard/einstellungen#sicherheit" className="font-medium underline hover:text-yellow-100">Einstellungen &gt; Gefahrenzone</Link>)
+                  Um den Schalter &quot;Website veröffentlichen&quot; (in <Link href="/dashboard/einstellungen#sicherheit" className="font-medium underline hover:text-yellow-100">Einstellungen &gt; Gefahrenzone</Link>)
                   aktivieren zu können, müssen Sie zwingend Ihre Texte für **Impressum** und **Datenschutz**
                   in den entsprechenden Feldern unter `Einstellungen &gt; Rechtliches` eintragen.
                 </p>
@@ -118,7 +118,7 @@ export default function DashboardHelpPage() {
             <div>
               <h4 className="text-lg font-semibold text-white">Projekte & die AI-Bildanalyse</h4>
               <p className="mt-2 text-slate-300">
-                Das Herzstück Ihrer Seite. Wenn Sie ein Projekt erstellen, laden Sie idealerweise zuerst ein "Nachher-Bild" hoch.
+                Das Herzstück Ihrer Seite. Wenn Sie ein Projekt erstellen, laden Sie idealerweise zuerst ein &quot;Nachher-Bild&quot; hoch.
                 Sobald das Bild hochgeladen ist, analysiert unsere KI (OpenAI `gpt-4o`) das Bild und schlägt
                 Ihnen automatisch eine professionelle Projektbeschreibung vor. Sie können diesen Text jederzeit anpassen.
               </p>
@@ -136,14 +136,14 @@ export default function DashboardHelpPage() {
             <div>
               <h4 className="text-lg font-semibold text-white">Kundenstimmen anfragen</h4>
               <p className="mt-2 text-slate-300">
-                Wenn ein Projekt auf "Veröffentlicht" steht, können Sie im <Link href="/dashboard/projekte" className="text-orange-400 underline hover:text-orange-300">Projekte</Link>-Tab
-                den "Kundenstimme anfragen"-Button (Stern-Icon) nutzen. Geben Sie die E-Mail des Kunden ein,
+                Wenn ein Projekt auf &quot;Veröffentlicht&quot; steht, können Sie im <Link href="/dashboard/projekte" className="text-orange-400 underline hover:text-orange-300">Projekte</Link>-Tab
+                den &quot;Kundenstimme anfragen&quot;-Button (Stern-Icon) nutzen. Geben Sie die E-Mail des Kunden ein,
                 und das System sendet eine E-Mail mit einem einzigartigen Link.
               </p>
               <p className="mt-2 text-slate-300">
                 Wenn der Kunde den Link anklickt, kann er ein Formular ausfüllen/page.tsx`].
                 Die eingereichte Bewertung landet bei Ihnen im <Link href="/dashboard/testimonials" className="text-orange-400 underline hover:text-orange-300">Kundenstimmen</Link>-Tab
-                und muss von Ihnen manuell auf "Veröffentlicht" gesetzt werden, bevor sie auf der Webseite erscheint.
+                und muss von Ihnen manuell auf &quot;Veröffentlicht&quot; gesetzt werden, bevor sie auf der Webseite erscheint.
               </p>
             </div>
 
@@ -151,7 +151,7 @@ export default function DashboardHelpPage() {
               <h4 className="text-lg font-semibold text-white">Kontaktanfragen & AI-Antworten</h4>
               <p className="mt-2 text-slate-300">
                 Anfragen über Ihr öffentliches Kontaktformular landen im <Link href="/dashboard/contact" className="text-orange-400 underline hover:text-orange-300">Kontaktanfragen</Link>-Tab.
-                Klicken Sie auf eine Nachricht, um sie zu öffnen. Dort können Sie den "Antwort entwerfen"-Button
+                Klicken Sie auf eine Nachricht, um sie zu öffnen. Dort können Sie den &quot;Antwort entwerfen&quot;-Button
                 nutzen. Die KI liest die Kundenanfrage sowie Ihre eigenen Leistungsbeschreibungen (aus den Einstellungen)
                 und formuliert einen höflichen Antwortentwurf.
               </p>
@@ -193,7 +193,7 @@ export default function DashboardHelpPage() {
                 <strong className="text-white">Wie lösche ich mein Konto?</strong>
                 <br />
                 Gehen Sie zu <Link href="/dashboard/einstellungen#sicherheit" className="text-orange-400 underline hover:text-orange-300">Einstellungen</Link> &gt; `Gefahrenzone`.
-                Dort finden Sie den Button "Konto löschen". Achtung: Diese Aktion ist endgültig
+                Dort finden Sie den Button &quot;Konto löschen&quot;. Achtung: Diese Aktion ist endgültig
                 und löscht alle Ihre Daten.
               </li>
             </ul>

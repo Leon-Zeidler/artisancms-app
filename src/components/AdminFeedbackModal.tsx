@@ -81,7 +81,8 @@ export default function AdminFeedbackModal({ item, onClose, onSave, isSaving, us
               <p className="text-sm text-slate-300">{new Date(item.created_at).toLocaleString('de-DE')}</p>
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-500">User's Message</label>
+              {/* --- FIX: Replaced ' with &apos; --- */}
+              <label className="text-xs font-medium text-slate-500">User&apos;s Message</label>
               <div className="mt-1 p-3 bg-slate-900 rounded-md border border-slate-700">
                 <p className="text-sm text-slate-200 whitespace-pre-wrap">{item.message}</p>
               </div>
@@ -120,7 +121,8 @@ export default function AdminFeedbackModal({ item, onClose, onSave, isSaving, us
                 Mark as Resolved
               </label>
               <p className="text-slate-500 text-xs">
-                Check this box when you've handled this feedback.
+                {/* --- FIX: Replaced ' with &apos; --- */}
+                Check this box when you&apos;ve handled this feedback.
               </p>
             </div>
           </div>

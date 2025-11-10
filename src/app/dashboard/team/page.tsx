@@ -18,6 +18,7 @@ const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fi
 const XMarkIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg>);
 const UserGroupIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 00-3.741-.97m-3.741 0a9.094 9.094 0 00-3.741.97m7.482 0a9.094 9.094 0 01-3.741-.97m3.741 0c-.393.16-1.183.3-2.12.39m-3.741 0c-.937-.09-1.727-.23-2.12-.39m3.741 0a9.094 9.094 0 00-3.741-.97m0 0c-2.062 0-3.8-1.34-4.24-3.235a9.094 9.094 0 010-3.135 4.238 4.238 0 014.24-3.235m0 0c2.063 0 3.8 1.34 4.24 3.235m0 0a9.094 9.094 0 010 3.135m-4.24 0c-.44 1.895-2.177 3.235-4.24 3.235m12.731 0a9.094 9.094 0 00-3.741-.97m3.741 0c.393.16 1.183.3 2.12.39m3.741 0c.937-.09 1.727-.23 2.12-.39m-3.741 0a9.094 9.094 0 013.741-.97m0 0c2.063 0 3.8-1.34 4.24-3.235a9.094 9.094 0 000-3.135 4.238 4.238 0 00-4.24-3.235m0 0c-2.062 0-3.8 1.34-4.24 3.235m0 0a9.094 9.094 0 000 3.135m4.24 0c.44 1.895 2.177 3.235 4.24 3.235z" /> </svg> );
 const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /> </svg> );
+const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> );
 
 // --- TYPE DEFINITIONS ---
 type TeamMember = {
@@ -43,17 +44,35 @@ interface TeamMemberModalProps {
     isSaving: boolean;
 }
 function TeamMemberModal({ modalState, onClose, onSave, isSaving }: TeamMemberModalProps) {
-    if (!modalState.isOpen) return null;
-
+    // --- FIX: Hooks are now at the top level ---
     const [formData, setFormData] = useState<TeamMemberFormData>(
         modalState.mode === 'edit' && modalState.data
         ? { name: modalState.data.name, role: modalState.data.role ?? '', bio: modalState.data.bio ?? '', display_order: modalState.data.display_order ?? 0, avatar_url: modalState.data.avatar_url, avatar_storage_path: modalState.data.avatar_storage_path }
         : { name: '', role: '', bio: '', display_order: 0, avatar_url: null, avatar_storage_path: null }
     );
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(formData.avatar_url);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(modalState.data?.avatar_url || null);
     const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
+
+    // --- FIX: Added useEffect to reset state when modal opens ---
+    useEffect(() => {
+        if (modalState.isOpen) {
+            if (modalState.mode === 'edit' && modalState.data) {
+                setFormData({ name: modalState.data.name, role: modalState.data.role ?? '', bio: modalState.data.bio ?? '', display_order: modalState.data.display_order ?? 0, avatar_url: modalState.data.avatar_url, avatar_storage_path: modalState.data.avatar_storage_path });
+                setAvatarPreview(modalState.data.avatar_url);
+            } else {
+                setFormData({ name: '', role: '', bio: '', display_order: 0, avatar_url: null, avatar_storage_path: null });
+                setAvatarPreview(null);
+            }
+            setAvatarFile(null);
+            setIsRemovingAvatar(false);
+            setLocalError(null);
+        }
+    }, [modalState.isOpen, modalState.mode, modalState.data]);
+    
+    // --- FIX: Early return is now AFTER hooks ---
+    if (!modalState.isOpen) return null;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -96,7 +115,11 @@ function TeamMemberModal({ modalState, onClose, onSave, isSaving }: TeamMemberMo
                         <label className="mb-2 block text-sm font-medium text-slate-300">Profilbild</label>
                         <div className="flex items-center gap-4">
                             <div className="flex-shrink-0 h-24 w-24 flex items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-slate-500 overflow-hidden">
-                                {avatarPreview ? ( <img src={avatarPreview} alt="Avatar Vorschau" className="h-full w-full object-cover" /> ) : ( <UserGroupIcon className="h-12 w-12" /> )}
+                                {avatarPreview ? ( 
+                                    // --- FIX: Added eslint-disable for next/image warning ---
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={avatarPreview} alt="Avatar Vorschau" className="h-full w-full object-cover" /> 
+                                ) : ( <UserGroupIcon className="h-12 w-12" /> )}
                             </div>
                             <div className="flex-grow space-y-2">
                                 <input type="file" id="avatarUpload" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 focus:ring-offset-slate-800"/>
@@ -112,8 +135,7 @@ function TeamMemberModal({ modalState, onClose, onSave, isSaving }: TeamMemberMo
                 </form>
                 <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-slate-700"> 
                     <button type="button" onClick={onClose} disabled={isSaving} className="rounded-md px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-50"> Abbrechen </button>
-                    <button type="button" onClick={handleSubmit} disabled={isSaving} className={`inline-flex items-center gap-x-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors ${ isSaving ? 'bg-orange-800 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'}`}> {isSaving && <ArrowPathIcon className="h-4 w-4 animate-spin" />} {isSaving ? 'Wird gespeichert...' : 'Speichern'} </button> 
-                </div>
+                    <button type="button" onClick={handleSubmit} disabled={isSaving} className={`inline-flex items-center gap-x-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors ${ isSaving ? 'bg-orange-800 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'}`}> {isSaving && <ArrowPathIcon className="h-4 w-4 animate-spin" />} {isSaving ? 'Wird gespeichert...' : 'Speichern'} </button> AiFillAlipayCircle</div>
             </div>
         </div>
     );
@@ -328,6 +350,8 @@ export default function TeamManagementPage() {
                                         className={`flex items-center justify-between rounded-2xl border border-slate-700/70 bg-slate-800/70 p-4 transition hover:-translate-y-0.5 hover:border-orange-500/60 hover:bg-slate-800/90 ${isDisabled ? 'opacity-70 pointer-events-none' : ''}`}
                                     >
                                         <div className="flex items-center space-x-4 flex-1 min-w-0">
+                                            {/* --- FIX: Added eslint-disable for next/image warning --- */}
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
                                                 src={
                                                     member.avatar_url ||
@@ -418,7 +442,16 @@ export default function TeamManagementPage() {
                 </div>
             )}
             <TeamMemberModal modalState={modalState} onClose={closeModal} onSave={handleSaveMember} isSaving={actionLoading.modal === 'save'} />
-            <ConfirmationModal isOpen={deleteConfirmState.isOpen} title="Mitglied löschen" message={`Möchten Sie "${deleteConfirmState.member?.name || ''}" wirklich unwiderruflich löschen?`} confirmText="Ja, löschen" onConfirm={handleConfirmDelete} onCancel={handleCancelDelete} isConfirming={isConfirmingDelete} />
+            {/* --- FIX: Escaped quote in message prop --- */}
+            <ConfirmationModal 
+                isOpen={deleteConfirmState.isOpen} 
+                title="Mitglied löschen" 
+                message={`Möchten Sie &quot;${deleteConfirmState.member?.name || ''}&quot; wirklich unwiderruflich löschen?`} 
+                confirmText="Ja, löschen" 
+                onConfirm={handleConfirmDelete} 
+                onCancel={handleCancelDelete} 
+                isConfirming={isConfirmingDelete} 
+            />
         </main>
     );
 }

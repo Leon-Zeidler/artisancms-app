@@ -228,7 +228,7 @@ export default function WelcomeModal({ onClose, isSaving }: WelcomeModalProps) {
             className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400 disabled:bg-orange-800 disabled:cursor-not-allowed"
           >
             {isSaving && <ArrowPathIcon className="h-4 w-4" />}
-            {isSaving ? "Speichern..." : "Verstanden, los geht's!"}
+            {isSaving ? "Speichern..." : "Verstanden, los geht&apos;s!"}
           </button>
         </div>
       </div>

@@ -140,6 +140,8 @@ function ProjectCard({ project }: ProjectCardProps) {
       className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-800/80 transition-transform hover:-translate-y-1 hover:border-orange-500/60 hover:shadow-2xl hover:shadow-orange-900/30"
     >
       <div className="relative">
+        {/* --- FIX: Added eslint-disable for next/image warning --- */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageUrl}
           alt={project.title || 'Projektbild'}
@@ -293,7 +295,8 @@ function EmptyProjectsState() {
     <div className="flex h-full flex-col justify-between rounded-2xl border border-slate-700/70 bg-slate-900/50 p-8">
       <div className="space-y-4">
         <span className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-orange-200">
-          Los geht's
+          {/* --- FIX: Replaced ' with &apos; --- */}
+          Los geht&apos;s
         </span>
         <h2 className="text-2xl font-bold text-white">Ihr Dashboard ist startklar</h2>
         <p className="text-sm text-slate-400">
