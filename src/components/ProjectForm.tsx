@@ -223,7 +223,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
         }
       }
       // --- FIX: Replaced ' with &quot; ---
-      toast.success(`&quot;${type === 'before' ? 'Vorher' : 'Nachher'}&quot; Bild erfolgreich hochgeladen.`);
+      toast.success(`&apos;${type === 'before' ? 'Vorher' : 'Nachher'}&apos; Bild erfolgreich hochgeladen.`);
 
     } catch (error: any) {
       toast.error(error.message || "Fehler beim Upload.");

@@ -255,7 +255,7 @@ export default function OnboardingPage() {
                     onChange={handleSlugChange}
                     required
                     aria-describedby="slug-description slug-status"
-                    style={{ paddingLeft: `${Math.max(60, 'artisancms.app/'.length * 7 + 12)}px` }} 
+                    style={{ paddingLeft: `${Math.max(60, "artisancms.app/".length * 7 + 12)}px` }}
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
                     placeholder="z.b. tischlerei-mustermann"
                  />
