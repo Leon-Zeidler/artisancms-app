@@ -23,9 +23,7 @@ type Project = {
   created_at: string;
 };
 */
-type ProjectCardProps = { project: Project }; // This now uses ProjectCard
-type QuickAction = { name: string; description: string; href: string; icon: React.ElementType; badge?: string };
-type ResourceLink = { name: string; description: string; href: string };
+type ProjectCardProps = { project: Project };
 
 // --- ICON COMPONENTS ---
 // (Icons remain the same)
@@ -57,69 +55,6 @@ const ArrowRightIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
   </svg>
 );
-const RocketLaunchIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M9 19c-1.657 0-3 .672-3 1.5S7.343 22 9 22s3-.672 3-1.5S10.657 19 9 19zm6 0c1.657 0 3 .672 3 1.5S16.657 22 15 22s-3-.672-3-1.5S13.343 19 15 19zm-3-4.5L9 9l6-6 3 3-6 6zm1.5-1.5L21 18M6 21l3-9"
-    />
-  </svg>
-);
-const UsersIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M18 20a4 4 0 00-8 0m8 0v-.5a6.5 6.5 0 00-13 0v.5m8-9a3 3 0 100-6 3 3 0 000 6zm-5 0a3 3 0 100-6 3 3 0 000 6z" />
-  </svg>
-);
-const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z"
-    />
-  </svg>
-);
-// (Rest of the QuickAction/ResourceLink data)
-const quickActions: QuickAction[] = [
-  {
-    name: 'Projekt starten',
-    description: 'Lassen Sie unsere KI eine überzeugende Projektseite erstellen.',
-    href: '/dashboard/projekte/neu',
-    icon: RocketLaunchIcon,
-    badge: 'Empfohlen',
-  },
-  {
-    name: 'Team präsentieren',
-    description: 'Stellen Sie Ihre Expertinnen und Experten auf Ihrer Seite vor.',
-    href: '/dashboard/team',
-    icon: UsersIcon,
-  },
-  {
-    name: 'Branding anpassen',
-    description: 'Logo, Farben und Call-to-Actions für Ihren Auftritt festlegen.',
-    href: '/dashboard/einstellungen#branding',
-    icon: SparklesIcon,
-  },
-];
-
-const resourceLinks: ResourceLink[] = [
-  {
-    name: 'Hilfe-Center',
-    description: 'Antworten auf häufige Fragen und Schritt-für-Schritt-Anleitungen.',
-    href: '/dashboard/hilfe',
-  },
-  {
-    name: 'Kontaktanfragen',
-    description: 'Reagieren Sie schnell auf neue Leads und Kundenfragen.',
-    href: '/dashboard/contact',
-  },
-  {
-    name: 'Feedback geben',
-    description: 'Teilen Sie Ihr Feedback direkt mit dem ArtisanCMS-Team.',
-    href: '/dashboard/admin',
-  },
-];
 
 
 function ProjectCard({ project }: ProjectCardProps) {
@@ -131,28 +66,27 @@ function ProjectCard({ project }: ProjectCardProps) {
       })
     : 'Kein Datum';
   const imageUrl =
-    project.after_image_url || `https://placehold.co/600x400/334155/94a3b8?text=${encodeURIComponent(project.title || 'Projekt')}`;
+    project.after_image_url || `https://placehold.co/600x400/ffedd5/f97316?text=${encodeURIComponent(project.title || 'Projekt')}`;
   const detailUrl = `/dashboard/projekte/${project.id}/edit`;
 
   return (
     <Link
       href={detailUrl}
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-800/80 transition-transform hover:-translate-y-1 hover:border-orange-500/60 hover:shadow-2xl hover:shadow-orange-900/30"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-transform hover:-translate-y-1 hover:border-orange-200 hover:shadow-xl"
     >
       <div className="relative">
-        {/* --- FIX: Added eslint-disable for next/image warning --- */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageUrl}
           alt={project.title || 'Projektbild'}
           className="h-44 w-full object-cover transition duration-500 group-hover:scale-105"
-          onError={(e) => ((e.target as HTMLImageElement).src = 'https://placehold.co/600x400/ef4444/ffffff?text=Image+Error')}
+          onError={(e) => ((e.target as HTMLImageElement).src = 'https://placehold.co/600x400/fef3c7/ea580c?text=Bild+fehlt')}
         />
         <div
           className={`absolute top-3 left-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
             project.status === 'Published'
-              ? 'bg-green-500/20 text-green-300 ring-1 ring-green-500/40'
-              : 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/40'
+              ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200'
+              : 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
           }`}
         >
           <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
@@ -161,12 +95,12 @@ function ProjectCard({ project }: ProjectCardProps) {
       </div>
       <div className="flex flex-1 flex-col justify-between p-5">
         <div>
-          <h3 className="text-lg font-semibold text-white transition group-hover:text-orange-200">
+          <h3 className="text-lg font-semibold text-slate-900 transition group-hover:text-orange-600">
             {project.title || 'Unbenanntes Projekt'}
           </h3>
-          <p className="mt-1 text-sm text-slate-400">{displayDate}</p>
+          <p className="mt-1 text-sm text-slate-500">{displayDate}</p>
         </div>
-        <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange-400">
+        <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange-600">
           Projekt öffnen
           <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
         </span>
@@ -179,139 +113,39 @@ function NewProjectCard() {
   return (
     <Link
       href="/dashboard/projekte/neu"
-      className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-700/70 bg-slate-900/50 text-center transition duration-300 hover:border-orange-500 hover:bg-slate-800/80 hover:text-orange-300"
+      className="flex h-full min-h-[260px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50 text-center text-orange-700 transition duration-300 hover:border-orange-300 hover:bg-orange-100 hover:text-orange-600"
     >
-      <div className="mb-4 rounded-full bg-orange-500/10 p-4 text-orange-300">
+      <div className="mb-4 rounded-full bg-white p-4 shadow-sm shadow-orange-100">
         <PlusIcon className="h-8 w-8" />
       </div>
-      <h3 className="text-lg font-semibold text-white">Neues Projekt</h3>
-      <p className="mt-1 text-sm text-slate-400">Starten Sie mit wenigen Klicks Ihr nächstes Highlight.</p>
+      <h3 className="text-lg font-semibold">Neues Projekt</h3>
+      <p className="mt-1 text-sm text-orange-600">Starten Sie mit wenigen Klicks Ihr nächstes Highlight.</p>
     </Link>
-  );
-}
-// (WelcomeGuide, QuickActionCard, ResourceList, EmptyProjectsState remain the same)
-const WelcomeGuide = () => {
-  const actions = [
-    { name: 'Projekt erstellen', description: 'Beginnen Sie mit Ihrem ersten Referenzprojekt.', href: '/dashboard/projekte/neu' },
-    { name: 'Team einrichten', description: 'Zeigen Sie Kundinnen und Kunden, wer hinter Ihrer Arbeit steckt.', href: '/dashboard/team' },
-    {
-      name: 'Einstellungen prüfen',
-      description: 'Impressum, Datenschutz & Branding eintragen, damit alles bereit für den Launch ist.',
-      href: '/dashboard/einstellungen',
-    },
-  ];
-
-  return (
-    <div className="overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900/60 shadow-lg shadow-slate-900/30">
-      <div className="border-b border-slate-700/60 bg-gradient-to-r from-slate-900 via-slate-900/50 to-orange-900/30 px-6 py-5">
-        <h2 className="text-lg font-semibold text-white">Willkommen bei ArtisanCMS!</h2>
-        <p className="mt-1 text-sm text-slate-400">
-          Folgen Sie diesen Schritten, um Ihre Präsenz zu vervollständigen und die ersten Besucher zu begeistern.
-        </p>
-      </div>
-      <div className="space-y-4 px-6 py-5">
-        {actions.map((action, actionIdx) => (
-          <div
-            key={actionIdx}
-            className="flex items-start gap-4 rounded-xl border border-slate-800/80 bg-slate-800/40 p-4 transition hover:border-orange-500/50 hover:bg-slate-800/80"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/10 text-sm font-semibold text-orange-300">
-              {actionIdx + 1}
-            </div>
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold text-white">{action.name}</h3>
-              <p className="mt-1 text-sm text-slate-400">{action.description}</p>
-            </div>
-            <Link
-              href={action.href}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-900/80 px-3 py-1.5 text-xs font-semibold text-orange-200 ring-1 ring-inset ring-slate-700 hover:bg-orange-500/20"
-            >
-              Starten
-              <ArrowRightIcon className="h-3 w-3" aria-hidden="true" />
-            </Link>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-function QuickActionCard({ name, description, href, icon: Icon, badge }: QuickAction) {
-  return (
-    <Link
-      href={href}
-      className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/40 p-5 transition hover:-translate-y-1 hover:border-orange-500/50 hover:bg-slate-900/70"
-    >
-      <div className="flex items-center justify-between">
-        <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500/10 text-orange-300">
-          <Icon className="h-6 w-6" aria-hidden="true" />
-        </span>
-        {badge && (
-          <span className="rounded-full bg-green-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-green-200">
-            {badge}
-          </span>
-        )}
-      </div>
-      <div>
-        <h3 className="text-base font-semibold text-white transition group-hover:text-orange-200">{name}</h3>
-        <p className="mt-1 text-sm text-slate-400">{description}</p>
-      </div>
-      <span className="mt-auto inline-flex items-center gap-2 text-sm font-semibold text-orange-300">
-        Jetzt öffnen
-        <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-      </span>
-    </Link>
-  );
-}
-
-function ResourceList({ resources }: { resources: ResourceLink[] }) {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900/50">
-      <div className="border-b border-slate-700/60 px-6 py-4">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-300">Ressourcen & Support</h3>
-      </div>
-      <ul className="divide-y divide-slate-800/80">
-        {resources.map((resource) => (
-          <li key={resource.name} className="group">
-            <Link
-              href={resource.href}
-              className="flex items-start justify-between gap-4 px-6 py-4 transition hover:bg-slate-800/60"
-            >
-              <div>
-                <p className="text-sm font-semibold text-white group-hover:text-orange-200">{resource.name}</p>
-                <p className="mt-1 text-sm text-slate-400">{resource.description}</p>
-              </div>
-              <ArrowRightIcon className="mt-1 h-4 w-4 text-slate-500 group-hover:text-orange-300" aria-hidden="true" />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 
 function EmptyProjectsState() {
   return (
-    <div className="flex h-full flex-col justify-between rounded-2xl border border-slate-700/70 bg-slate-900/50 p-8">
+    <div className="flex h-full flex-col justify-between rounded-2xl border border-orange-200 bg-white p-8 shadow-md shadow-orange-100/60">
       <div className="space-y-4">
-        <span className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-orange-200">
+        <span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-orange-600">
           Los geht&apos;s
         </span>
-        <h2 className="text-2xl font-bold text-white">Ihr Dashboard ist startklar</h2>
-        <p className="text-sm text-slate-400">
+        <h2 className="text-2xl font-bold text-slate-900">Ihr Dashboard ist startklar</h2>
+        <p className="text-sm text-slate-600">
           Sie haben noch keine Projekte veröffentlicht. Legen Sie direkt los und zeigen Sie, was Ihr Unternehmen auszeichnet.
         </p>
-        <ul className="mt-6 space-y-3 text-sm text-slate-300">
+        <ul className="mt-6 space-y-3 text-sm text-slate-600">
           <li className="flex items-start gap-3">
-            <CheckBadgeIcon className="mt-0.5 h-5 w-5 text-orange-300" aria-hidden="true" />
+            <CheckBadgeIcon className="mt-0.5 h-5 w-5 text-orange-500" aria-hidden="true" />
             <span>KI-gestützte Texte und Layouts sparen Ihnen wertvolle Zeit.</span>
           </li>
           <li className="flex items-start gap-3">
-            <CheckBadgeIcon className="mt-0.5 h-5 w-5 text-orange-300" aria-hidden="true" />
+            <CheckBadgeIcon className="mt-0.5 h-5 w-5 text-orange-500" aria-hidden="true" />
             <span>Veröffentlichen Sie Projekte mit nur einem Klick auf Ihrer Live-Seite.</span>
           </li>
           <li className="flex items-start gap-3">
-            <CheckBadgeIcon className="mt-0.5 h-5 w-5 text-orange-300" aria-hidden="true" />
+            <CheckBadgeIcon className="mt-0.5 h-5 w-5 text-orange-500" aria-hidden="true" />
             <span>Nutzen Sie das Hilfe-Center für Tipps zur perfekten Präsentation.</span>
           </li>
         </ul>
@@ -319,13 +153,13 @@ function EmptyProjectsState() {
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Link
           href="/dashboard/projekte/neu"
-          className="inline-flex items-center justify-center rounded-full bg-orange-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-900/40 transition hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300"
+          className="inline-flex items-center justify-center rounded-full bg-orange-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200"
         >
           Jetzt erstes Projekt erstellen
         </Link>
         <Link
           href="/dashboard/hilfe"
-          className="inline-flex items-center justify-center rounded-full border border-slate-600 px-6 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-orange-400 hover:text-orange-200"
+          className="inline-flex items-center justify-center rounded-full border border-orange-200 px-6 py-2.5 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:text-orange-500"
         >
           Schritt-für-Schritt-Anleitung ansehen
         </Link>
@@ -399,7 +233,7 @@ export default function DashboardPage() {
   const greeting = currentUser?.email ? currentUser.email.split('@')[0] : 'Artisan';
 
   return (
-    <main className="space-y-10 px-6 py-10 lg:px-10">
+    <main className="space-y-10 bg-gradient-to-b from-orange-50/60 via-white to-white px-6 py-10 lg:px-10">
       <DashboardHero
         eyebrow="Dashboard"
         title={`Willkommen zurück, ${greeting}!`}
@@ -417,7 +251,7 @@ export default function DashboardPage() {
           },
         ]}
       >
-        {currentUser && <p className="text-xs text-slate-400">Angemeldet als: {currentUser.email}</p>}
+        {currentUser && <p className="text-xs text-slate-500">Angemeldet als: {currentUser.email}</p>}
         <div className="grid gap-4 md:grid-cols-3">
           <DashboardStatCard
             title="Alle Projekte"
@@ -445,28 +279,46 @@ export default function DashboardPage() {
         </div>
       </DashboardHero>
 
-      <section className="space-y-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-white">Schnelle Aktionen</h2>
-            <p className="text-sm text-slate-400">Springen Sie direkt zu den beliebtesten Bereichen Ihres Dashboards.</p>
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-orange-100/40">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold text-slate-900">Nächste Schritte</h2>
+            <p className="text-sm text-slate-600">Wählen Sie aus, wie Sie Ihr Dashboard weiter gestalten möchten.</p>
           </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {quickActions.map((action) => (
-            <QuickActionCard key={action.name} {...action} />
-          ))}
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/dashboard/projekte"
+              className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-orange-200 transition hover:bg-orange-400"
+            >
+              Projekte ansehen
+              <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/dashboard/einstellungen#branding"
+              className="inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:text-orange-500"
+            >
+              Branding anpassen
+              <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/dashboard/hilfe"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-orange-200 hover:text-orange-500"
+            >
+              Hilfe-Center öffnen
+              <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </section>
 
       {loading && (
-        <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-10 text-center text-sm text-slate-300">
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-600 shadow-sm">
           Lade Projekte...
         </div>
       )}
 
       {error && !loading && (
-        <div className="rounded-2xl border border-red-500/40 bg-red-900/30 p-6 text-center text-sm text-red-100">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-600">
           {error}
         </div>
       )}
@@ -474,49 +326,36 @@ export default function DashboardPage() {
       {!loading && !error && (
         <section className="space-y-6">
           {hasProjects ? (
-            <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-              <div className="space-y-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">Aktuelle Projekte</h2>
-                    <p className="text-sm text-slate-400">Eine Kurzübersicht Ihrer letzten Aktivitäten.</p>
-                  </div>
-                  <Link
-                    href="/dashboard/projekte"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-orange-300 hover:text-orange-200"
-                  >
-                    Alle Projekte anzeigen
-                    <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-                  </Link>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-orange-100/40">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">Aktuelle Projekte</h2>
+                  <p className="text-sm text-slate-600">Eine Kurzübersicht Ihrer letzten Aktivitäten.</p>
                 </div>
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                  <NewProjectCard />
-                  {projects.slice(0, 5).map((project) => (
-                    <ProjectCard key={project.id} project={project} />
-                  ))}
-                </div>
-
-                {projects.length > 5 && (
-                  <p className="text-center text-xs text-slate-500">
-                    {projects.length - 5} weitere Projekte warten auf Ihre Aufmerksamkeit.
-                  </p>
-                )}
+                <Link
+                  href="/dashboard/projekte"
+                  className="inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:text-orange-500"
+                >
+                  Alle Projekte anzeigen
+                  <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+                </Link>
               </div>
 
-              <div className="space-y-6">
-                <WelcomeGuide />
-                <ResourceList resources={resourceLinks} />
+              <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                <NewProjectCard />
+                {projects.slice(0, 5).map((project) => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
               </div>
+
+              {projects.length > 5 && (
+                <p className="mt-6 text-center text-xs text-slate-500">
+                  {projects.length - 5} weitere Projekte warten auf Ihre Aufmerksamkeit.
+                </p>
+              )}
             </div>
           ) : (
-            <div className="grid gap-6 lg:grid-cols-[1.5fr,1fr]">
-              <EmptyProjectsState />
-              <div className="space-y-6">
-                <WelcomeGuide />
-                <ResourceList resources={resourceLinks} />
-              </div>
-            </div>
+            <EmptyProjectsState />
           )}
         </section>
       )}
