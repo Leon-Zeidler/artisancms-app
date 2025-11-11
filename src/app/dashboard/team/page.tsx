@@ -44,7 +44,7 @@ interface TeamMemberModalProps {
     isSaving: boolean;
 }
 function TeamMemberModal({ modalState, onClose, onSave, isSaving }: TeamMemberModalProps) {
-    // --- FIX: Hooks are now at the top level ---
+    // --- All hooks are now at the top level ---
     const [formData, setFormData] = useState<TeamMemberFormData>(
         modalState.mode === 'edit' && modalState.data
         ? { name: modalState.data.name, role: modalState.data.role ?? '', bio: modalState.data.bio ?? '', display_order: modalState.data.display_order ?? 0, avatar_url: modalState.data.avatar_url, avatar_storage_path: modalState.data.avatar_storage_path }
@@ -55,7 +55,6 @@ function TeamMemberModal({ modalState, onClose, onSave, isSaving }: TeamMemberMo
     const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
 
-    // --- FIX: Added useEffect to reset state when modal opens ---
     useEffect(() => {
         if (modalState.isOpen) {
             if (modalState.mode === 'edit' && modalState.data) {

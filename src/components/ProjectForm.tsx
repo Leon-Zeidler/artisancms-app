@@ -517,32 +517,14 @@ const handleGalleryUpdate = (newGallery: { url: string; path: string; }[]) => {
             <div className="space-y-8 border-b border-slate-700 pb-12">
                   <h2 className="text-xl font-semibold leading-7 text-white">Projekt Galerie</h2>
                    <ProjectGalleryManager
-                    projectId={initialData.id} // <-- Cast removed
-                    userId={currentUser.id}
-                    initialGalleryImages={formData.gallery_images || []}
-                    onGalleryUpdate={(newGallery: { url: string; path: string; }[]) => setFormData(prev => ({ ...prev, gallery_images: newGallery }))}
-                  />
+    projectId={initialData.id} // <-- This is the fix
+    userId={currentUser.id}
+    initialGalleryImages={formData.gallery_images || []}
+    onGalleryUpdate={(newGallery: { url: string; path: string; }[]) => setFormData(prev => ({ ...prev, gallery_images: newGallery }))}
+  />
             </div>
         )}
         
-        {/* --- ADD THIS ENTIRE SECTION --- */}
-        {/* --- Gallery Manager --- */}
-        {initialData?.id && (
-            <div className="space-y-8 border-b border-slate-700 pb-12">
-                  <h2 className="text-xl font-semibold leading-7 text-white">Projekt Galerie</h2>
-                  <p className="mt-1 text-sm text-slate-400">
-                    Fügen Sie hier weitere Bilder hinzu, um Ihr Projekt im Detail zu zeigen.
-                  </p>
-                   <ProjectGalleryManager
-                    // The 'as unknown' cast is necessary because your Project type has id: number
-                    // but the GalleryManager expects a string.
-                    projectId={initialData.id as unknown as string} 
-                    userId={currentUser.id}
-                    initialGalleryImages={formData.gallery_images || []}
-                    onGalleryUpdate={handleGalleryUpdate}
-                  />
-            </div>
-        )}
         {/* --- END OF ADDED SECTION --- */}
 
          {/* --- Private Notes --- */}
