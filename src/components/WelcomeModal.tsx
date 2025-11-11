@@ -76,158 +76,158 @@ export default function WelcomeModal({ onClose, isSaving }: WelcomeModalProps) {
   
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm"
       aria-modal="true"
       role="dialog"
       aria-labelledby="welcome-modal-title"
       onClick={onClose}
     >
       <div
-        className="relative w-[min(92vw,56rem)] sm:w-[min(92vw,64rem)] max-w-3xl bg-slate-800 rounded-lg shadow-xl p-6 sm:p-8 border border-slate-700 max-h-[85vh] flex flex-col"
+        className="relative w-[min(92vw,56rem)] sm:w-[min(92vw,64rem)] max-w-3xl rounded-3xl border border-orange-100 bg-white shadow-2xl shadow-orange-200/50 max-h-[85vh] flex flex-col px-6 py-8 sm:px-8"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={onClose}
           disabled={isSaving}
-          className="absolute right-3 top-3 rounded-md p-2 text-slate-300 hover:bg-slate-700/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400"
+          className="absolute right-4 top-4 rounded-full bg-orange-50 p-2 text-orange-500 transition hover:bg-orange-100 hover:text-orange-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300 disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Modal schließen"
         >
           <XMarkIcon className="h-5 w-5" />
         </button>
         <div className="flex items-start gap-3">
-          <SparklesIcon className="h-8 w-8 text-orange-400 flex-shrink-0" aria-hidden="true" />
+          <SparklesIcon className="h-8 w-8 flex-shrink-0 text-orange-500" aria-hidden="true" />
           <div className="space-y-1">
-            <p className="text-sm font-semibold uppercase tracking-wide text-orange-300/80">
+            <p className="text-sm font-semibold uppercase tracking-wide text-orange-500">
               Willkommen zur ArtisanCMS Beta
             </p>
-            <h2 id="welcome-modal-title" className="text-2xl font-bold text-white">
+            <h2 id="welcome-modal-title" className="text-2xl font-bold text-slate-900">
               So funktioniert&apos;s: Von Null zur Live-Webseite
             </h2>
           </div>
         </div>
 
-        <div className="mt-6 space-y-6 text-slate-300 flex-1 overflow-y-auto pr-2">
+        <div className="mt-6 flex-1 space-y-6 overflow-y-auto pr-2 text-slate-600">
           <p>
             Vielen Dank, dass Sie die Beta-Version testen! Hier ist der empfohlene Weg, um Ihre Webseite
             schnellstmöglich online zu bringen und die wichtigsten Funktionen zu verstehen.
           </p>
 
           {/* --- NEU: Rechtlicher Hinweis --- */}
-          <section aria-labelledby="welcome-modal-legal" className="flex items-start gap-4 p-4 rounded-lg bg-yellow-900/30 border border-yellow-700/70">
-            <ExclamationTriangleIcon className="h-6 w-6 text-yellow-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
+          <section aria-labelledby="welcome-modal-legal" className="flex items-start gap-4 rounded-2xl border border-amber-200 bg-amber-50/80 p-4">
+            <ExclamationTriangleIcon className="mt-0.5 h-6 w-6 flex-shrink-0 text-amber-500" aria-hidden="true" />
             <div>
-              <h3 id="welcome-modal-legal" className="text-lg font-semibold text-white">
+              <h3 id="welcome-modal-legal" className="text-lg font-semibold text-slate-900">
                 Wichtiger Hinweis zur Veröffentlichung
               </h3>
-              <p className="mt-1 text-sm text-yellow-200">
+              <p className="mt-1 text-sm text-slate-600">
                 Ihre Webseite kann erst live geschaltet werden, wenn Sie ein **Impressum** und eine **Datenschutzerklärung**
                 hinterlegt haben. Dies ist eine gesetzliche Anforderung in Deutschland.
               </p>
             </div>
           </section>
 
-          <section aria-labelledby="welcome-modal-steps">
-            <h3 id="welcome-modal-steps" className="text-lg font-semibold text-white">
+          <section aria-labelledby="welcome-modal-steps" className="space-y-4 rounded-2xl border border-orange-100 bg-orange-50/70 p-5">
+            <h3 id="welcome-modal-steps" className="text-lg font-semibold text-slate-900">
               Ihr 4-Schritte-Plan zur Live-Seite
             </h3>
-            <ol className="mt-3 space-y-4 list-decimal list-inside text-sm text-slate-300">
+            <ol className="mt-3 space-y-4 list-decimal list-inside text-sm text-slate-600">
               <li>
-                <strong className="text-white">Stammdaten & Rechtliches eintragen:</strong>
+                <strong className="text-orange-600">Stammdaten & Rechtliches eintragen:</strong>
                 <br />
-                Gehen Sie zu <Link href="/dashboard/einstellungen" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Einstellungen</Link>.
+                Gehen Sie zu <Link href="/dashboard/einstellungen" onClick={onClose} className="text-orange-600 underline hover:text-orange-500">Einstellungen</Link>.
                 {/* --- FIX: Replaced \` with &apos; --- */}
                 Füllen Sie unter &apos;Firmendaten&apos; Ihren Namen und Ihre Adresse aus und hinterlegen Sie Ihre Texte für &apos;Impressum&apos; sowie &apos;Datenschutz&apos;.
               </li>
               <li>
-                <strong className="text-white">Branding & Farben festlegen:</strong>
+                <strong className="text-orange-600">Branding & Farben festlegen:</strong>
                 <br />
-                Personalisieren Sie unter <Link href="/dashboard/einstellungen#branding" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Branding</Link>
+                Personalisieren Sie unter <Link href="/dashboard/einstellungen#branding" onClick={onClose} className="text-orange-600 underline hover:text-orange-500">Branding</Link>
                 Ihr Logo, Farbschema und den Call-to-Action. So fühlt sich Ihre Seite sofort wie Ihr Unternehmen an.
               </li>
               <li>
-                <strong className="text-white">Erstes Projekt mit AI erstellen:</strong>
+                <strong className="text-orange-600">Erstes Projekt mit AI erstellen:</strong>
                 <br />
-                Gehen Sie zu <Link href="/dashboard/projekte" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Projekte</Link> und klicken Sie auf &apos;Neues Projekt&apos;.
+                Gehen Sie zu <Link href="/dashboard/projekte" onClick={onClose} className="text-orange-600 underline hover:text-orange-500">Projekte</Link> und klicken Sie auf &apos;Neues Projekt&apos;.
                 Laden Sie ein &quot;Nachher-Bild&quot; hoch – unsere KI schreibt automatisch eine passende Beschreibung. Setzen Sie den Status auf &quot;Veröffentlicht&quot; und speichern Sie.
               </li>
               <li>
-                <strong className="text-white">Webseite veröffentlichen:</strong>
+                <strong className="text-orange-600">Webseite veröffentlichen:</strong>
                 <br />
-                Aktivieren Sie unter <Link href="/dashboard/einstellungen#sicherheit" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Gefahrenzone</Link>
+                Aktivieren Sie unter <Link href="/dashboard/einstellungen#sicherheit" onClick={onClose} className="text-orange-600 underline hover:text-orange-500">Gefahrenzone</Link>
                 {/* --- FIX: Replaced \` with &apos; --- */}
                 den Schalter &apos;Website veröffentlichen&apos;. Fertig – Ihre Seite ist live!
               </li>
             </ol>
           </section>
 
-          <section aria-labelledby="welcome-modal-highlights" className="rounded-lg border border-slate-700/70 bg-slate-800/60 p-5">
-            <h3 id="welcome-modal-highlights" className="text-lg font-semibold text-white">
+          <section aria-labelledby="welcome-modal-highlights" className="rounded-2xl border border-orange-100 bg-white/90 p-5 shadow-sm shadow-orange-100/50">
+            <h3 id="welcome-modal-highlights" className="text-lg font-semibold text-slate-900">
               Drei Highlights, die Sie ausprobieren sollten
             </h3>
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-lg border border-slate-700/70 bg-slate-900/40 p-4">
-                <div className="flex items-center gap-2 text-orange-300">
+              <div className="rounded-xl border border-orange-100 bg-orange-50/80 p-4">
+                <div className="flex items-center gap-2 text-orange-600">
                   <PaintBrushIcon className="h-5 w-5" aria-hidden="true" />
                   <span className="text-sm font-semibold">Design verfeinern</span>
                 </div>
-                <p className="mt-2 text-xs text-slate-300">
+                <p className="mt-2 text-xs text-slate-600">
                   Individualisieren Sie Schriftarten, Farben und Buttons, damit jede Unterseite Ihren Markenauftritt widerspiegelt.
                 </p>
               </div>
-              <div className="rounded-lg border border-slate-700/70 bg-slate-900/40 p-4">
-                <div className="flex items-center gap-2 text-orange-300">
+              <div className="rounded-xl border border-orange-100 bg-orange-50/80 p-4">
+                <div className="flex items-center gap-2 text-orange-600">
                   <MegaphoneIcon className="h-5 w-5" aria-hidden="true" />
                   <span className="text-sm font-semibold">Kundenstimmen sammeln</span>
                 </div>
-                <p className="mt-2 text-xs text-slate-300">
-                  Aktivieren Sie unter <Link href="/dashboard/testimonials" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Kundenstimmen</Link>
+                <p className="mt-2 text-xs text-slate-600">
+                  Aktivieren Sie unter <Link href="/dashboard/testimonials" onClick={onClose} className="text-orange-600 underline hover:text-orange-500">Kundenstimmen</Link>
                   Ihr Bewertungsformular und veröffentlichen Sie Referenzen direkt mit einem Klick.
                 </p>
               </div>
-              <div className="rounded-lg border border-slate-700/70 bg-slate-900/40 p-4">
-                <div className="flex items-center gap-2 text-orange-300">
+              <div className="rounded-xl border border-orange-100 bg-orange-50/80 p-4">
+                <div className="flex items-center gap-2 text-orange-600">
                   <LifebuoyIcon className="h-5 w-5" aria-hidden="true" />
                   <span className="text-sm font-semibold">Support erreichen</span>
                 </div>
-                <p className="mt-2 text-xs text-slate-300">
-                  In <Link href="/dashboard/hilfe" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Dashboard &gt; Hilfe</Link>
+                <p className="mt-2 text-xs text-slate-600">
+                  In <Link href="/dashboard/hilfe" onClick={onClose} className="text-orange-600 underline hover:text-orange-500">Dashboard &gt; Hilfe</Link>
                   finden Sie Anleitungen, Video-Shortcuts und direkte Kontaktmöglichkeiten zum Produktteam.
                 </p>
               </div>
             </div>
           </section>
 
-          <section aria-labelledby="welcome-modal-feedback" className="rounded-lg border border-slate-700/70 bg-slate-800/60 p-5">
-            <h3 id="welcome-modal-feedback" className="text-lg font-semibold text-white">
+          <section aria-labelledby="welcome-modal-feedback" className="rounded-2xl border border-orange-100 bg-white/90 p-5 shadow-sm shadow-orange-100/50">
+            <h3 id="welcome-modal-feedback" className="text-lg font-semibold text-slate-900">
               Feedback & Austausch
             </h3>
-            <p className="mt-2 text-sm text-slate-300">
+            <p className="mt-2 text-sm text-slate-600">
               Nutzen Sie jederzeit den **Feedback-Button (unten rechts)**, wenn etwas nicht funktioniert, Sie eine Idee haben oder etwas unklar ist.
             </p>
-            <ul className="mt-4 space-y-2 text-xs text-slate-300">
+            <ul className="mt-4 space-y-2 text-xs text-slate-600">
               <li className="flex items-start gap-2">
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-orange-400" aria-hidden="true" />
+                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-orange-500" aria-hidden="true" />
                 Teilen Sie uns Bugs und Funktionswünsche direkt über das Formular mit – wir reagieren innerhalb von 24 Stunden.
               </li>
               <li className="flex items-start gap-2">
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-orange-400" aria-hidden="true" />
-                Besuchen Sie <Link href="/dashboard/admin" onClick={onClose} className="text-orange-400 underline hover:text-orange-300">Dashboard &gt; Feedback</Link>,
+                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-orange-500" aria-hidden="true" />
+                Besuchen Sie <Link href="/dashboard/admin" onClick={onClose} className="text-orange-600 underline hover:text-orange-500">Dashboard &gt; Feedback</Link>,
                 um den aktuellen Status Ihrer Meldungen einzusehen.
               </li>
             </ul>
           </section>
         </div>
 
-        <div className="mt-6 border-t border-slate-700 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <p className="text-xs text-slate-400">
-            Sie können diese Anleitung jederzeit über <Link href="/dashboard/hilfe" onClick={onClose} className="underline hover:text-white">Dashboard &gt; Hilfe</Link> erneut öffnen.
+        <div className="mt-6 flex flex-col gap-4 border-t border-orange-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-slate-500">
+            Sie können diese Anleitung jederzeit über <Link href="/dashboard/hilfe" onClick={onClose} className="font-semibold text-orange-600 underline-offset-2 hover:text-orange-500 hover:underline">Dashboard &gt; Hilfe</Link> erneut öffnen.
           </p>
           <button
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400 disabled:bg-orange-800 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-x-2 rounded-full bg-orange-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200 disabled:cursor-not-allowed disabled:bg-orange-300"
           >
             {isSaving && <ArrowPathIcon className="h-4 w-4" />}
             {/* --- FIX: Replaced ' with &apos; --- */}

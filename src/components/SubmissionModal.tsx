@@ -52,66 +52,66 @@ export default function SubmissionModal({
   const mailtoHref = `mailto:${item.sender_email}?subject=${mailtoSubject}&body=${mailtoBody}`;
 
   return (
-    <div 
-      className="fixed inset-0 z-[55] bg-black/60 backdrop-blur-sm flex items-center justify-center"
+    <div
+      className="fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm flex items-center justify-center"
       onClick={onClose}
       aria-modal="true"
     >
       <div
-        className="relative z-[60] w-full max-w-2xl rounded-lg bg-slate-800 shadow-xl border border-slate-700"
-        onClick={(e) => e.stopPropagation()} 
+        className="relative z-[60] w-full max-w-2xl rounded-3xl border border-orange-100 bg-white shadow-2xl shadow-orange-200/40"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-slate-700 p-4">
+        <div className="flex items-start justify-between border-b border-orange-100 px-6 py-5">
           <div>
-            <h3 className="text-lg font-semibold text-white">Kontaktanfrage</h3>
-            <p className="text-sm text-slate-400">
+            <h3 className="text-lg font-semibold text-slate-900">Kontaktanfrage</h3>
+            <p className="text-sm text-slate-500">
               Gesendet am: {new Date(item.created_at).toLocaleString('de-DE')}
             </p>
           </div>
           <button
             onClick={onClose}
             disabled={isDrafting}
-            className="text-slate-400 hover:text-white disabled:opacity-50"
+            className="rounded-full bg-orange-50 p-1.5 text-orange-500 transition hover:bg-orange-100 hover:text-orange-600 disabled:opacity-50"
             aria-label="Close modal"
           >
             <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
-        
-        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+
+        <div className="max-h-[70vh] space-y-5 overflow-y-auto px-6 py-6">
           {/* Sender Details */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex items-center gap-2 p-3 bg-slate-700/50 rounded-lg flex-1">
-              <UserIcon className="h-5 w-5 text-slate-400" />
-              <span className="text-sm text-white">{item.sender_name}</span>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex flex-1 items-center gap-2 rounded-xl border border-orange-100 bg-orange-50/60 px-4 py-3">
+              <UserIcon className="h-5 w-5 text-orange-500" />
+              <span className="text-sm font-medium text-slate-800">{item.sender_name}</span>
             </div>
-            <div className="flex items-center gap-2 p-3 bg-slate-700/50 rounded-lg flex-1">
-              <EnvelopeIcon className="h-5 w-5 text-slate-400" />
-              <a href={`mailto:${item.sender_email}`} className="text-sm text-orange-400 hover:underline">
+            <div className="flex flex-1 items-center gap-2 rounded-xl border border-orange-100 bg-orange-50/60 px-4 py-3">
+              <EnvelopeIcon className="h-5 w-5 text-orange-500" />
+              <a href={`mailto:${item.sender_email}`} className="text-sm font-medium text-orange-600 transition hover:text-orange-500 hover:underline">
                 {item.sender_email}
               </a>
             </div>
           </div>
-          
+
           {/* Message Body */}
           <div>
-            <label className="text-xs font-medium text-slate-500">Nachricht</label>
-            <div className="mt-1 p-4 bg-slate-900 rounded-md border border-slate-700">
-              <p className="text-sm text-slate-200 whitespace-pre-wrap">{item.message}</p>
+            <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">Nachricht</label>
+            <div className="mt-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm shadow-orange-100/40">
+              <p className="text-sm leading-6 text-slate-700 whitespace-pre-wrap">{item.message}</p>
             </div>
           </div>
-          
+
           {/* --- AI Draft Section --- */}
-          <div className="border-t border-slate-700 pt-4">
-            <div className="flex justify-between items-center mb-2">
-              <label htmlFor="aiDraft" className="text-sm font-medium text-slate-300">
+          <div className="border-t border-orange-100 pt-4">
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <label htmlFor="aiDraft" className="text-sm font-semibold text-slate-800">
                 AI-Antwortentwurf
               </label>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={handleDraftClick}
                 disabled={isDrafting}
-                className="inline-flex items-center gap-x-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-x-1.5 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:bg-orange-300"
               >
                 {isDrafting ? <ArrowPathIcon className="h-4 w-4" /> : <SparklesIcon className="h-4 w-4" />}
                 {isDrafting ? 'Entwurf wird erstellt...' : 'Antwort entwerfen'}
@@ -122,16 +122,16 @@ export default function SubmissionModal({
               rows={6}
               value={aiDraft || ''}
               readOnly
-              className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-slate-300 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
               placeholder={isDrafting ? 'AI denkt nach...' : "Klicken Sie auf 'Antwort entwerfen', um einen Vorschlag zu generieren..."}
             />
             {/* --- 3. MODIFIED BUTTONS --- */}
             {aiDraft && (
-              <div className="mt-2 flex items-center gap-x-4">
+              <div className="mt-3 flex flex-wrap items-center gap-4 text-xs font-medium">
                 <button
                   type="button"
                   onClick={handleCopyToClipboard}
-                  className="text-xs text-orange-400 hover:text-orange-300 font-medium"
+                  className="text-orange-600 underline-offset-2 transition hover:text-orange-500 hover:underline"
                 >
                   In Zwischenablage kopieren
                 </button>
@@ -139,7 +139,7 @@ export default function SubmissionModal({
                   href={mailtoHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-x-1 text-xs text-green-400 hover:text-green-300 font-medium"
+                  className="inline-flex items-center gap-1 text-emerald-600 transition hover:text-emerald-500"
                 >
                   In E-Mail-Programm öffnen
                   <ArrowTopRightOnSquareIcon className="h-3 w-3" />
@@ -148,15 +148,15 @@ export default function SubmissionModal({
             )}
             {/* --- END OF MODIFICATION --- */}
           </div>
-          
+
         </div>
-        
-        <div className="flex justify-end gap-3 border-t border-slate-700 p-4 bg-slate-800/50 rounded-b-lg">
+
+        <div className="flex justify-end gap-3 rounded-b-3xl border-t border-orange-100 bg-orange-50/60 px-6 py-4">
           <button
             type="button"
             onClick={onClose}
             disabled={isDrafting}
-            className="rounded-md bg-slate-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-600 disabled:opacity-50"
+            className="rounded-full px-5 py-2 text-sm font-semibold text-slate-600 transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Schließen
           </button>
