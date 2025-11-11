@@ -55,40 +55,40 @@ function TestimonialCard({
   const isDisabled = isToggling || isDeleting;
 
   return (
-    <div className="bg-slate-800 rounded-lg border border-slate-700 shadow-md divide-y divide-slate-700">
+    <div className="divide-y divide-orange-100 rounded-2xl border border-orange-100 bg-white/90 shadow-lg shadow-orange-100/40">
       <div className="p-5">
-        <div className="flex justify-between items-start">
+        <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-white">{author_name || 'Anonym'}</h3>
-            <p className="text-sm text-slate-400">
-              Für Projekt: <span className="font-medium text-slate-300">{projectName}</span>
+            <h3 className="text-lg font-semibold text-slate-900">{author_name || 'Anonym'}</h3>
+            <p className="text-sm text-slate-500">
+              Für Projekt: <span className="font-medium text-slate-700">{projectName}</span>
             </p>
           </div>
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
             is_published // Logik angepasst
-              ? 'bg-green-500/20 text-green-400'
-              : 'bg-yellow-500/20 text-yellow-400'
+              ? 'bg-emerald-100 text-emerald-700'
+              : 'bg-amber-100 text-amber-700'
           }`}>
             {is_published ? 'Veröffentlicht' : 'Eingegangen'}
           </span>
         </div>
-        
+
         {/* RatingDisplay entfernt */}
-        
-        <p className="mt-4 text-slate-300 italic">&quot;{body || 'Kein Inhalt'}&quot;</p>
+
+        <p className="mt-4 text-sm italic text-slate-600">&quot;{body || 'Kein Inhalt'}&quot;</p>
         <p className="mt-3 text-xs text-slate-500">Eingegangen am: {receivedDate}</p>
       </div>
-      <div className="p-4 flex justify-end space-x-3 bg-slate-800/50 rounded-b-lg">
+      <div className="flex justify-end gap-3 rounded-b-2xl bg-orange-50/60 p-4">
         <button
           onClick={() => onStatusToggle(testimonial)}
           disabled={isDisabled}
           title={is_published ? 'Verbergen' : 'Veröffentlichen'}
-          className={`inline-flex items-center gap-x-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+          className={`inline-flex items-center gap-x-1.5 rounded-full px-3 py-2 text-sm font-semibold transition-colors ${
             isDisabled
-              ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
               : is_published // Logik angepasst
-              ? 'bg-yellow-600/20 text-yellow-300 hover:bg-yellow-500/30'
-              : 'bg-green-600/20 text-green-300 hover:bg-green-500/30'
+              ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+              : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
           }`}
         >
           {isToggling ? (
@@ -104,10 +104,10 @@ function TestimonialCard({
           onClick={() => onDeleteRequest(testimonial)}
           disabled={isDisabled}
           title="Löschen"
-          className={`inline-flex items-center gap-x-1.5 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+          className={`inline-flex items-center gap-x-1.5 rounded-full px-3 py-2 text-sm font-semibold transition-colors ${
             isDisabled
-              ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-              : 'bg-red-600/20 text-red-300 hover:bg-red-500/30'
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              : 'bg-red-100 text-red-600 hover:bg-red-200'
           }`}
         >
           {isDeleting ? (
@@ -268,20 +268,20 @@ export default function TestimonialsPage() {
 
   // --- Render Logic (Unverändert) ---
   return (
-    <main className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <main className="space-y-10 px-6 py-10 lg:px-10">
+      <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Kundenstimmen</h1>
-          <p className="text-slate-400 mt-1">Verwalten Sie hier alle erhaltenen Kundenbewertungen.</p>
+          <h1 className="text-3xl font-bold text-slate-900">Kundenstimmen</h1>
+          <p className="mt-1 text-slate-600">Verwalten Sie hier alle erhaltenen Kundenbewertungen.</p>
         </div>
       </div>
 
       {loading && (
-        <p className="text-slate-400 mt-6 text-center">Lade Kundenstimmen...</p>
+        <p className="mt-6 text-center text-sm text-slate-500">Lade Kundenstimmen...</p>
       )}
 
       {error && !loading && (
-        <p className="text-red-500 mt-6 text-center">{error}</p>
+        <p className="mt-6 text-center text-sm text-red-600">{error}</p>
       )}
 
       {!loading && !error && testimonials.length === 0 && (

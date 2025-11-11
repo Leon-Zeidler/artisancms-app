@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useState, useEffect, useRef, useMemo } from 'react'; 
+import React, { useState, useEffect, useMemo } from 'react';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js'; 
 import { Toaster, toast } from 'react-hot-toast';
@@ -57,20 +57,8 @@ const ArrowLeftOnRectangleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <sv
 // --- ENDE KORRIGIERTE ICONS ---
 
 
-// --- Adaptive color helpers ---
-function parseRgb(input: string): { r: number; g: number; b: number } | null {
-  const m = input.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
-  if (!m) return null;
-  return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]) };
-}
-function isDarkFromRGB(rgb: { r: number; g: number; b: number }): boolean {
-  const { r, g, b } = rgb;
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  return brightness < 128;
-}
-
 // --- SIDEBAR COMPONENTS ---
-function Sidebar({ user, userSlug, isAdmin, isDarkBg }: { user: User | null, userSlug: string | null, isAdmin: boolean, isDarkBg: boolean }) {
+function Sidebar({ user, userSlug, isAdmin }: { user: User | null; userSlug: string | null; isAdmin: boolean }) {
   const pathname = usePathname();
   const router = useRouter(); // <-- HINZUGEFÜGT
   const supabase = useMemo(() => createSupabaseClient(), []); // <-- HINZUGEFÜGT
@@ -90,65 +78,68 @@ function Sidebar({ user, userSlug, isAdmin, isDarkBg }: { user: User | null, use
   // --- ENDE HINZUGEFÜGTE FUNKTION ---
 
   const baseClasses = "flex items-center p-4 text-base font-normal rounded-lg transition duration-75 group w-full";
-  const activeClasses = "bg-orange-600 text-white shadow-lg";
-  const inactiveClasses = isDarkBg
-    ? "text-slate-300 hover:bg-slate-700 hover:text-white"
-    : "text-slate-700 hover:bg-slate-100 hover:text-slate-900";
+  const activeClasses = "bg-orange-500 text-white shadow-lg shadow-orange-200";
+  const inactiveClasses = "text-slate-600 hover:bg-orange-50 hover:text-orange-600";
 
   const isDisabled = false; 
 
   return (
-    <aside className={`w-64 flex-shrink-0 p-4 relative ${isDarkBg ? 'bg-slate-800' : 'bg-white border-r border-slate-200'}`}>
+    <aside className="relative w-64 flex-shrink-0 border-r border-slate-200 bg-white/80 px-5 py-6 backdrop-blur supports-[backdrop-filter]:bg-white/70">
       <div className="flex items-center mb-8">
-        <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md"> 
-          <DashboardIcon className="h-6 w-6 text-white"/> 
+        <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md">
+          <DashboardIcon className="h-6 w-6 text-white"/>
         </div>
-        <div className="ml-3"> 
-          <h1 className={`text-lg font-bold ${isDarkBg ? 'text-white' : 'text-slate-900'}`}>ArtisanCMS</h1> 
-          <p className={`text-xs ${isDarkBg ? 'text-slate-400' : 'text-slate-500'}`}>Projektverwaltung</p> 
+        <div className="ml-3">
+          <h1 className="text-lg font-bold text-slate-900">ArtisanCMS</h1>
+          <p className="text-xs text-slate-500">Projektverwaltung</p>
         </div>
       </div>
       <nav className="space-y-2">
-        <SidebarLink icon={DashboardIcon} text="Dashboard" href="/dashboard" active={pathname === '/dashboard'} isDarkBg={isDarkBg} />
-        <SidebarLink icon={ProjectsIcon} text="Projekte" href="/dashboard/projekte" active={pathname?.startsWith('/dashboard/projekte')} isDarkBg={isDarkBg} />
-        <SidebarLink icon={UserGroupIcon} text="Team / Über Uns" href="/dashboard/team" active={pathname === '/dashboard/team'} isDarkBg={isDarkBg} />
-        <SidebarLink icon={ChatBubbleLeftRightIcon} text="Kundenstimmen" href="/dashboard/testimonials" active={pathname === '/dashboard/testimonials'} isDarkBg={isDarkBg} />
-        <SidebarLink icon={InboxIcon} text="Kontaktanfragen" href="/dashboard/contact" active={pathname === '/dashboard/contact'} isDarkBg={isDarkBg} />
-        <SidebarLink icon={SettingsIcon} text="Einstellungen" href="/dashboard/einstellungen" active={pathname === '/dashboard/einstellungen'} isDarkBg={isDarkBg} />
-         
-         <div className="pt-4 mt-4 border-t border-slate-700">
+        <SidebarLink icon={DashboardIcon} text="Dashboard" href="/dashboard" active={pathname === '/dashboard'} />
+        <SidebarLink icon={ProjectsIcon} text="Projekte" href="/dashboard/projekte" active={pathname?.startsWith('/dashboard/projekte')} />
+        <SidebarLink icon={UserGroupIcon} text="Team / Über Uns" href="/dashboard/team" active={pathname === '/dashboard/team'} />
+        <SidebarLink icon={ChatBubbleLeftRightIcon} text="Kundenstimmen" href="/dashboard/testimonials" active={pathname === '/dashboard/testimonials'} />
+        <SidebarLink icon={InboxIcon} text="Kontaktanfragen" href="/dashboard/contact" active={pathname === '/dashboard/contact'} />
+        <SidebarLink icon={SettingsIcon} text="Einstellungen" href="/dashboard/einstellungen" active={pathname === '/dashboard/einstellungen'} />
+
+         <div className="mt-6 border-t border-slate-200 pt-6">
              <SidebarLink
                 icon={ArrowTopRightOnSquareIcon}
                 text="Meine Webseite"
                 href={websiteHref}
                 isExternal={true}
-                isDarkBg={isDarkBg}
              />
          </div>
          {isAdmin && (
-           <div className="pt-4 mt-4 border-t border-slate-700">
+           <div className="mt-4 border-t border-slate-200 pt-4">
              <SidebarLink
                 icon={LockClosedIcon}
                 text="Admin"
                 href="/dashboard/admin"
                 active={pathname === '/dashboard/admin'}
-                isDarkBg={isDarkBg}
              />
            </div>
          )}
       </nav>
       {user && (
-          <div className="absolute bottom-0 left-0 w-64 p-4">
+          <div className="absolute bottom-0 left-0 w-64 px-5 pb-6">
             {/* --- AKTUALISIERTER BLOCK MIT SIGN OUT BUTTON --- */}
-            <div className={`p-3 rounded-lg flex items-center ${isDarkBg ? 'bg-slate-900' : 'bg-slate-100'}`}>
-                <div className="flex-shrink-0"> <div className="h-10 w-10 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white"> {user.email ? user.email.charAt(0).toUpperCase() : '?'} </div> </div>
-                <div className="ml-3 flex-1 min-w-0"> <p className="text-sm font-semibold truncate" style={{color: isDarkBg ? 'white' : 'inherit'}}> {user.email || 'Benutzer'} </p> <p className={`text-xs truncate ${isDarkBg ? 'text-slate-400' : 'text-slate-600'}`}>Angemeldet</p> </div>
-                
+            <div className="flex items-center rounded-xl bg-orange-50/80 p-3 shadow-inner shadow-orange-100">
+                <div className="flex-shrink-0">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 font-bold text-white">
+                    {user.email ? user.email.charAt(0).toUpperCase() : '?'}
+                  </div>
+                </div>
+                <div className="ml-3 min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-slate-900">{user.email || 'Benutzer'}</p>
+                  <p className="text-xs text-slate-500">Angemeldet</p>
+                </div>
+
                 {/* --- NEUER BUTTON --- */}
-                <button 
-                  onClick={handleSignOut} 
-                  title="Abmelden" 
-                  className={`ml-2 flex-shrink-0 rounded-md p-2 transition-colors ${isDarkBg ? 'text-slate-400 hover:bg-slate-700 hover:text-white' : 'text-slate-500 hover:bg-slate-200 hover:text-slate-800'}`}
+                <button
+                  onClick={handleSignOut}
+                  title="Abmelden"
+                  className="ml-2 flex-shrink-0 rounded-md p-2 text-orange-500 transition-colors hover:bg-orange-100 hover:text-orange-600"
                 >
                   <span className="sr-only">Abmelden</span>
                   <ArrowLeftOnRectangleIcon className="h-5 w-5" />
@@ -164,12 +155,10 @@ function Sidebar({ user, userSlug, isAdmin, isDarkBg }: { user: User | null, use
 }
 
 // ... (SidebarLink component remains unchanged) ...
-function SidebarLink({ icon: Icon, text, href, active = false, isExternal = false, isDarkBg = true }: SidebarLinkProps & { isDarkBg?: boolean }) {
+function SidebarLink({ icon: Icon, text, href, active = false, isExternal = false }: SidebarLinkProps) {
   const baseClasses = "flex items-center p-4 text-base font-normal rounded-lg transition duration-75 group w-full";
-  const activeClasses = "bg-orange-600 text-white shadow-lg";
-  const inactiveClasses = isDarkBg
-    ? "text-slate-300 hover:bg-slate-700 hover:text-white"
-    : "text-slate-700 hover:bg-slate-100 hover:text-slate-900";
+  const activeClasses = "bg-orange-500 text-white shadow-lg shadow-orange-200";
+  const inactiveClasses = "text-slate-600 hover:bg-orange-50 hover:text-orange-600";
 
   const isDisabled = !href;
 
@@ -187,7 +176,7 @@ function SidebarLink({ icon: Icon, text, href, active = false, isExternal = fals
             <Icon className="h-6 w-6" />
             <span className="ml-3 text-left">{text}</span>
         </span>
-        <ArrowTopRightOnSquareIcon className={`h-4 w-4 ${isDarkBg ? 'text-slate-500 group-hover:text-slate-300' : 'text-slate-400 group-hover:text-slate-600'}`} />
+        <ArrowTopRightOnSquareIcon className="h-4 w-4 text-slate-400 transition-colors group-hover:text-orange-500" />
       </a>
     );
   }
@@ -221,9 +210,6 @@ export default function DashboardLayout({
   const [isAdmin, setIsAdmin] = useState(false); 
   const router = useRouter(); 
   const pathname = usePathname(); 
-
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const [isDarkBg, setIsDarkBg] = useState(true);
 
   useEffect(() => { 
     let isMounted = true;
@@ -284,14 +270,6 @@ export default function DashboardLayout({
 
   }, [router, pathname, supabase.auth]); 
 
-  useEffect(() => {
-    if (!rootRef.current) return;
-    const cs = getComputedStyle(rootRef.current);
-    const bg = cs.backgroundColor; // e.g., rgb(15, 23, 42) or rgba(...)
-    const rgb = parseRgb(bg);
-    if (rgb) setIsDarkBg(isDarkFromRGB(rgb));
-  }, [rootRef]);
-
   const handleCloseWelcomeModal = async () => {
     if (!user) return;
     setIsClosingModal(true);
@@ -323,26 +301,42 @@ export default function DashboardLayout({
   };
 
   if (loadingProfile) {
-      return ( <div className="flex h-screen items-center justify-center bg-slate-900 text-white"> Lade Daten... </div> );
+      return ( <div className="flex h-screen items-center justify-center bg-gradient-to-br from-orange-100 via-white to-slate-100 text-slate-600"> Lade Daten... </div> );
   }
 
   return (
-    <div
-      ref={rootRef}
-      className={`flex h-screen ${isDarkBg ? 'text-white' : 'text-slate-900'}`}
-      style={{ backgroundColor: 'var(--dashboard-bg, #0f172a)' }}
-    >
-      <Toaster position="bottom-right" toastOptions={{ className: '', duration: 5000, style: { background: '#334155', color: '#fff', border: '1px solid #475569', }, success: { duration: 3000, iconTheme: { primary: '#22c55e', secondary: '#fff' }, }, error: { duration: 6000, iconTheme: { primary: '#ef4444', secondary: '#fff' }, }, }} />
-      <FeedbackWidget /> 
-      
+    <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-slate-50 text-slate-900">
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          className: '',
+          duration: 4000,
+          style: {
+            background: '#ffffff',
+            color: '#0f172a',
+            border: '1px solid #f97316',
+            boxShadow: '0 20px 45px -20px rgba(249, 115, 22, 0.35)',
+          },
+          success: {
+            duration: 2500,
+            iconTheme: { primary: '#22c55e', secondary: '#fff' },
+          },
+          error: {
+            duration: 6000,
+            iconTheme: { primary: '#ef4444', secondary: '#fff' },
+          },
+        }}
+      />
+      <FeedbackWidget />
+
       {showWelcomeModal && (
-        <WelcomeModal 
-          onClose={handleCloseWelcomeModal} 
-          isSaving={isClosingModal} 
+        <WelcomeModal
+          onClose={handleCloseWelcomeModal}
+          isSaving={isClosingModal}
         />
       )}
-      
-      <Sidebar user={user} userSlug={userSlug} isAdmin={isAdmin} isDarkBg={isDarkBg} />
+
+      <Sidebar user={user} userSlug={userSlug} isAdmin={isAdmin} />
       <div className="flex-1 overflow-y-auto">
         {children}
       </div>

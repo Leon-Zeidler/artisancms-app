@@ -217,13 +217,13 @@ export default function ContactInboxPage() {
       </DashboardHero>
 
       {loading && (
-        <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-10 text-center text-sm text-slate-300">
+        <div className="rounded-2xl border border-orange-100 bg-white p-10 text-center text-sm text-slate-600 shadow-lg shadow-orange-100/40">
           Lade Anfragen...
         </div>
       )}
 
       {error && !loading && (
-        <div className="rounded-2xl border border-red-500/40 bg-red-900/30 p-6 text-center text-sm text-red-100">{error}</div>
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">{error}</div>
       )}
 
       {!loading && !error && (
@@ -234,14 +234,14 @@ export default function ContactInboxPage() {
                 <button
                   key={item.id}
                   onClick={() => handleOpenModal(item)}
-                  className="group flex w-full flex-col gap-3 rounded-2xl border border-slate-700/70 bg-slate-800/70 p-5 text-left transition hover:-translate-y-0.5 hover:border-orange-500/60 hover:bg-slate-800/90 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-300"
+                  className="group flex w-full flex-col gap-3 rounded-2xl border border-orange-100 bg-white/90 p-5 text-left shadow-sm shadow-orange-100 transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-300"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-white">
-                      <EnvelopeIcon className="h-4 w-4 text-orange-300" />
+                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+                      <EnvelopeIcon className="h-4 w-4 text-orange-500" />
                       {item.sender_name}
                     </span>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-500">
                       {new Date(item.created_at).toLocaleDateString('de-DE', {
                         day: '2-digit',
                         month: '2-digit',
@@ -251,8 +251,8 @@ export default function ContactInboxPage() {
                       })}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-300 line-clamp-2">{item.message}</p>
-                  <span className="inline-flex items-center gap-2 text-xs font-semibold text-orange-300">
+                  <p className="text-sm text-slate-600 line-clamp-2">{item.message}</p>
+                  <span className="inline-flex items-center gap-2 text-xs font-semibold text-orange-500">
                     {item.sender_email}
                   </span>
                 </button>
@@ -269,24 +269,24 @@ export default function ContactInboxPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900/60">
-              <div className="border-b border-slate-800/70 bg-gradient-to-r from-slate-900 via-slate-900/60 to-orange-900/30 px-5 py-4">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-200">Antwort-Tipps</h2>
+            <div className="overflow-hidden rounded-2xl border border-orange-100 bg-white/90 shadow-lg shadow-orange-100/40">
+              <div className="border-b border-orange-100 bg-gradient-to-r from-orange-50 via-white to-orange-100 px-5 py-4">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-orange-600">Antwort-Tipps</h2>
               </div>
-              <div className="space-y-3 px-5 py-4 text-sm text-slate-300">
+              <div className="space-y-3 px-5 py-4 text-sm text-slate-600">
                 <p>Nutzen Sie den KI-Entwurf im Nachrichtendialog, um schnell eine freundliche Antwort zu formulieren.</p>
                 <p>Verlinken Sie in Ihrer Antwort direkt auf relevante Projekte oder Testimonials, um Vertrauen zu stärken.</p>
                 <p>Aktualisieren Sie Ihre Kontaktzeiten im Impressum, damit Anfragende wissen, wann sie mit Ihnen rechnen können.</p>
               </div>
             </div>
-            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-5 text-sm text-slate-300">
-              <h3 className="text-base font-semibold text-white">Mehr Leads gewünscht?</h3>
-              <p className="mt-2 text-sm text-slate-400">
+            <div className="rounded-2xl border border-orange-100 bg-white/90 p-5 text-sm text-slate-600 shadow-lg shadow-orange-100/40">
+              <h3 className="text-base font-semibold text-slate-900">Mehr Leads gewünscht?</h3>
+              <p className="mt-2 text-sm text-slate-600">
                 Teilen Sie Ihre ArtisanCMS-Seite in sozialen Netzwerken oder binden Sie den Link in Ihrer E-Mail-Signatur ein, um mehr Kontakte zu gewinnen.
               </p>
               <button
                 onClick={() => router.push('/dashboard/projekte/neu')}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-orange-900/40 transition hover:bg-orange-400"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400"
               >
                 Jetzt neues Projekt hervorheben
               </button>
