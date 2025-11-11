@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, ChangeEvent, FormEvent } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
@@ -74,7 +75,18 @@ const LogoUploader = ({ logoUrl, onFileChange, onRemoveLogo, isUploading }: { lo
     <label className="block text-sm font-medium text-slate-600 sm:pt-2">Logo</label>
     <div className="flex items-center gap-4">
       <div className="flex h-16 w-32 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white text-slate-400 shadow-sm">
-        {logoUrl ? <img src={logoUrl} alt="Logo preview" className="h-full w-full object-contain" /> : <span className="text-xs">Vorschau</span>}
+        {logoUrl ? (
+          <Image
+            src={logoUrl}
+            alt="Logo preview"
+            width={128}
+            height={64}
+            className="h-full w-full object-contain"
+            unoptimized
+          />
+        ) : (
+          <span className="text-xs">Vorschau</span>
+        )}
       </div>
       <div className="flex-grow space-y-2">
         <input

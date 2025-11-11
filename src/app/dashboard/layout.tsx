@@ -268,7 +268,7 @@ export default function DashboardLayout({
 
     return () => { isMounted = false; };
 
-  }, [router, pathname, supabase.auth]); 
+  }, [router, pathname, supabase]);
 
   const handleCloseWelcomeModal = async () => {
     if (!user) return;

@@ -129,7 +129,7 @@ export default function AdminPage() {
     };
 
     initializeAdmin();
-  }, [router]); // Added router dependency
+  }, [router, supabase]); // Added router dependency
 
   // --- Modal Handlers (Kept all original functions) ---
   const handleOpenFeedback = (item: Feedback) => {

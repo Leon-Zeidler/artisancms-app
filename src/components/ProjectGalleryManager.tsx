@@ -4,7 +4,6 @@
 import React, { useState, useMemo } from 'react';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import toast from 'react-hot-toast';
-import type { Project } from '@/lib/types';
 
 const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -58,7 +57,10 @@ export default function ProjectGalleryManager({
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const updateGalleryInSupabase = async (newGallery: GalleryImage[]) => {
-    const { error } = await supabase.from<Project>('projects').update({ gallery_images: newGallery }).eq('id', projectId);
+    const { error } = await supabase
+      .from('projects')
+      .update({ gallery_images: newGallery })
+      .eq('id', projectId);
     if (error) {
       toast.error(`Galerie konnte nicht aktualisiert werden: ${error.message}`);
       return false;

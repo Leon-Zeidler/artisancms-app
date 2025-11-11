@@ -104,7 +104,7 @@ export default function ContactInboxPage() {
       setLoading(false);
     };
     getUserAndData();
-  }, [router]);
+  }, [router, supabase]);
   
   const handleOpenModal = (submission: ContactSubmission) => {
     setSelectedSubmission(submission);
