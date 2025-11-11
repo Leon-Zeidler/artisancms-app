@@ -481,7 +481,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
                   <div>
                      <h2 className="text-xl font-semibold leading-7 text-white">KI Projektbeschreibung</h2>
                      <p className="mt-1 text-sm text-slate-400">
-                         Lassen Sie eine Beschreibung automatisch generieren, basierend auf dem 'Nachher'-Bild.
+                         Lassen Sie eine Beschreibung automatisch generieren, basierend auf dem &apos;Nachher&apos;-Bild.
                      </p>
                   </div>
                    <button
