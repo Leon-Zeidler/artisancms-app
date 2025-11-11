@@ -41,7 +41,7 @@ export default function ClientProjectDetailPage() {
       try {
         const { data, error: fetchError } = await supabase
           .from('projects')
-          .select(`id, title, "project-date", after_image_url, before_image_url, status, created_at, ai_description, gallery_images`)
+          .select(`*`) // <-- Updated to fetch all columns
           .eq('id', projectId)
           .eq('user_id', profile.id)
           .eq('status', 'Published')

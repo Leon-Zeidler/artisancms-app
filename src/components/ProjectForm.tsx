@@ -513,7 +513,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             <div className="space-y-8 border-b border-slate-700 pb-12">
                   <h2 className="text-xl font-semibold leading-7 text-white">Projekt Galerie</h2>
                    <ProjectGalleryManager
-                    projectId={initialData.id as unknown as string}
+                    projectId={initialData.id} // <-- Cast removed
                     userId={currentUser.id}
                     initialGalleryImages={formData.gallery_images || []}
                     onGalleryUpdate={(newGallery: { url: string; path: string; }[]) => setFormData(prev => ({ ...prev, gallery_images: newGallery }))}

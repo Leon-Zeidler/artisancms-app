@@ -483,16 +483,37 @@ export default function EinstellungenPage() {
     setIsChangingEmail(true);
     const toastId = toast.loading("E-Mail-Änderung wird eingeleitet...");
 
-    const { data, error } = await supabase.auth.updateUser(
+    // Step 1: Update the authentication email
+    const { data: authData, error: authError } = await supabase.auth.updateUser(
       { email: newEmail }
     );
 
+    if (authError) {
+      setIsChangingEmail(false);
+      toast.error(`Fehler: ${authError.message}`, { id: toastId });
+      return; // Stop if auth update fails
+    }
+
+    // --- THIS IS THE FIX ---
+    // Step 2: Update the public 'profiles' table to match
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ email: newEmail })
+      .eq('id', currentUser.id);
+
     setIsChangingEmail(false);
-    
-    if (error) {
-      toast.error(`Fehler: ${error.message}`, { id: toastId });
+
+    if (profileError) {
+      // Auth email was updated, but profile failed!
+      toast.error(`Auth-E-Mail aktualisiert, aber Profil-Update fehlgeschlagen: ${profileError.message}`, {
+        id: toastId,
+        duration: 8000
+      });
     } else {
+      // Both were successful
       setNewEmail('');
+      // Also update the local form data to reflect the change
+      setFormData(prev => ({ ...prev, email: newEmail }));
       toast.success(
         "Bitte Posteingang prüfen! Wir haben eine Bestätigungs-E-Mail an Ihre ALTE und NEUE Adresse gesendet. Sie müssen beide bestätigen.",
         { id: toastId, duration: 10000 }

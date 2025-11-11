@@ -75,8 +75,8 @@ export default function ClientPortfolioPage() {
         // --- Updated select query ---
         const { data, error: fetchError } = await supabase
           .from('projects')
-          .select(`id, title, "project-date", after_image_url, status, created_at, ai_description, gallery_images`)
-          .eq('user_id', profile.id) // <-- ADD THIS LINE BACK
+          .select(`*`) // <-- Updated to fetch all columns
+          .eq('user_id', profile.id) 
           .eq('status', 'Published')
           .order('project-date', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false });

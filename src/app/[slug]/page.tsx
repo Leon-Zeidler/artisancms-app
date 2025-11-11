@@ -208,7 +208,7 @@ export default function ClientHomepage() {
       setLoadingContent(true);
       try {
         const { data: projects, error: projectsError } = await supabase
-          .from('projects').select(`id, title, image_url, status, "project-date", created_at`).eq('user_id', profile.id).eq('status', 'Published').order('created_at', { ascending: false }).limit(3);
+          .from('projects').select(`*`).eq('user_id', profile.id).eq('status', 'Published').order('created_at', { ascending: false }).limit(3); // <-- Updated to select *
         if (projectsError) throw projectsError;
         setFeaturedProjects((projects || []) as Project[]);
 

@@ -372,7 +372,7 @@ export default function DashboardPage() {
 
       const { data, error: fetchError } = await supabase
         .from('projects')
-        .select(`id, title, "project-date", after_image_url, status, created_at`)
+        .select(`*`) // <-- Updated to fetch all columns
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 

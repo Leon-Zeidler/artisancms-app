@@ -13,21 +13,7 @@ import RequestTestimonialModal from '@/components/RequestTestimonialModal';
 import PlusIcon from '@/components/icons/PlusIcon';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { DashboardStatCard } from '@/components/dashboard/DashboardStatCard';
-
-// --- TYPE DEFINITIONS (FIXED) ---
-type Project = {
-  id: string;
-  title: string | null;
-  client?: string | null; 
-  'project-date': string | null;
-  after_image_url: string | null; // <-- Corrected name
-  after_image_storage_path: string | null; // <-- Corrected name
-  status: 'Published' | 'Draft' | string | null;
-  created_at: string;
-  ai_description?: string | null;
-  gallery_images: { url: string; path: string }[] | null; // <-- ADDED GALLERY TYPE
-};
-
+import type { Project } from '@/lib/types';
 
 // --- ICON COMPONENTS ---
 const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> );
@@ -125,7 +111,7 @@ export default function ProjektePage() {
     // --- (FIXED) UPDATED SELECT QUERY ---
     const { data, error: fetchError } = await supabase
       .from('projects')
-      .select(`id, title, "project-date", after_image_url, after_image_storage_path, status, created_at, gallery_images`) // <-- Corrected columns
+      .select(`*`) // <-- This now fetches all fields, matching the Project type
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
