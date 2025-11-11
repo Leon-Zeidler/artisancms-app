@@ -38,60 +38,60 @@ export default function AdminFeedbackModal({ item, onClose, onSave, isSaving, us
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-[55] bg-black/60 backdrop-blur-sm flex items-center justify-center"
+    <div
+      className="fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm flex items-center justify-center"
       onClick={onClose}
       aria-modal="true"
     >
       <div
-        className="relative z-[60] w-full max-w-2xl rounded-lg bg-slate-800 shadow-xl border border-slate-700"
+        className="relative z-[60] w-full max-w-2xl rounded-3xl border border-orange-100 bg-white shadow-2xl shadow-orange-200/40"
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
       >
-        <div className="flex items-start justify-between border-b border-slate-700 p-4">
+        <div className="flex items-start justify-between border-b border-orange-100 px-6 py-5">
           <div>
-            <h3 className="text-lg font-semibold text-white">Feedback Details</h3>
-            <p className="text-sm text-slate-400">
-              From: <strong className="text-white">{userEmail}</strong>
+            <h3 className="text-lg font-semibold text-slate-900">Feedback Details</h3>
+            <p className="text-sm text-slate-500">
+              From: <strong className="text-slate-900">{userEmail}</strong>
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white"
+            className="rounded-full bg-orange-50 p-1.5 text-orange-500 transition hover:bg-orange-100 hover:text-orange-600"
             aria-label="Close modal"
           >
             <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
-        
-        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+
+        <div className="max-h-[70vh] space-y-5 overflow-y-auto px-6 py-6">
           {/* Feedback Details */}
           <div className="space-y-2">
             <div>
-              <label className="text-xs font-medium text-slate-500">Category</label>
-              <p className="text-sm text-orange-400 bg-orange-900/50 px-2 py-0.5 rounded-full inline-block ml-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">Category</label>
+              <p className="ml-2 inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600">
                 {item.category}
               </p>
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-500">Page URL</label>
-              <p className="text-sm text-slate-300 font-mono">{item.page_url}</p>
+              <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">Page URL</label>
+              <p className="mt-1 text-sm font-mono text-slate-600">{item.page_url}</p>
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-500">Submitted At</label>
-              <p className="text-sm text-slate-300">{new Date(item.created_at).toLocaleString('de-DE')}</p>
+              <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">Submitted At</label>
+              <p className="mt-1 text-sm text-slate-600">{new Date(item.created_at).toLocaleString('de-DE')}</p>
             </div>
             <div>
               {/* --- FIX: Replaced ' with &apos; --- */}
-              <label className="text-xs font-medium text-slate-500">User&apos;s Message</label>
-              <div className="mt-1 p-3 bg-slate-900 rounded-md border border-slate-700">
-                <p className="text-sm text-slate-200 whitespace-pre-wrap">{item.message}</p>
+              <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">User&apos;s Message</label>
+              <div className="mt-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm shadow-orange-100/40">
+                <p className="text-sm leading-6 text-slate-700 whitespace-pre-wrap">{item.message}</p>
               </div>
             </div>
           </div>
 
           {/* Admin Notes */}
-          <div className="border-t border-slate-700 pt-4">
-            <label htmlFor="admin_notes" className="block text-sm font-medium text-slate-300 mb-1">
+          <div className="border-t border-orange-100 pt-4">
+            <label htmlFor="admin_notes" className="mb-2 block text-sm font-semibold text-slate-800">
               Your Admin Notes
             </label>
             <textarea
@@ -99,7 +99,7 @@ export default function AdminFeedbackModal({ item, onClose, onSave, isSaving, us
               rows={4}
               value={adminNote}
               onChange={(e) => setAdminNote(e.target.value)}
-              className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
               placeholder="Add your private notes here..."
             />
           </div>
@@ -113,27 +113,27 @@ export default function AdminFeedbackModal({ item, onClose, onSave, isSaving, us
                 type="checkbox"
                 checked={isResolved}
                 onChange={(e) => setIsResolved(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-orange-600 focus:ring-orange-600 focus:ring-offset-slate-800"
+                className="h-4 w-4 rounded border-orange-300 text-orange-500 focus:ring-orange-400 focus:ring-offset-0"
               />
             </div>
             <div className="ml-3 text-sm leading-6">
-              <label htmlFor="is_resolved" className="font-medium text-slate-300">
+              <label htmlFor="is_resolved" className="font-semibold text-slate-800">
                 Mark as Resolved
               </label>
-              <p className="text-slate-500 text-xs">
+              <p className="text-xs text-slate-500">
                 {/* --- FIX: Replaced ' with &apos; --- */}
                 Check this box when you&apos;ve handled this feedback.
               </p>
             </div>
           </div>
         </div>
-        
-        <div className="flex justify-end gap-3 border-t border-slate-700 p-4 bg-slate-800/50 rounded-b-lg">
+
+        <div className="flex justify-end gap-3 rounded-b-3xl border-t border-orange-100 bg-orange-50/60 px-6 py-4">
           <button
             type="button"
             onClick={onClose}
             disabled={isSaving}
-            className="rounded-md px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+            className="rounded-full px-5 py-2 text-sm font-semibold text-slate-600 transition hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Cancel
           </button>
@@ -141,7 +141,7 @@ export default function AdminFeedbackModal({ item, onClose, onSave, isSaving, us
             type="button"
             onClick={handleSaveClick}
             disabled={isSaving}
-            className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 disabled:bg-orange-800 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-x-2 rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:bg-orange-300"
           >
             {isSaving && <ArrowPathIcon className="h-4 w-4" />}
             {isSaving ? 'Saving...' : 'Save Note & Close'}

@@ -29,47 +29,47 @@ export default function ConfirmationModal({
   onConfirm, 
   onCancel, 
   isConfirming,
-  confirmButtonClass = "bg-red-600 text-white hover:bg-red-700" // Default to danger
+  confirmButtonClass = "bg-red-500 text-white hover:bg-red-400" // Default to danger
 }: ConfirmationModalProps) {
     if (!isOpen) return null;
-    
-    return ( 
-      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog"> 
-        <div className="bg-slate-800 rounded-lg shadow-xl p-6 max-w-sm w-full border border-slate-700"> 
-          <div className="flex items-start"> 
-            <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-900/50 sm:mx-0 sm:h-10 sm:w-10"> 
-              <ExclamationTriangleIcon className="h-6 w-6 text-red-400" aria-hidden="true" /> 
-            </div> 
-            <div className="ml-4 text-left"> 
-              <h3 className="text-base font-semibold leading-6 text-white" id="modal-title">{title}</h3> 
-              <div className="mt-2"> 
-                <p className="text-sm text-slate-400">{message}</p> 
-              </div> 
-            </div> 
-          </div> 
-          <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse sm:gap-x-3"> 
-            <button 
-              type="button" 
-              disabled={isConfirming} 
-              onClick={onConfirm} 
-              className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:w-auto transition-colors ${ 
-                isConfirming 
-                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+
+    return (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm" aria-modal="true" role="dialog">
+        <div className="w-full max-w-sm rounded-3xl border border-orange-100 bg-white p-6 shadow-2xl shadow-orange-200/40">
+          <div className="flex items-start">
+            <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-500 sm:mx-0 sm:h-10 sm:w-10">
+              <ExclamationTriangleIcon className="h-6 w-6" aria-hidden="true" />
+            </div>
+            <div className="ml-4 text-left">
+              <h3 className="text-base font-semibold leading-6 text-slate-900" id="modal-title">{title}</h3>
+              <div className="mt-2">
+                <p className="text-sm text-slate-600">{message}</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse sm:gap-x-3">
+            <button
+              type="button"
+              disabled={isConfirming}
+              onClick={onConfirm}
+              className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold shadow-sm sm:w-auto transition-colors ${
+                isConfirming
+                  ? 'bg-rose-200 text-rose-500 cursor-not-allowed'
                   : confirmButtonClass
               }`}
-            > 
-              {isConfirming ? (<><ArrowPathIcon className="-ml-1 mr-2 h-5 w-5 animate-spin" /> Wird ausgeführt...</>) : confirmText} 
-            </button> 
-            <button 
-              type="button" 
-              disabled={isConfirming} 
-              onClick={onCancel} 
-              className="mt-3 inline-flex w-full justify-center rounded-md bg-slate-700 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-slate-600 hover:bg-slate-600 sm:mt-0 sm:w-auto disabled:opacity-50"
-            > 
-              {cancelText} 
-            </button> 
-          </div> 
-        </div> 
+            >
+              {isConfirming ? (<><ArrowPathIcon className="-ml-1 mr-2 h-5 w-5 animate-spin" /> Wird ausgeführt...</>) : confirmText}
+            </button>
+            <button
+              type="button"
+              disabled={isConfirming}
+              onClick={onCancel}
+              className="mt-3 inline-flex w-full justify-center rounded-md border border-orange-100 bg-white px-3 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-orange-50 sm:mt-0 sm:w-auto disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {cancelText}
+            </button>
+          </div>
+        </div>
       </div> 
     );
 }

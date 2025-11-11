@@ -26,20 +26,20 @@ export default function CookieConsentBanner() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 w-full bg-slate-800 text-white p-4 z-[100] border-t border-slate-700 shadow-lg">
-      <div className="mx-auto max-w-7xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <p className="text-sm text-slate-300">
-          Wir verwenden Cookies und ähnliche Technologien (z.B. Vercel Analytics), 
-          um die Nutzung unserer Website zu analysieren und Ihr Erlebnis zu verbessern. 
-          Durch die weitere Nutzung dieser Website stimmen Sie dem zu. 
+    <div className="fixed bottom-0 left-0 z-[100] w-full border-t border-orange-100 bg-white/95 py-4 shadow-2xl shadow-orange-200/40">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm">
+          Wir verwenden Cookies und ähnliche Technologien (z.B. Vercel Analytics),
+          um die Nutzung unserer Website zu analysieren und Ihr Erlebnis zu verbessern.
+          Durch die weitere Nutzung dieser Website stimmen Sie dem zu.
           Mehr Informationen finden Sie in unserer{' '}
-          <Link href="/datenschutz" className="font-medium underline hover:text-white">
+          <Link href="/datenschutz" className="font-semibold text-orange-600 underline-offset-2 hover:text-orange-500 hover:underline">
             Datenschutzerklärung
           </Link>.
         </p>
         <button
           onClick={handleAccept}
-          className="rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 flex-shrink-0"
+          className="flex-shrink-0 rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200"
         >
           Akzeptieren & Schließen
         </button>

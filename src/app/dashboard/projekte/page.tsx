@@ -63,38 +63,81 @@ function ProjectListItem({
   isDeleting 
 }: ProjectListItemProps) {
   const displayDate = project['project-date'] ? new Date(project['project-date']).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
-  const imageUrl = project.after_image_url || `https://placehold.co/48x48/334155/94a3b8?text=${encodeURIComponent(project.title?.charAt(0) || 'P')}`;
+  const imageUrl = project.after_image_url || `https://placehold.co/48x48/fef3c7/f97316?text=${encodeURIComponent(project.title?.charAt(0) || 'P')}`;
   const isPublished = project.status === 'Published';
   const editUrl = `/dashboard/projekte/${project.id}/edit`;
 
   return (
-    <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg border border-slate-700 hover:bg-slate-700/50 transition-colors">
+    <div className="flex items-center justify-between gap-4 rounded-2xl border border-orange-100 bg-white/90 p-4 shadow-sm shadow-orange-100 transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg">
       {/* Project Info */}
       <div className="flex items-center space-x-4 flex-1 min-w-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={imageUrl} alt={project.title || 'Project image'} className="w-12 h-12 rounded-md object-cover flex-shrink-0" onError={(e) => ((e.target as HTMLImageElement).src = 'https://placehold.co/48x48/ef4444/ffffff?text=Err')} />
         <div className="min-w-0">
-          <p className="font-semibold text-white truncate">{project.title || 'Untitled Project'}</p>
-          <p className="text-sm text-slate-400">Erstellt: {new Date(project.created_at).toLocaleDateString('de-DE')}</p>
+          <p className="truncate text-sm font-semibold text-slate-900">{project.title || 'Untitled Project'}</p>
+          <p className="text-xs text-slate-500">Erstellt: {new Date(project.created_at).toLocaleDateString('de-DE')}</p>
         </div>
       </div>
       {/* Actions & Status */}
-      <div className="flex items-center space-x-3 text-sm flex-shrink-0 ml-4">
-         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ isPublished ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400' }`}> {project.status || 'N/A'} </span>
-         <span className="text-slate-400 hidden sm:inline">{displayDate}</span>
+      <div className="ml-4 flex flex-shrink-0 items-center space-x-3 text-sm">
+         <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }`}> {project.status || 'N/A'} </span>
+         <span className="hidden text-xs text-slate-500 sm:inline">{displayDate}</span>
          {isPublished && (
-           <button 
-             onClick={() => onRequestTestimonial(project)} 
-             disabled={isToggling || isDeleting} 
-             title="Kundenstimme anfragen" 
-             className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isToggling || isDeleting ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-indigo-600/20 text-indigo-300 hover:bg-indigo-500/30' }`}> 
+           <button
+             onClick={() => onRequestTestimonial(project)}
+             disabled={isToggling || isDeleting}
+             title="Kundenstimme anfragen"
+             className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors ${ isToggling || isDeleting ? 'cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-indigo-100 text-indigo-600 hover:bg-indigo-200' }`}>
              <span className="sr-only">Kundenstimme anfragen</span>
-             <ChatBubbleOvalLeftEllipsisIcon className="h-4 w-4" /> 
+             <ChatBubbleOvalLeftEllipsisIcon className="h-4 w-4" />
            </button>
          )}
-         <button onClick={() => onStatusToggle(project.id, project.status)} disabled={isToggling || isDeleting} title={isPublished ? 'Projekt verbergen' : 'Projekt veröffentlichen'} className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isToggling ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : isPublished ? 'bg-yellow-600/20 text-yellow-300 hover:bg-yellow-500/30' : 'bg-green-600/20 text-green-300 hover:bg-green-500/30' }`}> <span className="sr-only">{isPublished ? 'Verbergen' : 'Veröffentlichen'}</span> {isToggling ? <ArrowPathIcon className="h-4 w-4" /> : isPublished ? <EyeSlashIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />} </button>
-         <Link href={editUrl} title="Projekt bearbeiten" aria-disabled={isDeleting || isToggling} onClick={(e) => { if (isDeleting || isToggling) e.preventDefault(); }} className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDeleting || isToggling ? 'bg-slate-700 text-slate-500 cursor-not-allowed pointer-events-none' : 'bg-blue-600/20 text-blue-300 hover:bg-blue-500/30' }`}> <span className="sr-only">Bearbeiten</span> <PencilIcon className="h-4 w-4" /> </Link>
-         <button onClick={() => onDeleteRequest(project)} disabled={isDeleting || isToggling} title="Projekt löschen" className={`inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors ${ isDeleting ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : isToggling ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-red-600/20 text-red-300 hover:bg-red-500/30' }`}> <span className="sr-only">Löschen</span> {isDeleting ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />} </button>
+         <button
+           onClick={() => onStatusToggle(project.id, project.status)}
+           disabled={isToggling || isDeleting}
+           title={isPublished ? 'Projekt verbergen' : 'Projekt veröffentlichen'}
+           className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
+             isToggling
+               ? 'cursor-not-allowed bg-slate-100 text-slate-400'
+               : isPublished
+                 ? 'bg-amber-100 text-amber-600 hover:bg-amber-200'
+                 : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
+           }`}
+         >
+           <span className="sr-only">{isPublished ? 'Verbergen' : 'Veröffentlichen'}</span>
+           {isToggling ? <ArrowPathIcon className="h-4 w-4" /> : isPublished ? <EyeSlashIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />}
+         </button>
+         <Link
+           href={editUrl}
+           title="Projekt bearbeiten"
+           aria-disabled={isDeleting || isToggling}
+           onClick={(e) => {
+             if (isDeleting || isToggling) e.preventDefault();
+           }}
+           className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
+             isDeleting || isToggling
+               ? 'pointer-events-none cursor-not-allowed bg-slate-100 text-slate-400'
+               : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+           }`}
+         >
+           <span className="sr-only">Bearbeiten</span>
+           <PencilIcon className="h-4 w-4" />
+         </Link>
+         <button
+           onClick={() => onDeleteRequest(project)}
+           disabled={isDeleting || isToggling}
+           title="Projekt löschen"
+           className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
+             isDeleting
+               ? 'cursor-not-allowed bg-slate-100 text-slate-400'
+               : isToggling
+                 ? 'cursor-not-allowed bg-slate-100 text-slate-400'
+                 : 'bg-red-100 text-red-600 hover:bg-red-200'
+           }`}
+         >
+           <span className="sr-only">Löschen</span>
+           {isDeleting ? <ArrowPathIcon className="h-4 w-4" /> : <TrashIcon className="h-4 w-4" />}
+         </button>
       </div>
     </div>
   );
@@ -424,13 +467,13 @@ export default function ProjektePage() {
       </DashboardHero>
 
       {loading && (
-        <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-10 text-center text-sm text-slate-300">
+        <div className="rounded-2xl border border-orange-100 bg-white p-10 text-center text-sm text-slate-600 shadow-lg shadow-orange-100/40">
           Lade Projekte...
         </div>
       )}
 
       {error && !loading && (
-        <div className="rounded-2xl border border-red-500/40 bg-red-900/30 p-6 text-center text-sm text-red-100">{error}</div>
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">{error}</div>
       )}
 
       {!loading && (
@@ -464,24 +507,24 @@ export default function ProjektePage() {
           </div>
 
           <div className="space-y-4">
-            <div className="overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900/60">
-              <div className="border-b border-slate-800/70 bg-gradient-to-r from-slate-900 via-slate-900/60 to-orange-900/30 px-5 py-4">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-200">Best-Practice Checkliste</h2>
+            <div className="overflow-hidden rounded-2xl border border-orange-100 bg-white/90 shadow-lg shadow-orange-100/40">
+              <div className="border-b border-orange-100 bg-gradient-to-r from-orange-50 via-white to-orange-100 px-5 py-4">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-orange-600">Best-Practice Checkliste</h2>
               </div>
-              <div className="space-y-3 px-5 py-4 text-sm text-slate-300">
+              <div className="space-y-3 px-5 py-4 text-sm text-slate-600">
                 <p>Nutzen Sie aussagekräftige Vorher-/Nachher-Bilder, um die Qualität Ihrer Arbeit hervorzuheben.</p>
                 <p>Aktivieren Sie veröffentlichte Projekte, sobald Texte und Bilder final sind, damit sie auf Ihrer Seite erscheinen.</p>
                 <p>Fordern Sie nach Abschluss eines Projektes Kundenstimmen an, um soziale Beweise zu sammeln.</p>
               </div>
             </div>
-            <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-5 text-sm text-slate-300">
-              <h3 className="text-base font-semibold text-white">Vorlagen für schnelle Veröffentlichungen</h3>
-              <p className="mt-2 text-sm text-slate-400">
+            <div className="rounded-2xl border border-orange-100 bg-white/90 p-5 text-sm text-slate-600 shadow-lg shadow-orange-100/40">
+              <h3 className="text-base font-semibold text-slate-900">Vorlagen für schnelle Veröffentlichungen</h3>
+              <p className="mt-2 text-sm text-slate-600">
                 Wiederverwenden Sie bestehende Projekte als Vorlage: duplizieren Sie ein Projekt, passen Sie Text und Bilder an und sparen Sie Zeit beim nächsten Upload.
               </p>
               <button
                 onClick={() => router.push('/dashboard/projekte/neu')}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-orange-900/40 transition hover:bg-orange-400"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400"
               >
                 Projekt duplizieren & anpassen
               </button>

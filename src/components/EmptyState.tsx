@@ -36,15 +36,15 @@ export default function EmptyState({
     </>
   );
   
-  const buttonClassName = "inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600";
+  const buttonClassName = "inline-flex items-center gap-x-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200";
 
   return (
-    <div className="text-center py-16 px-6 bg-slate-800 border-2 border-dashed border-slate-700 rounded-lg">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-700/50">
-        <Icon className="h-6 w-6 text-slate-400" aria-hidden="true" />
+    <div className="rounded-2xl border border-dashed border-orange-200 bg-white/90 px-6 py-16 text-center shadow-sm shadow-orange-100/60">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-50">
+        <Icon className="h-6 w-6 text-orange-500" aria-hidden="true" />
       </div>
-      <h3 className="mt-4 text-lg font-semibold text-white">{title}</h3>
-      <p className="mt-2 text-sm text-slate-400 max-w-sm mx-auto">{message}</p>
+      <h3 className="mt-4 text-lg font-semibold text-slate-900">{title}</h3>
+      <p className="mx-auto mt-2 max-w-sm text-sm text-slate-600">{message}</p>
       
       {/* --- FIX 2: Button nur rendern, wenn buttonText übergeben wird --- */}
       {buttonText && (

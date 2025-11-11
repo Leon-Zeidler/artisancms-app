@@ -42,19 +42,19 @@ export default function RequestTestimonialModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog">
-      <div className="bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-lg border border-slate-700 relative">
-        <button onClick={onClose} disabled={isSending} className="absolute top-4 right-4 text-slate-400 hover:text-white disabled:opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" aria-modal="true" role="dialog">
+      <div className="relative w-full max-w-lg rounded-3xl border border-orange-100 bg-white px-6 py-6 shadow-2xl shadow-orange-200/50">
+        <button onClick={onClose} disabled={isSending} className="absolute right-5 top-5 rounded-full bg-orange-50 p-1.5 text-orange-500 transition hover:bg-orange-100 hover:text-orange-600 disabled:cursor-not-allowed disabled:opacity-50">
           <XMarkIcon className="h-6 w-6" />
         </button>
-        <h2 className="text-xl font-semibold text-white mb-2">Kundenstimme anfragen</h2>
-        <p className="text-sm text-slate-400 mb-6">
-          Senden Sie eine E-Mail-Anfrage für das Projekt: <strong className="text-white">{projectTitle}</strong>
+        <h2 className="mb-2 text-xl font-semibold text-slate-900">Kundenstimme anfragen</h2>
+        <p className="mb-6 text-sm text-slate-600">
+          Senden Sie eine E-Mail-Anfrage für das Projekt: <strong className="text-orange-600">{projectTitle}</strong>
         </p>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="clientEmail" className="block text-sm font-medium text-slate-300 mb-1">
+            <label htmlFor="clientEmail" className="mb-1 block text-sm font-semibold text-slate-800">
               E-Mail des Kunden *
             </label>
             <input
@@ -67,27 +67,27 @@ export default function RequestTestimonialModal({
                 setClientEmail(e.target.value);
                 setLocalError('');
               }}
-              className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
               placeholder="kunde@beispiel.de"
             />
           </div>
-          
+
           {localError && <p className="text-sm text-red-500">{localError}</p>}
-          
+
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
               disabled={isSending}
-              className="rounded-md px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+              className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Abbrechen
             </button>
             <button
               type="submit"
               disabled={isSending}
-              className={`inline-flex items-center gap-x-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors ${
-                isSending ? 'bg-orange-800 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'
+              className={`inline-flex items-center gap-x-2 rounded-full px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition ${
+                isSending ? 'bg-orange-300 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-400'
               }`}
             >
               {isSending && <ArrowPathIcon className="h-4 w-4" />}

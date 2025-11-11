@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, ChangeEvent, FormEvent } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
@@ -47,58 +48,114 @@ const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="htt
 
 // --- REUSABLE COMPONENTS ---
 const ColorInput = ({ label, name, value, onChange }: { label: string, name: string, value: string, onChange: (e: ChangeEvent<HTMLInputElement>) => void }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    <label htmlFor={name} className="block text-sm font-medium text-slate-300 sm:pt-2">{label}</label>
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <label htmlFor={name} className="block text-sm font-medium text-slate-600 sm:pt-2">{label}</label>
     <div className="flex items-center gap-3">
-      <input type="color" name={name} id={name} value={value || '#000000'} onChange={onChange} className="h-10 w-10 p-0 m-0 border-none rounded cursor-pointer bg-slate-800" />
-      <input type="text" value={value || ''} onChange={onChange} className="w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500 sm:text-sm" placeholder="#F97316" />
+      <input
+        type="color"
+        name={name}
+        id={name}
+        value={value || '#ffffff'}
+        onChange={onChange}
+        className="h-10 w-10 cursor-pointer rounded border border-slate-200 bg-white shadow-sm"
+      />
+      <input
+        type="text"
+        value={value || ''}
+        onChange={onChange}
+        className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+        placeholder="#F97316"
+      />
     </div>
   </div>
 );
 
 const LogoUploader = ({ logoUrl, onFileChange, onRemoveLogo, isUploading }: { logoUrl: string | null, onFileChange: (e: ChangeEvent<HTMLInputElement>) => void, onRemoveLogo: () => void, isUploading: boolean }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    <label className="block text-sm font-medium text-slate-300 sm:pt-2">Logo</label>
+    <label className="block text-sm font-medium text-slate-600 sm:pt-2">Logo</label>
     <div className="flex items-center gap-4">
-      <div className="flex-shrink-0 h-16 w-32 flex items-center justify-center rounded-md border border-slate-700 bg-slate-800 text-slate-500 overflow-hidden">
-        {logoUrl ? <img src={logoUrl} alt="Logo preview" className="h-full w-full object-contain" /> : <span className="text-xs">Vorschau</span>}
+      <div className="flex h-16 w-32 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white text-slate-400 shadow-sm">
+        {logoUrl ? (
+          <Image
+            src={logoUrl}
+            alt="Logo preview"
+            width={128}
+            height={64}
+            className="h-full w-full object-contain"
+            unoptimized
+          />
+        ) : (
+          <span className="text-xs">Vorschau</span>
+        )}
       </div>
       <div className="flex-grow space-y-2">
-        <input type="file" id="logoUpload" accept="image/png, image/jpeg, image/webp" onChange={onFileChange} disabled={isUploading} className="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 focus:ring-offset-slate-800" />
-        {logoUrl && <button type="button" onClick={onRemoveLogo} disabled={isUploading} className="text-xs text-red-400 hover:text-red-300 disabled:opacity-50">Logo entfernen</button>}
+        <input
+          type="file"
+          id="logoUpload"
+          accept="image/png, image/jpeg, image/webp"
+          onChange={onFileChange}
+          disabled={isUploading}
+          className="w-full text-sm text-slate-500 file:mr-4 file:rounded-md file:border-0 file:bg-orange-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-orange-700 hover:file:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-200"
+        />
+        {logoUrl && (
+          <button
+            type="button"
+            onClick={onRemoveLogo}
+            disabled={isUploading}
+            className="text-xs font-semibold text-red-500 transition hover:text-red-400 disabled:opacity-50"
+          >
+            Logo entfernen
+          </button>
+        )}
       </div>
     </div>
   </div>
 );
 
 const SectionCard = ({ title, description, children }: { title: string, description: string, children: React.ReactNode }) => (
-  <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg">
-    <div className="px-6 py-5 border-b border-slate-700">
-      <h3 className="text-lg font-semibold text-white">{title}</h3>
-      <p className="mt-1 text-sm text-slate-400">{description}</p>
+  <div className="rounded-2xl border border-orange-100 bg-white/90 shadow-xl shadow-orange-100/40">
+    <div className="border-b border-orange-100 px-6 py-5">
+      <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+      <p className="mt-1 text-sm text-slate-600">{description}</p>
     </div>
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       {children}
     </div>
   </div>
 );
 
 const SettingsInput = ({ label, name, value, onChange, placeholder, type = 'text', rows = 3 }: { label: string, name: string, value: string, onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void, placeholder?: string, type?: string, rows?: number }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    <label htmlFor={name} className="block text-sm font-medium text-slate-300">{label}</label>
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <label htmlFor={name} className="block text-sm font-medium text-slate-600">{label}</label>
     {type === 'textarea' ? (
-      <textarea name={name} id={name} rows={rows} value={value} onChange={onChange} className="mt-0 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder={placeholder} />
+      <textarea
+        name={name}
+        id={name}
+        rows={rows}
+        value={value}
+        onChange={onChange}
+        className="mt-0 block w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+        placeholder={placeholder}
+      />
     ) : (
-      <input type={type} name={name} id={name} value={value} onChange={onChange} className="mt-0 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder={placeholder} />
+      <input
+        type={type}
+        name={name}
+        id={name}
+        value={value}
+        onChange={onChange}
+        className="mt-0 block w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+        placeholder={placeholder}
+      />
     )}
   </div>
 );
 
 // --- KORRIGIERTE TOGGLE KOMPONENTE ---
 const SettingsToggle = ({ label, description, name, isChecked, onChange, disabled = false }: { label: string, description: string, name: string, isChecked: boolean, onChange: (e: ChangeEvent<HTMLInputElement>) => void, disabled?: boolean }) => (
-  <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${disabled ? 'opacity-60' : ''}`}>
+  <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${disabled ? 'opacity-60' : ''}`}>
     <span className="flex flex-grow flex-col">
-      <span className={`text-sm font-medium ${disabled ? 'text-slate-500' : 'text-slate-300'}`}>{label}</span>
+      <span className={`text-sm font-medium ${disabled ? 'text-slate-400' : 'text-slate-600'}`}>{label}</span>
       <span className="text-xs text-slate-500">{description}</span>
     </span>
     {/* KORREKTUR: sm:justify-self-end richtet den Schalter rechtsbündig aus */}
@@ -112,7 +169,9 @@ const SettingsToggle = ({ label, description, name, isChecked, onChange, disable
         className="sr-only peer"
       />
       {/* KORREKTUR: after:border-gray-300 und after:border wieder hinzugefügt */}
-      <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${disabled ? 'cursor-not-allowed' : ''}`}></div>
+      <div
+        className={`h-6 w-11 rounded-full bg-slate-200 transition peer peer-focus:ring-2 peer-focus:ring-orange-200 peer-focus:ring-offset-2 peer-focus:ring-offset-white peer-checked:bg-orange-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-slate-200 after:bg-white after:transition-all peer-disabled:cursor-not-allowed ${disabled ? 'cursor-not-allowed' : ''}`}
+      ></div>
     </label>
   </div>
 );
@@ -193,16 +252,16 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
         title="Veröffentlichung & Gefahrenzone"
         description="Wichtige Aktionen mit dauerhaften Konsequenzen."
       >
-        <div className="space-y-4 rounded-lg border border-slate-700 bg-slate-900/50 p-4">
+        <div className="space-y-4 rounded-2xl border border-orange-100 bg-white/90 p-4 shadow-inner shadow-orange-100/40">
           {/* KORREKTUR: sm:grid-cols-2 und sm:gap-4 hinzugefügt für korrekte Ausrichtung */}
           <div className="grid grid-cols-1 sm:grid-cols-2 sm:gap-4 items-start justify-between gap-4">
             <div>
-              <h4 className="text-base font-semibold text-white">Website veröffentlichen</h4>
-              <p className="mt-1 text-sm text-slate-400">
+              <h4 className="text-base font-semibold text-slate-900">Website veröffentlichen</h4>
+              <p className="mt-1 text-sm text-slate-600">
                 Machen Sie Ihre Webseite unter Ihrem Link öffentlich sichtbar.
               </p>
               {!canPublish && (
-                <p className="mt-2 text-xs text-yellow-400 flex items-center gap-2">
+                <p className="mt-2 flex items-center gap-2 text-xs text-amber-600">
                   <ExclamationTriangleIcon className="h-4 w-4 flex-shrink-0" />
                   <span>Zum Veröffentlichen müssen Impressum & Datenschutz ausgefüllt sein.</span>
                 </p>
@@ -218,16 +277,20 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
                 className="sr-only peer"
               />
               {/* KORREKTUR: Border-Klassen wiederhergestellt */}
-              <div className={`w-11 h-6 bg-slate-700 rounded-full peer peer-focus:ring-2 peer-focus:ring-orange-500 peer-focus:ring-offset-2 peer-focus:ring-offset-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600 ${isPublishing || (!isPublished && !canPublish) ? 'cursor-not-allowed opacity-50' : ''}`}></div>
+              <div
+                className={`h-6 w-11 rounded-full bg-slate-200 transition peer peer-focus:ring-2 peer-focus:ring-orange-200 peer-focus:ring-offset-2 peer-focus:ring-offset-white peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-slate-200 after:bg-white after:transition-all ${
+                  isPublishing || (!isPublished && !canPublish) ? 'cursor-not-allowed opacity-60' : ''
+                }`}
+              ></div>
             </label>
           </div>
         </div>
 
         {/* Delete Account UI */}
-        <div className="space-y-4 rounded-lg border border-red-900/50 bg-red-900/20 p-4">
+        <div className="space-y-4 rounded-2xl border border-red-100 bg-red-50/80 p-4 shadow-inner shadow-red-100/40">
           <div>
-            <h4 className="text-base font-semibold text-red-300">Konto löschen</h4>
-            <p className="mt-1 text-sm text-slate-400">
+            <h4 className="text-base font-semibold text-red-600">Konto löschen</h4>
+            <p className="mt-1 text-sm text-red-600/80">
               Diese Aktion ist endgültig und kann nicht rückgängig gemacht werden. Alle Ihre Daten, Projekte und Einstellungen werden dauerhaft gelöscht.
             </p>
           </div>
@@ -236,7 +299,7 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
               type="button"
               onClick={() => setConfirmDeleteModal(true)}
               disabled={isDeleting}
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 disabled:opacity-50"
+              className="rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-red-200 transition hover:bg-red-400 disabled:opacity-50"
             >
               Konto löschen
             </button>
@@ -537,24 +600,24 @@ export default function EinstellungenPage() {
   ];
 
   if (loading) {
-    return <div className="p-8 text-slate-400">Lade Einstellungen...</div>;
+    return <div className="flex h-full items-center justify-center p-10 text-sm text-slate-500">Lade Einstellungen...</div>;
   }
 
   // === RENDER ===
   return (
-    <main className="p-8">
+    <main className="space-y-10 px-6 py-10 lg:px-10">
       {/* This is the main 2-column layout */}
-      <div className="mx-auto max-w-7xl grid grid-cols-1 lg:grid-cols-4 gap-x-12 gap-y-8">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-4">
         
         {/* === LEFT COLUMN: STICKY NAV === */}
         <aside className="lg:col-span-1">
           <nav className="sticky top-16 space-y-1">
-            <h2 className="text-2xl font-bold text-white mb-4">Einstellungen</h2>
+            <h2 className="mb-4 text-2xl font-bold text-slate-900">Einstellungen</h2>
             {navItems.map((item) => (
               <a
                 key={item.id}
                 href={`#${item.id}`}
-                className="group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-orange-500 transition-colors"
+                className="group flex items-center gap-3 rounded-full px-3 py-2 text-sm font-semibold text-slate-500 transition hover:bg-orange-50 hover:text-orange-600"
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
                 <span>{item.label}</span>
@@ -564,18 +627,18 @@ export default function EinstellungenPage() {
         </aside>
 
         {/* === RIGHT COLUMN: CONTENT === */}
-        <div className="lg:col-span-3 space-y-12">
+        <div className="space-y-12 lg:col-span-3">
           
           {/* --- Main Form for Profile Data --- */}
           <form onSubmit={handleSaveProfile} className="space-y-12">
             
             {/* Sticky Save Header */}
-            <div className="sticky top-0 z-10 bg-slate-900 -mx-1 -mt-1 py-4 border-b border-slate-700 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">Allgemeine Einstellungen</h2>
+            <div className="-mx-1 -mt-1 flex items-center justify-between border-b border-orange-100 bg-white/90 py-4 shadow-sm shadow-orange-100/40 backdrop-blur">
+              <h2 className="text-xl font-semibold text-slate-900">Allgemeine Einstellungen</h2>
               <button
                 type="submit"
                 disabled={saving || isUploading || !!aiLoading}
-                className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-50"
+                className="inline-flex items-center gap-x-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:opacity-50"
               >
                 {saving ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
                 {saving ? 'Wird gespeichert...' : 'Änderungen speichern'}
@@ -584,9 +647,9 @@ export default function EinstellungenPage() {
 
             {/* --- Section 1: Firmendaten --- */}
             <section id="firmendaten" className="scroll-mt-32">
-              <h3 className="text-xl font-semibold text-white">Firmendaten</h3>
-              <p className="mt-1 text-sm text-slate-400">Diese Informationen werden auf Ihrer Webseite (z.B. im Impressum) angezeigt.</p>
-              <div className="mt-6 space-y-6 p-6 bg-slate-800 border border-slate-700 rounded-lg">
+              <h3 className="text-xl font-semibold text-slate-900">Firmendaten</h3>
+              <p className="mt-1 text-sm text-slate-600">Diese Informationen werden auf Ihrer Webseite (z.B. im Impressum) angezeigt.</p>
+              <div className="mt-6 space-y-6 rounded-2xl border border-orange-100 bg-white/90 p-6 shadow-sm shadow-orange-100">
                 <SettingsInput label="Firmenname" name="business_name" value={formData.business_name ?? ''} onChange={handleFormChange} placeholder="z.B. Max Mustermann GmbH" />
                 <SettingsInput label="Adresse" name="address" value={formData.address ?? ''} onChange={handleFormChange} placeholder="z.B. Musterstraße 1, 12345 Musterstadt" type="textarea" rows={3} />
                 <SettingsInput label="Telefon" name="phone" value={formData.phone ?? ''} onChange={handleFormChange} placeholder="z.B. 01234 567890" />
@@ -596,9 +659,9 @@ export default function EinstellungenPage() {
             
             {/* --- Section 2: Branding --- */}
             <section id="branding" className="scroll-mt-32">
-              <h3 className="text-xl font-semibold text-white">Webseiten-Branding & Inhalte</h3>
-              <p className="mt-1 text-sm text-slate-400">Passen Sie das Aussehen Ihrer Webseite an.</p>
-              <div className="mt-6 space-y-6 p-6 bg-slate-800 border border-slate-700 rounded-lg">
+              <h3 className="text-xl font-semibold text-slate-900">Webseiten-Branding & Inhalte</h3>
+              <p className="mt-1 text-sm text-slate-600">Passen Sie das Aussehen Ihrer Webseite an.</p>
+              <div className="mt-6 space-y-6 rounded-2xl border border-orange-100 bg-white/90 p-6 shadow-sm shadow-orange-100">
                 <ColorInput label="Primärfarbe (Brand)" name="primary_color" value={formData.primary_color ?? '#F97316'} onChange={handleFormChange} />
                 <ColorInput label="Sekundärfarbe (Hintergrund)" name="secondary_color" value={formData.secondary_color ?? '#F8FAFC'} onChange={handleFormChange} />
                 <LogoUploader 
@@ -607,7 +670,7 @@ export default function EinstellungenPage() {
                   onRemoveLogo={handleRemoveLogo}
                   isUploading={isUploading}
                 />
-                <hr className="border-slate-700" />
+                <hr className="border-orange-100" />
                 <SettingsToggle label="Leistungen anzeigen" description="Zeigt den 'Leistungen' Abschnitt auf Ihrer Startseite." name="show_services_section" isChecked={formData.show_services_section} onChange={handleFormChange} />
                 <SettingsToggle label="'Über Uns' Seite anzeigen" description="Zeigt den 'Über Uns' Link in der Navigation." name="show_team_page" isChecked={formData.show_team_page} onChange={handleFormChange} />
                 <SettingsToggle label="'Kundenstimmen' Seite anzeigen" description="Zeigt den 'Kundenstimmen' Link in der Navigation." name="show_testimonials_page" isChecked={formData.show_testimonials_page} onChange={handleFormChange} />
@@ -616,19 +679,19 @@ export default function EinstellungenPage() {
             
             {/* --- Section 3: SEO & AI (MIT BUTTONS) --- */}
             <section id="seo" className="scroll-mt-32">
-              <h3 className="text-xl font-semibold text-white">SEO & AI-Inhalte</h3>
-              <p className="mt-1 text-sm text-slate-400">Helfen Sie der AI, bessere Texte für Sie zu generieren.</p>
-              <div className="mt-6 space-y-6 p-6 bg-slate-800 border border-slate-700 rounded-lg">
+              <h3 className="text-xl font-semibold text-slate-900">SEO & AI-Inhalte</h3>
+              <p className="mt-1 text-sm text-slate-600">Helfen Sie der AI, bessere Texte für Sie zu generieren.</p>
+              <div className="mt-6 space-y-6 rounded-2xl border border-orange-100 bg-white/90 p-6 shadow-sm shadow-orange-100">
                 
                 {/* Keywords (Bleibt ein einfaches Input) */}
                 <SettingsInput label="Wichtige Keywords" name="keywords" value={formData.keywords ?? ''} onChange={handleFormChange} placeholder="z.B. Badsanierung, Heizung, Fliesenleger, Dresden..." type="textarea" rows={3} />
                 
                 {/* Leistungsbeschreibung (MIT BUTTON) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <label htmlFor="services_description" className="block text-sm font-medium text-slate-300">Leistungsbeschreibung</label>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <label htmlFor="services_description" className="block text-sm font-medium text-slate-600">Leistungsbeschreibung</label>
                   <div className="relative">
-                    <textarea name="services_description" id="services_description" rows={6} value={formData.services_description ?? ''} onChange={handleFormChange} className="mt-0 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="Eine Zeile pro Leistung, z.B. Sanitär: Installation und Reparatur..." />
-                    <button type="button" onClick={() => handleGenerateProfileText('services')} disabled={aiLoading === 'services' || !formData.business_name} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'services' || !formData.business_name ? 'bg-gray-500 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} >
+                    <textarea name="services_description" id="services_description" rows={6} value={formData.services_description ?? ''} onChange={handleFormChange} className="mt-0 block w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100" placeholder="Eine Zeile pro Leistung, z.B. Sanitär: Installation und Reparatur..." />
+                    <button type="button" onClick={() => handleGenerateProfileText('services')} disabled={aiLoading === 'services' || !formData.business_name} className={`absolute right-2 top-2 inline-flex items-center gap-x-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg transition-colors ${ aiLoading === 'services' || !formData.business_name ? 'bg-slate-300 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-400' }`} >
                       <SparklesIcon className={`h-4 w-4 ${aiLoading === 'services' ? 'animate-spin' : ''}`} />
                       {aiLoading === 'services' ? 'Generiere...' : 'Generieren'}
                     </button>
@@ -636,11 +699,11 @@ export default function EinstellungenPage() {
                 </div>
 
                 {/* Über Uns Text (MIT BUTTON) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <label htmlFor="about_text" className="block text-sm font-medium text-slate-300">Über Uns Text</label>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <label htmlFor="about_text" className="block text-sm font-medium text-slate-600">Über Uns Text</label>
                   <div className="relative">
-                    <textarea name="about_text" id="about_text" rows={6} value={formData.about_text ?? ''} onChange={handleFormChange} className="mt-0 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="Ein kurzer Text über Ihre Firma, Ihre Werte und Ihre Geschichte..." />
-                    <button type="button" onClick={() => handleGenerateProfileText('about')} disabled={aiLoading === 'about' || !formData.business_name} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'about' || !formData.business_name ? 'bg-gray-500 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} >
+                    <textarea name="about_text" id="about_text" rows={6} value={formData.about_text ?? ''} onChange={handleFormChange} className="mt-0 block w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100" placeholder="Ein kurzer Text über Ihre Firma, Ihre Werte und Ihre Geschichte..." />
+                    <button type="button" onClick={() => handleGenerateProfileText('about')} disabled={aiLoading === 'about' || !formData.business_name} className={`absolute right-2 top-2 inline-flex items-center gap-x-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg transition-colors ${ aiLoading === 'about' || !formData.business_name ? 'bg-slate-300 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-400' }`} >
                       <SparklesIcon className={`h-4 w-4 ${aiLoading === 'about' ? 'animate-spin' : ''}`} />
                       {aiLoading === 'about' ? 'Generiere...' : 'Generieren'}
                     </button>
@@ -651,9 +714,9 @@ export default function EinstellungenPage() {
 
             {/* --- Section 4: Rechtliches --- */}
             <section id="rechtliches" className="scroll-mt-32">
-              <h3 className="text-xl font-semibold text-white">Rechtliches</h3>
-              <p className="mt-1 text-sm text-slate-400">WICHTIG: Diese Texte sind für den Betrieb einer Webseite in Deutschland gesetzlich vorgeschrieben.</p>
-              <div className="mt-6 space-y-6 p-6 bg-slate-800 border border-slate-700 rounded-lg">
+              <h3 className="text-xl font-semibold text-slate-900">Rechtliches</h3>
+              <p className="mt-1 text-sm text-slate-600">WICHTIG: Diese Texte sind für den Betrieb einer Webseite in Deutschland gesetzlich vorgeschrieben.</p>
+              <div className="mt-6 space-y-6 rounded-2xl border border-orange-100 bg-white/90 p-6 shadow-sm shadow-orange-100">
                 <SettingsInput label="Impressum" name="impressum_text" value={formData.impressum_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihr Impressum ein..." type="textarea" rows={10} />
                 <SettingsInput label="Datenschutzerklärung" name="datenschutz_text" value={formData.datenschutz_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihre Datenschutzerklärung ein..." type="textarea" rows={10} />
               </div>
@@ -669,19 +732,19 @@ export default function EinstellungenPage() {
             >
               <form onSubmit={handleChangeEmail} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300">Aktuelle Login-E-Mail</label>
-                  <p className="mt-2 text-sm text-slate-400 font-medium">{currentUser?.email}</p>
+                  <label className="block text-sm font-medium text-slate-600">Aktuelle Login-E-Mail</label>
+                  <p className="mt-2 text-sm font-medium text-slate-600">{currentUser?.email}</p>
                 </div>
                 <div>
-                  <label htmlFor="newEmail" className="block text-sm font-medium text-slate-300">Neue E-Mail-Adresse</label>
+                  <label htmlFor="newEmail" className="block text-sm font-medium text-slate-600">Neue E-Mail-Adresse</label>
                   <div className="relative mt-2">
-                    <input type="email" name="newEmail" id="newEmail" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 pl-10 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="neue-email@beispiel.de" />
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><AtSymbolIcon className="h-5 w-5 text-slate-500" /></div>
+                    <input type="email" name="newEmail" id="newEmail" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 pl-10 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100" placeholder="neue-email@beispiel.de" />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><AtSymbolIcon className="h-5 w-5 text-slate-400" /></div>
                   </div>
                 </div>
                 {/* KORREKTUR: "text-right" stellt sicher, dass der Button rechts ist */}
                 <div className="text-right">
-                  <button type="submit" disabled={isChangingEmail || !newEmail} className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:opacity-50">
+                  <button type="submit" disabled={isChangingEmail || !newEmail} className="inline-flex items-center gap-x-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:opacity-50">
                     {isChangingEmail ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
                     {isChangingEmail ? 'Wird gespeichert...' : 'E-Mail ändern'}
                   </button>
