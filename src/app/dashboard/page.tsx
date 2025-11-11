@@ -74,6 +74,10 @@ function ProjectCard({ project }: ProjectCardProps) {
       href={detailUrl}
       className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-transform hover:-translate-y-1 hover:border-orange-200 hover:shadow-xl"
     >
+      <span
+        className="pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.18),_transparent_60%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+        aria-hidden="true"
+      />
       <div className="relative">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -83,7 +87,7 @@ function ProjectCard({ project }: ProjectCardProps) {
           onError={(e) => ((e.target as HTMLImageElement).src = 'https://placehold.co/600x400/fef3c7/ea580c?text=Bild+fehlt')}
         />
         <div
-          className={`absolute top-3 left-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+          className={`absolute top-4 left-4 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold shadow-sm shadow-orange-100 ${
             project.status === 'Published'
               ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200'
               : 'bg-amber-100 text-amber-700 ring-1 ring-amber-200'
@@ -150,7 +154,7 @@ function EmptyProjectsState() {
           </li>
         </ul>
       </div>
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+      <div className="relative mt-8 flex flex-col gap-3 sm:flex-row">
         <Link
           href="/dashboard/projekte/neu"
           className="inline-flex items-center justify-center rounded-full bg-orange-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200"
