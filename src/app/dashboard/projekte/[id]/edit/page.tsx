@@ -5,12 +5,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
-
-// --- HIER IST DER FIX ---
-import ProjectForm from '@/components/ProjectForm'; 
-// Typ-Import aus der neuen, zentralen Datei
-import type { Project } from '@/lib/types'; 
-// --- ENDE DES FIX ---
+import ProjectForm from '@/components/ProjectForm';
+import { DashboardHero } from '@/components/dashboard/DashboardHero';
+import type { Project } from '@/lib/types';
 
 export default function EditProjectPage() {
   const supabase = useMemo(() => createSupabaseClient(), []);
@@ -71,23 +68,69 @@ export default function EditProjectPage() {
     getUserAndProject();
   }, [projectId, router, supabase]);
 
-  if (loading) { return <div className="p-8 text-center text-slate-400">Lade Projekt...</div>; }
-  if (generalError) { return <div className="p-8 text-center text-red-500">{generalError}</div>; }
-  if (!project || !currentUser) { 
-     return <div className="p-8 text-center text-slate-400">Projekt oder Benutzer nicht gefunden.</div>; 
-  } 
+  if (loading) {
+    return (
+      <main className="space-y-10 px-6 py-10 lg:px-10">
+        <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600 shadow-sm shadow-orange-100">
+          Lade Projekt...
+        </div>
+      </main>
+    );
+  }
+
+  if (generalError) {
+    return (
+      <main className="space-y-10 px-6 py-10 lg:px-10">
+        <div className="rounded-3xl border border-red-200 bg-white p-8 text-center text-red-600 shadow-sm shadow-red-100">
+          {generalError}
+        </div>
+      </main>
+    );
+  }
+
+  if (!project || !currentUser) {
+    return (
+      <main className="space-y-10 px-6 py-10 lg:px-10">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center text-slate-600 shadow-sm shadow-orange-100">
+          Projekt oder Benutzer nicht gefunden.
+        </div>
+      </main>
+    );
+  }
+
+  const liveProjectUrl =
+    userSlug && project.status === 'Published'
+      ? `/${userSlug}/portfolio/${project.id}`
+      : undefined;
 
   return (
-    <main className="p-8">
-      <div>
-        <h1 className="text-3xl font-bold text-white">Projekt bearbeiten</h1>
-        <p className="text-slate-400 mt-1">Aktualisieren Sie die Details Ihres Projekts.</p>
-      </div>
-      <ProjectForm 
-        currentUser={currentUser} 
-        userSlug={userSlug} 
-        initialData={project} 
+    <main className="space-y-10 px-6 py-10 lg:px-10">
+      <DashboardHero
+        eyebrow="Projekte"
+        title="Projekt bearbeiten"
+        subtitle="Aktualisieren Sie Inhalte, Bilder und Status dieses Projekts."
+        actions={[
+          {
+            label: 'Zur Projektliste',
+            href: '/dashboard/projekte',
+            variant: 'secondary',
+          },
+          ...(liveProjectUrl
+            ? [
+                {
+                  label: 'Live-Seite ansehen',
+                  href: liveProjectUrl,
+                  variant: 'primary' as const,
+                  target: '_blank',
+                },
+              ]
+            : []),
+        ]}
       />
+
+      <div className="mx-auto max-w-5xl rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-xl shadow-orange-100/40">
+        <ProjectForm currentUser={currentUser} userSlug={userSlug} initialData={project} />
+      </div>
     </main>
   );
 }

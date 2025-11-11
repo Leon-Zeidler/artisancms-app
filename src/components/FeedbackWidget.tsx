@@ -85,34 +85,34 @@ export default function FeedbackWidget() {
       {/* --- The Modal --- */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-[55] bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
           aria-modal="true"
         >
           <div
-            className="fixed bottom-24 right-8 z-[60] w-full max-w-sm rounded-lg bg-slate-800 shadow-xl border border-slate-700"
+            className="fixed bottom-24 right-8 z-[60] w-full max-w-sm rounded-3xl border border-orange-100 bg-white shadow-2xl shadow-orange-200/50"
             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
           >
-            <div className="flex items-center justify-between border-b border-slate-700 p-4">
-              <h3 className="text-lg font-semibold text-white">Beta-Feedback abgeben</h3>
+            <div className="flex items-center justify-between border-b border-orange-100 px-5 py-4">
+              <h3 className="text-lg font-semibold text-slate-900">Beta-Feedback abgeben</h3>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="rounded-full bg-orange-50 p-1.5 text-orange-500 transition hover:bg-orange-100 hover:text-orange-600"
                 aria-label="Feedback-Modal schließen"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 px-5 py-4">
               <div>
-                <label htmlFor="feedback-category" className="block text-sm font-medium text-slate-300 mb-1">
+                <label htmlFor="feedback-category" className="mb-1 block text-sm font-semibold text-slate-800">
                   Kategorie
                 </label>
                 <select
                   id="feedback-category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value as FeedbackCategory)}
-                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                 >
                   <option>Fehlerbericht</option>
                   <option>Funktionswunsch</option>
@@ -120,7 +120,7 @@ export default function FeedbackWidget() {
                 </select>
               </div>
               <div>
-                <label htmlFor="feedback-message" className="block text-sm font-medium text-slate-300 mb-1">
+                <label htmlFor="feedback-message" className="mb-1 block text-sm font-semibold text-slate-800">
                   Ihre Nachricht
                 </label>
                 <textarea
@@ -128,12 +128,12 @@ export default function FeedbackWidget() {
                   rows={5}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                   placeholder="Teilen Sie uns Ihre Meinung mit..."
                   required
                 />
-                <p className="text-xs text-slate-500 mt-1">
-                  Aktuelle Seite: <code className="bg-slate-700 px-1 py-0.5 rounded">{pathname}</code>
+                <p className="mt-1 text-xs text-slate-500">
+                  Aktuelle Seite: <code className="rounded bg-orange-50 px-2 py-0.5 text-orange-600">{pathname}</code>
                 </p>
               </div>
               <div className="flex justify-end gap-3">
@@ -141,14 +141,14 @@ export default function FeedbackWidget() {
                   type="button"
                   onClick={() => setIsOpen(false)}
                   disabled={isLoading}
-                  className="rounded-md px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+                  className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Abbrechen
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading || !currentUser} 
-                  className="inline-flex items-center gap-x-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 disabled:bg-orange-800 disabled:cursor-not-allowed"
+                  disabled={isLoading || !currentUser}
+                  className="inline-flex items-center gap-x-2 rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:bg-orange-300"
                 >
                   {isLoading && <ArrowPathIcon className="h-4 w-4" />}
                   {isLoading ? 'Wird gesendet...' : 'Feedback senden'}
@@ -162,7 +162,7 @@ export default function FeedbackWidget() {
       {/* --- The Button --- */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-8 right-8 z-50 h-14 w-14 rounded-full bg-orange-600 p-3 text-white shadow-lg transition-transform hover:scale-110 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+        className="fixed bottom-8 right-8 z-50 h-14 w-14 rounded-full bg-orange-500 p-3 text-white shadow-lg shadow-orange-200 transition-transform hover:scale-110 hover:bg-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 focus:ring-offset-white"
         aria-label="Feedback-Modal öffnen"
       >
         <ChatBubbleLeftRightIcon className="h-full w-full" />

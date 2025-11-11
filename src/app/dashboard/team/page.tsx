@@ -105,36 +105,37 @@ function TeamMemberModal({ modalState, onClose, onSave, isSaving }: TeamMemberMo
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog">
-            <div className="bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-lg border border-slate-700 relative max-h-[90vh] flex flex-col">
-                 <button onClick={onClose} disabled={isSaving} className="absolute top-4 right-4 text-slate-400 hover:text-white disabled:opacity-50"> <XMarkIcon className="h-6 w-6" /> </button>
-                <h2 className="text-xl font-semibold text-white mb-6"> {modalState.mode === 'add' ? 'Neues Team-Mitglied' : 'Team-Mitglied bearbeiten'} </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" aria-modal="true" role="dialog">
+            <div className="relative flex w-full max-w-lg max-h-[90vh] flex-col rounded-2xl border border-orange-100 bg-white p-6 shadow-2xl shadow-orange-100/50">
+                 <button onClick={onClose} disabled={isSaving} className="absolute right-4 top-4 text-slate-400 transition hover:text-orange-500 disabled:opacity-50"> <XMarkIcon className="h-6 w-6" /> </button>
+                <h2 className="mb-6 text-xl font-semibold text-slate-900"> {modalState.mode === 'add' ? 'Neues Team-Mitglied' : 'Team-Mitglied bearbeiten'} </h2>
                 <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto pr-2">
                     <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-300">Profilbild</label>
+                        <label className="mb-2 block text-sm font-medium text-slate-600">Profilbild</label>
                         <div className="flex items-center gap-4">
-                            <div className="flex-shrink-0 h-24 w-24 flex items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-slate-500 overflow-hidden">
-                                {avatarPreview ? ( 
+                            <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-white text-slate-400 shadow-sm">
+                                {avatarPreview ? (
                                     // --- FIX: Added eslint-disable for next/image warning ---
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={avatarPreview} alt="Avatar Vorschau" className="h-full w-full object-cover" /> 
+                                    <img src={avatarPreview} alt="Avatar Vorschau" className="h-full w-full object-cover" />
                                 ) : ( <UserGroupIcon className="h-12 w-12" /> )}
                             </div>
                             <div className="flex-grow space-y-2">
-                                <input type="file" id="avatarUpload" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 focus:ring-offset-slate-800"/>
-                                {avatarPreview && <button type="button" onClick={handleRemoveImage} className="text-xs text-red-400 hover:text-red-300">Bild entfernen</button>}
+                                <input type="file" id="avatarUpload" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-md file:border-0 file:bg-orange-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-orange-700 hover:file:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-200"/>
+                                {avatarPreview && <button type="button" onClick={handleRemoveImage} className="text-xs font-semibold text-red-500 transition hover:text-red-400">Bild entfernen</button>}
                             </div>
                         </div>
                     </div>
-                    <div> <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-1">Name *</label> <input type="text" name="name" id="name" required value={formData.name} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" /> </div>
-                    <div> <label htmlFor="role" className="block text-sm font-medium text-slate-300 mb-1">Position / Rolle</label> <input type="text" name="role" id="role" value={formData.role ?? ''} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="z.B. Geschäftsführer, Meister, Geselle" /> </div>
-                    <div> <label htmlFor="bio" className="block text-sm font-medium text-slate-300 mb-1">Kurz-Bio</label> <textarea name="bio" id="bio" rows={3} value={formData.bio ?? ''} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="z.B. Experte für Badsanierung seit 10 Jahren..."/> </div>
-                    <div> <label htmlFor="display_order" className="block text-sm font-medium text-slate-300 mb-1">Sortier-Reihenfolge</label> <input type="number" name="display_order" id="display_order" value={formData.display_order} onChange={handleChange} className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-orange-500" /> <p className="text-xs text-slate-500 mt-1">Niedrigere Zahlen werden zuerst angezeigt (z.B. 0, 1, 2...).</p> </div>
+                    <div> <label htmlFor="name" className="mb-1 block text-sm font-medium text-slate-600">Name *</label> <input type="text" name="name" id="name" required value={formData.name} onChange={handleChange} className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100" /> </div>
+                    <div> <label htmlFor="role" className="mb-1 block text-sm font-medium text-slate-600">Position / Rolle</label> <input type="text" name="role" id="role" value={formData.role ?? ''} onChange={handleChange} className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100" placeholder="z.B. Geschäftsführer, Meister, Geselle" /> </div>
+                    <div> <label htmlFor="bio" className="mb-1 block text-sm font-medium text-slate-600">Kurz-Bio</label> <textarea name="bio" id="bio" rows={3} value={formData.bio ?? ''} onChange={handleChange} className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100" placeholder="z.B. Experte für Badsanierung seit 10 Jahren..."/> </div>
+                    <div> <label htmlFor="display_order" className="mb-1 block text-sm font-medium text-slate-600">Sortier-Reihenfolge</label> <input type="number" name="display_order" id="display_order" value={formData.display_order} onChange={handleChange} className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100" /> <p className="mt-1 text-xs text-slate-500">Niedrigere Zahlen werden zuerst angezeigt (z.B. 0, 1, 2...).</p> </div>
                     {localError && <p className="text-sm text-red-500">{localError}</p>}
                 </form>
-                <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-slate-700"> 
-                    <button type="button" onClick={onClose} disabled={isSaving} className="rounded-md px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-50"> Abbrechen </button>
-                    <button type="button" onClick={handleSubmit} disabled={isSaving} className={`inline-flex items-center gap-x-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors ${ isSaving ? 'bg-orange-800 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'}`}> {isSaving && <ArrowPathIcon className="h-4 w-4 animate-spin" />} {isSaving ? 'Wird gespeichert...' : 'Speichern'} </button> AiFillAlipayCircle</div>
+                <div className="mt-4 flex justify-end gap-3 border-t border-orange-100 pt-6">
+                    <button type="button" onClick={onClose} disabled={isSaving} className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"> Abbrechen </button>
+                    <button type="button" onClick={handleSubmit} disabled={isSaving} className={`inline-flex items-center gap-x-2 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition ${ isSaving ? 'bg-orange-300 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-400'}`}> {isSaving && <ArrowPathIcon className="h-4 w-4 animate-spin" />} {isSaving ? 'Wird gespeichert...' : 'Speichern'} </button>
+                </div>
             </div>
         </div>
     );
@@ -333,8 +334,8 @@ export default function TeamManagementPage() {
                 </div>
             </DashboardHero>
 
-            {loading && (<div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-10 text-center text-sm text-slate-300">Lade Team-Mitglieder...</div>)}
-            {error && !loading && (<div className="rounded-2xl border border-red-500/40 bg-red-900/30 p-6 text-center text-sm text-red-100">{error}</div>)}
+            {loading && (<div className="rounded-2xl border border-orange-100 bg-white p-10 text-center text-sm text-slate-600 shadow-lg shadow-orange-100/40">Lade Team-Mitglieder...</div>)}
+            {error && !loading && (<div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">{error}</div>)}
 
             {!loading && (
                 <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
@@ -346,7 +347,7 @@ export default function TeamManagementPage() {
                                 return (
                                     <div
                                         key={member.id}
-                                        className={`flex items-center justify-between rounded-2xl border border-slate-700/70 bg-slate-800/70 p-4 transition hover:-translate-y-0.5 hover:border-orange-500/60 hover:bg-slate-800/90 ${isDisabled ? 'opacity-70 pointer-events-none' : ''}`}
+                                        className={`flex items-center justify-between rounded-2xl border border-orange-100 bg-white/90 p-4 shadow-sm shadow-orange-100 transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg ${isDisabled ? 'opacity-70 pointer-events-none' : ''}`}
                                     >
                                         <div className="flex items-center space-x-4 flex-1 min-w-0">
                                             {/* --- FIX: Added eslint-disable for next/image warning --- */}
@@ -360,9 +361,9 @@ export default function TeamManagementPage() {
                                                 className="h-14 w-14 flex-shrink-0 rounded-full object-cover"
                                             />
                                             <div className="min-w-0">
-                                                <p className="font-semibold text-white truncate">{member.name}</p>
-                                                <p className="text-sm text-slate-400 truncate">{member.role || 'Keine Position'}</p>
-                                                {member.bio && <p className="mt-1 line-clamp-2 text-sm text-slate-400">{member.bio}</p>}
+                                                <p className="truncate text-sm font-semibold text-slate-900">{member.name}</p>
+                                                <p className="truncate text-xs text-slate-500">{member.role || 'Keine Position'}</p>
+                                                {member.bio && <p className="mt-1 line-clamp-2 text-sm text-slate-600">{member.bio}</p>}
                                             </div>
                                         </div>
                                         <div className="flex items-center space-x-2 flex-shrink-0 pl-4">
@@ -375,8 +376,8 @@ export default function TeamManagementPage() {
                                                 title="Bearbeiten"
                                                 className={`inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors ${
                                                     isDisabled
-                                                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                                                        : 'bg-blue-600/20 text-blue-300 hover:bg-blue-500/30'
+                                                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                                        : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
                                                 }`}
                                             >
                                                 <span className="sr-only">Bearbeiten</span>
@@ -388,10 +389,10 @@ export default function TeamManagementPage() {
                                                 title="Löschen"
                                                 className={`inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors ${
                                                     actionLoading[member.id] === 'delete'
-                                                        ? 'bg-slate-600 text-slate-400 cursor-wait'
+                                                        ? 'bg-slate-100 text-slate-400 cursor-wait'
                                                         : isDisabled
-                                                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                                                        : 'bg-red-600/20 text-red-300 hover:bg-red-500/30'
+                                                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                                        : 'bg-red-100 text-red-600 hover:bg-red-200'
                                                 }`}
                                             >
                                                 <span className="sr-only">Löschen</span>
@@ -415,24 +416,24 @@ export default function TeamManagementPage() {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="overflow-hidden rounded-2xl border border-slate-700/70 bg-slate-900/60">
-                            <div className="border-b border-slate-800/70 bg-gradient-to-r from-slate-900 via-slate-900/60 to-orange-900/30 px-5 py-4">
-                                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-200">Storytelling-Tipps</h2>
+                        <div className="overflow-hidden rounded-2xl border border-orange-100 bg-white/90 shadow-lg shadow-orange-100/40">
+                            <div className="border-b border-orange-100 bg-gradient-to-r from-orange-50 via-white to-orange-100 px-5 py-4">
+                                <h2 className="text-sm font-semibold uppercase tracking-wide text-orange-600">Storytelling-Tipps</h2>
                             </div>
-                            <div className="space-y-3 px-5 py-4 text-sm text-slate-300">
+                            <div className="space-y-3 px-5 py-4 text-sm text-slate-600">
                                 <p>Schreiben Sie kurze Bios, die Fachgebiete und persönliche Highlights kombinieren – so wirkt Ihr Team nahbar.</p>
                                 <p>Nutzen Sie hochwertige Porträts oder Arbeitsfotos mit identischem Hintergrund, um einen einheitlichen Eindruck zu schaffen.</p>
                                 <p>Positionieren Sie Ihr wichtigstes Teammitglied an erster Stelle durch die Sortier-Reihenfolge.</p>
                             </div>
                         </div>
-                        <div className="rounded-2xl border border-slate-700/70 bg-slate-900/60 p-5 text-sm text-slate-300">
-                            <h3 className="text-base font-semibold text-white">Mehr Vertrauen aufbauen</h3>
-                            <p className="mt-2 text-sm text-slate-400">
+                        <div className="rounded-2xl border border-orange-100 bg-white/90 p-5 text-sm text-slate-600 shadow-lg shadow-orange-100/40">
+                            <h3 className="text-base font-semibold text-slate-900">Mehr Vertrauen aufbauen</h3>
+                            <p className="mt-2 text-sm text-slate-600">
                                 Ergänzen Sie Ihre Teamseite mit Testimonials und Projektlinks, damit Besucher direkt sehen, welche Qualität sie erwartet.
                             </p>
                             <button
                                 onClick={() => router.push('/dashboard/testimonials')}
-                                className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-orange-900/40 transition hover:bg-orange-400"
+                                className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400"
                             >
                                 Kundenstimmen hinzufügen
                             </button>

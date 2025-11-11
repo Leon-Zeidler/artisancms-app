@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { useProfile } from '@/contexts/ProfileContext'; // <-- IMPORT CONTEXT
@@ -49,18 +50,17 @@ export default function ClientTestimonialsPage() {
           setTestimonials(data || []);
         }
 
-      } catch (err: any) {
-         if (!error) { 
-           setError(err.message || "Ein Fehler ist aufgetreten.");
-         }
-         setTestimonials([]);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten.';
+        setError(message);
+        setTestimonials([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchTestimonialsData();
-  }, [profile]); 
+  }, [profile, supabase]);
 
   // === Render Logic ===
   if (loading) { return <div className="min-h-screen flex items-center justify-center">Lade Kundenstimmen...</div>; }
@@ -86,7 +86,14 @@ export default function ClientTestimonialsPage() {
                             testimonials.map((testimonial) => (
                                 <div key={testimonial.id} className="py-12">
                                     <div className="flex items-center gap-x-4">
-                                        <img className="h-12 w-12 flex-none rounded-full bg-gray-50 object-cover ring-1 ring-gray-200" src={`https://placehold.co/48x48/E2E8F0/475569?text=${testimonial.author_name.charAt(0)}`} alt="" />
+                                        <Image
+                                          className="h-12 w-12 flex-none rounded-full bg-gray-50 object-cover ring-1 ring-gray-200"
+                                          src={`https://placehold.co/48x48/E2E8F0/475569?text=${testimonial.author_name.charAt(0)}`}
+                                          alt=""
+                                          width={48}
+                                          height={48}
+                                          unoptimized
+                                        />
                                         <div>
                                             <h3 className="text-base font-semibold leading-7 tracking-tight text-gray-900">{testimonial.author_name}</h3>
                                             {testimonial.author_handle && <p className="text-sm leading-6 text-gray-600">{testimonial.author_handle}</p>}

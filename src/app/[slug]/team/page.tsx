@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -48,11 +49,10 @@ export default function ClientTeamPage() {
           setTeamMembers(data || []);
         }
 
-      } catch (err: any) {
-         if (!error) { 
-           setError(err.message || "Ein Fehler ist aufgetreten.");
-         }
-         setTeamMembers([]);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Ein Fehler ist aufgetreten.';
+        setError(message);
+        setTeamMembers([]);
       } finally {
         setLoading(false);
       }
@@ -87,7 +87,14 @@ export default function ClientTeamPage() {
                         teamMembers.map((person) => (
                             <li key={person.id} className="flex flex-col gap-6">
                                 {person.avatar_url ? (
-                                    <img className="aspect-[3/2] w-full rounded-2xl object-cover" src={person.avatar_url} alt={`Portrait von ${person.name}`} />
+                                    <Image
+                                      className="aspect-[3/2] w-full rounded-2xl object-cover"
+                                      src={person.avatar_url}
+                                      alt={`Portrait von ${person.name}`}
+                                      width={480}
+                                      height={320}
+                                      unoptimized
+                                    />
                                 ) : (
                                     <div className="aspect-[3/2] w-full rounded-2xl bg-slate-100 flex items-center justify-center">
                                         <UserGroupIcon className="h-24 w-24 text-slate-400" />

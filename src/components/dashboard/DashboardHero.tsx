@@ -20,28 +20,28 @@ type DashboardHeroProps = {
 
 const variantStyles: Record<NonNullable<HeroAction['variant']>, string> = {
   primary:
-    'inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-900/40 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200',
+    'inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-200/60 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200',
   secondary:
-    'inline-flex items-center justify-center gap-2 rounded-full border border-slate-600 px-5 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-orange-400 hover:text-orange-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200',
+    'inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-orange-300 hover:text-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200',
 };
 
 export function DashboardHero({ eyebrow, title, subtitle, actions, children }: DashboardHeroProps) {
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-slate-700/70 bg-slate-900/70 p-8 shadow-2xl shadow-slate-900/40">
+    <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-orange-100/40">
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 w-2/3 bg-[radial-gradient(circle_at_top,rgba(249,115,22,0.35),transparent_60%)]"
+        className="pointer-events-none absolute inset-y-0 right-0 w-2/3 bg-[radial-gradient(circle_at_top,rgba(249,115,22,0.18),transparent_70%)]"
         aria-hidden="true"
       />
       <div className="relative z-10 space-y-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-3">
             {eyebrow && (
-              <span className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-200">
+              <span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-orange-600">
                 {eyebrow}
               </span>
             )}
-            <h1 className="text-3xl font-bold text-white lg:text-4xl">{title}</h1>
-            {subtitle && <p className="text-base text-slate-300 lg:max-w-3xl">{subtitle}</p>}
+            <h1 className="text-3xl font-bold text-slate-900 lg:text-4xl">{title}</h1>
+            {subtitle && <p className="text-base text-slate-600 lg:max-w-3xl">{subtitle}</p>}
           </div>
           {actions && actions.length > 0 && (
             <div className="flex flex-wrap gap-3">

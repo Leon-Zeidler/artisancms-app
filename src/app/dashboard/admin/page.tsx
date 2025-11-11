@@ -21,7 +21,18 @@ const InboxIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fi
 // --- Re-using StatCard Component ---
 type StatCardProps = { title: string; value: string | number; description: string; icon: React.ElementType; };
 function StatCard({ title, value, description, icon: Icon }: StatCardProps) {
-  return ( <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 flex justify-between items-center"> <div> <p className="text-sm text-slate-400">{title}</p> <p className="text-3xl font-bold text-white">{value}</p> <p className="text-xs text-slate-500">{description}</p> </div> <div className="bg-slate-900 p-3 rounded-lg"> <Icon className="h-6 w-6 text-slate-400" /> </div> </div> );
+  return (
+    <div className="flex items-center justify-between rounded-2xl border border-orange-100 bg-white/90 p-6 shadow-lg shadow-orange-100/40">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-orange-500">{title}</p>
+        <p className="mt-2 text-3xl font-bold text-slate-900">{value}</p>
+        <p className="text-xs text-slate-500">{description}</p>
+      </div>
+      <div className="rounded-xl bg-orange-50 p-3 text-orange-500">
+        <Icon className="h-6 w-6" />
+      </div>
+    </div>
+  );
 }
 
 // --- TYPE DEFINITIONS ---
@@ -118,7 +129,7 @@ export default function AdminPage() {
     };
 
     initializeAdmin();
-  }, [router]); // Added router dependency
+  }, [router, supabase]); // Added router dependency
 
   // --- Modal Handlers (Kept all original functions) ---
   const handleOpenFeedback = (item: Feedback) => {
@@ -176,16 +187,16 @@ export default function AdminPage() {
   // --- Render Logic ---
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-400">Loading Admin Dashboard...</div>;
+    return <div className="flex h-full items-center justify-center p-10 text-sm text-slate-500">Loading Admin Dashboard...</div>;
   }
-  
+
   if (error) {
-     return <div className="p-8 text-center text-red-500">{error}</div>;
+     return <div className="p-8 text-center text-red-600">{error}</div>;
   }
-  
+
   // This check is now cosmetic, the API routes provide the real security
   if (!isAdmin) {
-     return <div className="p-8 text-center text-red-500">Access Denied.</div>;
+     return <div className="p-8 text-center text-red-600">Access Denied.</div>;
   }
 
   // 6. UPDATED userMap logic
@@ -193,95 +204,95 @@ export default function AdminPage() {
   // We can just access `item.profiles.email`.
 
   return (
-    <main className="p-8">
+    <main className="space-y-10 px-6 py-10 lg:px-10">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-        <p className="text-slate-400 mt-1">Overview of all beta test activity.</p>
+        <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
+        <p className="mt-1 text-slate-600">Overview of all beta test activity.</p>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
         <StatCard title="Total Users" value={totalUsers} description="All signed-up profiles" icon={UsersIcon} />
         <StatCard title="Total Projects" value={totalProjects} description="All projects created" icon={DocumentDuplicateIcon} />
-        <StatCard 
-          title="New Feedback" 
-          value={newFeedback.length} 
+        <StatCard
+          title="New Feedback"
+          value={newFeedback.length}
           description={`${masterFeedbackList.length} total submissions`}
           icon={InboxIcon} 
         />
       </div>
 
       {/* Data Lists */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
-        
+      <div className="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-2">
+
         {/* Column 1: Feedback */}
         <div>
-          <h2 className="text-2xl font-bold text-white mb-6">New Feedback ({newFeedback.length})</h2>
+          <h2 className="mb-6 text-2xl font-bold text-slate-900">New Feedback ({newFeedback.length})</h2>
           <div className="space-y-4">
             {newFeedback.length > 0 ? (
               newFeedback.map(item => (
-                <button 
-                  key={item.id} 
+                <button
+                  key={item.id}
                   onClick={() => handleOpenFeedback(item)}
-                  className="w-full p-4 bg-slate-800 rounded-lg border border-slate-700 text-left transition-all hover:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full rounded-2xl border border-orange-100 bg-white/90 p-4 text-left shadow-sm shadow-orange-100 transition hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-300"
                 >
                   <div className="flex justify-between items-center mb-2">
                     {/* 7. UPDATED to use new data shape */}
-                    <span className="text-sm font-semibold text-white truncate max-w-[200px]">
+                    <span className="max-w-[200px] truncate text-sm font-semibold text-slate-900">
                       {item.profiles?.email || `Unknown User (${item.user_id.slice(0, 8)}...)`}
                     </span>
                     <div className="flex items-center gap-2">
                       {item.admin_notes && (
-                        <PencilSquareIcon className="h-4 w-4 text-slate-500" title="Note added" />
+                        <PencilSquareIcon className="h-4 w-4 text-slate-400" title="Note added" />
                       )}
-                      <span className="text-xs text-orange-400 bg-orange-900/50 px-2 py-0.5 rounded-full">
+                      <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-600">
                         {item.category}
                       </span>
                     </div>
                   </div>
-                  <p className="text-sm text-slate-300 mb-2 truncate">{item.message}</p>
+                  <p className="mb-2 text-sm text-slate-600 line-clamp-2">{item.message}</p>
                   <p className="text-xs text-slate-500">
                     On page: <code className="text-slate-400">{item.page_url}</code>
                   </p>
                 </button>
               ))
             ) : (
-              <p className="text-slate-500 text-center py-4">No new feedback. Inbox is clear!</p>
+              <p className="py-4 text-center text-slate-500">No new feedback. Inbox is clear!</p>
             )}
           </div>
-          
+
           <details className="mt-8">
-            <summary className="text-xl font-semibold text-white cursor-pointer hover:text-orange-400">
+            <summary className="cursor-pointer text-xl font-semibold text-slate-900 transition hover:text-orange-500">
               Resolved Feedback ({resolvedFeedback.length})
             </summary>
             <div className="space-y-4 mt-6">
               {resolvedFeedback.length > 0 ? (
                 resolvedFeedback.map(item => (
-                  <button 
-                    key={item.id} 
+                  <button
+                    key={item.id}
                     onClick={() => handleOpenFeedback(item)}
-                    className="w-full p-4 bg-slate-800/60 rounded-lg border border-slate-700/60 text-left transition-all hover:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 opacity-70 hover:opacity-100"
+                    className="w-full rounded-2xl border border-emerald-100 bg-white/80 p-4 text-left shadow-sm shadow-emerald-100 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300"
                   >
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="mb-2 flex items-center justify-between">
                       {/* 7. UPDATED to use new data shape */}
-                      <span className="text-sm font-medium text-slate-300 truncate max-w-[200px]">
+                      <span className="max-w-[200px] truncate text-sm font-medium text-slate-700">
                         {item.profiles?.email || `Unknown User`}
                       </span>
                       <div className="flex items-center gap-2">
                         {item.admin_notes && (
-                          <PencilSquareIcon className="h-4 w-4 text-slate-500" title="Note added" />
+                          <PencilSquareIcon className="h-4 w-4 text-slate-400" title="Note added" />
                         )}
-                        <span className="text-xs text-green-400 bg-green-900/50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-600">
                           <CheckIcon className="h-3 w-3" /> Resolved
                         </span>
                       </div>
                     </div>
-                    <p className="text-sm text-slate-400 mb-2 truncate">{item.message}</p>
+                    <p className="text-sm text-slate-600 line-clamp-2">{item.message}</p>
                   </button>
                 ))
               ) : (
-                <p className="text-slate-500 text-center py-4">No feedback resolved yet.</p>
+                <p className="py-4 text-center text-slate-500">No feedback resolved yet.</p>
               )}
             </div>
           </details>
@@ -289,18 +300,18 @@ export default function AdminPage() {
 
         {/* Column 2: Users */}
         <div>
-          <h2 className="text-2xl font-bold text-white mb-6">Registered Users ({userList.length})</h2>
+          <h2 className="mb-6 text-2xl font-bold text-slate-900">Registered Users ({userList.length})</h2>
           <div className="space-y-4">
             {userList.length > 0 ? (
               userList.map(profile => (
-                <div key={profile.id} className="p-4 bg-slate-800 rounded-lg border border-slate-700">
-                  <p className="text-sm font-semibold text-white">{profile.business_name || "No Business Name"}</p>
-                  <p className="text-sm text-slate-400">{profile.email || "No Email Found"}</p>
-                  <p className="text-xs text-slate-500 mt-1">Slug: {profile.slug || "Not set"}</p>
+                <div key={profile.id} className="rounded-2xl border border-orange-100 bg-white/90 p-4 shadow-sm shadow-orange-100">
+                  <p className="text-sm font-semibold text-slate-900">{profile.business_name || "No Business Name"}</p>
+                  <p className="text-sm text-slate-600">{profile.email || "No Email Found"}</p>
+                  <p className="mt-1 text-xs text-slate-500">Slug: {profile.slug || "Not set"}</p>
                 </div>
               ))
             ) : (
-              <p className="text-slate-500 text-center py-4">No users have signed up yet.</p>
+              <p className="py-4 text-center text-slate-500">No users have signed up yet.</p>
             )}
           </div>
         </div>
