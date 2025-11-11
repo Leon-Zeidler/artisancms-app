@@ -512,13 +512,12 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
         {initialData?.id && (
             <div className="space-y-8 border-b border-slate-700 pb-12">
                   <h2 className="text-xl font-semibold leading-7 text-white">Projekt Galerie</h2>
-                   {/* eslint-disable-next-line react/no-unescaped-entities */}
-                  <ProjectGalleryManager
-   projectId={initialData.id as unknown as string} // Cast von 'bigint' zu string
-   userId={currentUser.id}
-   initialGalleryImages={formData.gallery_images || []}
-   onGalleryUpdate={(newGallery: { url: string; path: string; }[]) => setFormData(prev => ({ ...prev, gallery_images: newGallery }))}
-/>
+                   <ProjectGalleryManager
+                    projectId={initialData.id as unknown as string}
+                    userId={currentUser.id}
+                    initialGalleryImages={formData.gallery_images || []}
+                    onGalleryUpdate={(newGallery: { url: string; path: string; }[]) => setFormData(prev => ({ ...prev, gallery_images: newGallery }))}
+                  />
             </div>
         )}
         
