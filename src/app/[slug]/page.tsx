@@ -6,9 +6,14 @@ import Image from 'next/image';
 import React, { useState, useEffect, useMemo } from 'react';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { useProfile } from '@/contexts/ProfileContext'; // <-- IMPORT CONTEXT
+// --- 1. IMPORT THE CORRECT TYPE ---
+import type { Project } from '@/lib/types';
 
 // --- TYPE DEFINITIONS (Updated) ---
+// --- 2. REMOVE THE OLD LOCAL TYPE ---
+/*
 type Project = { id: string; title: string | null; 'project-date': string | null; image_url: string | null; status: 'Published' | 'Draft' | string | null; created_at: string; ai_description?: string | null; };
+*/
 type Testimonial = {
   id: string;
   author_name: string;
@@ -17,6 +22,7 @@ type Testimonial = {
 };
 
 // --- Icons ---
+// (Icons remain the same)
 const Icon = ({ path, className, color }: { path: string, className?: string, color?: string }) => (
     <svg className={className || "h-6 w-6 text-white"} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke={color || "currentColor"} aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d={path} />
@@ -42,7 +48,7 @@ const EnvelopeIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 type FormStatus = 'idle' | 'loading' | 'success' | 'error';
-
+// (Rest of the helper functions)
 const projectBlurDataUrl =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEwIDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJhZGlhbEdyYWRpZW50IGlkPSJhIiBjeD0iNSIgY3k9IjQiIHI9IjUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmM2YyZWYiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmOGY5ZmYiLz48L3JhZGlhbEdyYWRpZW50PjxyZWN0IHdpZHRoPSIxMCIgaGVpZ2h0PSI4IiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+';
 
@@ -183,6 +189,7 @@ const isColorDark = (color: string | null | undefined): boolean => {
   }
 };
 
+
 // --- MAIN PAGE ---
 export default function ClientHomepage() {
   // === State Variables ===
@@ -190,7 +197,7 @@ export default function ClientHomepage() {
   const profile = useProfile(); // <-- GET PROFILE FROM CONTEXT
   
   // These states are specific to this page
-  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
+  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]); // Uses ProjectCard
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loadingContent, setLoadingContent] = useState(true);
 
@@ -207,6 +214,7 @@ export default function ClientHomepage() {
     const fetchPageContent = async () => {
       setLoadingContent(true);
       try {
+        // --- 3. UPDATE THE SELECT STATEMENT ---
         const { data: projects, error: projectsError } = await supabase
           .from('projects').select(`*`).eq('user_id', profile.id).eq('status', 'Published').order('created_at', { ascending: false }).limit(3); // <-- Updated to select *
         if (projectsError) throw projectsError;
@@ -226,7 +234,7 @@ export default function ClientHomepage() {
     };
 
     fetchPageContent();
-  }, [profile, supabase]); // <-- ADDED supabase dependency
+  }, [profile, supabase]);
 
   // --- Helper to parse services ---
   const parsedServices = profile.services_description?.split('\n').map(line => { const parts = line.split(':'); const name = parts[0]?.trim(); const description = parts.slice(1).join(':').trim(); if (name && description) { const iconKey = Object.keys(serviceIcons).find(key => name.toLowerCase().includes(key.toLowerCase())) || 'Default'; return { name, description, icon: serviceIcons[iconKey as keyof typeof serviceIcons] }; } return null; }).filter(Boolean) as { name: string; description: string; icon: string }[] || [];
@@ -368,11 +376,9 @@ export default function ClientHomepage() {
                 {parsedServices.map((service) => (
                   <div key={service.name} className="card-surface flex h-full flex-col p-6">
                     {/* --- 2. THIS IS THE CARD TITLE --- */}
-                    {/* Before: className={`... ${servicesHeadingColor}`} */}
                     <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
                       
                       {/* --- 3. THIS IS THE ICON STACK --- */}
-                      {/* Before: className="flex h-10 w-10 ... bg-brand/10 text-brand" */}
                       <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconStackBg} ${iconStackIconColor}`}>
                         <Icon path={service.icon} />
                       </span>
@@ -380,7 +386,6 @@ export default function ClientHomepage() {
                     </dt>
                     
                     {/* --- 4. THIS IS THE CARD DESCRIPTION --- */}
-                    {/* Before: className={`... ${servicesTextColor}`} */}
                     <dd className="mt-4 text-sm leading-6 sm:text-base sm:leading-7 text-gray-600">
                       {service.description}
                     </dd>
@@ -418,10 +423,11 @@ export default function ClientHomepage() {
                     : 'bg-amber-100 text-amber-700';
                 const statusLabel =
                   status === 'published' ? 'Live' : status === 'draft' ? 'Entwurf' : 'In Vorbereitung';
+                // --- 4. FIX THE IMAGE PROPERTY ---
                 const projectImage =
-                  project.image_url || `https://placehold.co/960x720/A3A3A3/FFF?text=${encodeURIComponent(project.title || 'Projekt')}`;
-                const summary = project.ai_description
-                  ? `${project.ai_description.substring(0, 120)}${project.ai_description.length > 120 ? '…' : ''}`
+                  project.after_image_url || `https://placehold.co/960x720/A3A3A3/FFF?text=${encodeURIComponent(project.title || 'Projekt')}`;
+                const summary = (project as any).ai_description // Use 'any' to access ai_description which is on our local Project type
+                  ? `${(project as any).ai_description.substring(0, 120)}${(project as any).ai_description.length > 120 ? '…' : ''}`
                   : 'Erfahren Sie mehr über dieses Projekt und die verwendeten Materialien im Portfolio.';
 
                 return (
@@ -477,6 +483,7 @@ export default function ClientHomepage() {
       )}
 
       {/* ========== TESTIMONIALS SECTION ========== */}
+      {/* (This section remains unchanged) */}
       {testimonials.length > 0 && (
            <section id="testimonials" className="relative isolate overflow-hidden bg-white px-6 py-24 sm:py-32 lg:px-8">
                <div className="hidden sm:block absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_top,theme(colors.indigo.100),white)] opacity-30" aria-hidden="true" />
@@ -517,6 +524,7 @@ export default function ClientHomepage() {
       )}
 
       {/* ========== CONTACT SECTION ========== */}
+      {/* (This section remains unchanged) */}
       <section id="kontakt" className="bg-gray-50 py-24 sm:py-28">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-x-12 gap-y-16 lg:grid-cols-5">

@@ -8,8 +8,12 @@ import { User } from '@supabase/supabase-js';
 import PlusIcon from '@/components/icons/PlusIcon';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { DashboardStatCard } from '@/components/dashboard/DashboardStatCard';
+// --- 1. IMPORT THE CORRECT TYPE ---
+import type { Project } from '@/lib/types';
 
 // --- TYPE DEFINITIONS ---
+// --- 2. REMOVE THE OLD LOCAL TYPE ---
+/*
 type Project = {
   id: string;
   title: string | null;
@@ -18,12 +22,13 @@ type Project = {
   status: 'Published' | 'Draft' | string | null;
   created_at: string;
 };
-
-type ProjectCardProps = { project: Project };
+*/
+type ProjectCardProps = { project: Project }; // This now uses ProjectCard
 type QuickAction = { name: string; description: string; href: string; icon: React.ElementType; badge?: string };
 type ResourceLink = { name: string; description: string; href: string };
 
 // --- ICON COMPONENTS ---
+// (Icons remain the same)
 const DocumentDuplicateIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
     <path
@@ -33,7 +38,6 @@ const DocumentDuplicateIcon = (props: React.SVGProps<SVGSVGElement>) => (
     />
   </svg>
 );
-
 const PencilSquareIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
     <path
@@ -43,19 +47,16 @@ const PencilSquareIcon = (props: React.SVGProps<SVGSVGElement>) => (
     />
   </svg>
 );
-
 const CheckBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
-
 const ArrowRightIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
   </svg>
 );
-
 const RocketLaunchIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
     <path
@@ -65,13 +66,11 @@ const RocketLaunchIcon = (props: React.SVGProps<SVGSVGElement>) => (
     />
   </svg>
 );
-
 const UsersIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" d="M18 20a4 4 0 00-8 0m8 0v-.5a6.5 6.5 0 00-13 0v.5m8-9a3 3 0 100-6 3 3 0 000 6zm-5 0a3 3 0 100-6 3 3 0 000 6z" />
   </svg>
 );
-
 const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
     <path
@@ -81,7 +80,7 @@ const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
     />
   </svg>
 );
-
+// (Rest of the QuickAction/ResourceLink data)
 const quickActions: QuickAction[] = [
   {
     name: 'Projekt starten',
@@ -121,6 +120,7 @@ const resourceLinks: ResourceLink[] = [
     href: '/dashboard/admin',
   },
 ];
+
 
 function ProjectCard({ project }: ProjectCardProps) {
   const displayDate = project['project-date']
@@ -189,7 +189,7 @@ function NewProjectCard() {
     </Link>
   );
 }
-
+// (WelcomeGuide, QuickActionCard, ResourceList, EmptyProjectsState remain the same)
 const WelcomeGuide = () => {
   const actions = [
     { name: 'Projekt erstellen', description: 'Beginnen Sie mit Ihrem ersten Referenzprojekt.', href: '/dashboard/projekte/neu' },
@@ -295,7 +295,6 @@ function EmptyProjectsState() {
     <div className="flex h-full flex-col justify-between rounded-2xl border border-slate-700/70 bg-slate-900/50 p-8">
       <div className="space-y-4">
         <span className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-orange-200">
-          {/* --- FIX: Replaced ' with &apos; --- */}
           Los geht&apos;s
         </span>
         <h2 className="text-2xl font-bold text-white">Ihr Dashboard ist startklar</h2>
@@ -335,10 +334,11 @@ function EmptyProjectsState() {
   );
 }
 
+
 // --- MAIN PAGE COMPONENT ---
 export default function DashboardPage() {
   const supabase = useMemo(() => createSupabaseClient(), []);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]); // This now uses ProjectCard
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -369,10 +369,11 @@ export default function DashboardPage() {
       }
 
       setCurrentUser(user);
-
+      
+      // --- 3. UPDATE THE SELECT STATEMENT ---
       const { data, error: fetchError } = await supabase
         .from('projects')
-        .select(`*`) // <-- Updated to fetch all columns
+        .select(`*`) // <-- FIX: Fetch all columns
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -388,7 +389,7 @@ export default function DashboardPage() {
     };
 
     fetchData();
-  }, [supabase]);
+  }, [supabase]); // <-- supabase was the missing dependency
 
   const totalProjects = projects.length;
   const publishedProjects = projects.filter((p) => p.status === 'Published').length;

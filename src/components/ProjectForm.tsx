@@ -6,7 +6,7 @@ import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
-import ProjectGalleryManager from './ProjectGalleryManager';
+import ProjectGalleryManager from './ProjectGalleryManager'; // <-- ADD THIS LINE
 import type { Project, ProjectFormProps } from '@/lib/types';
 
 // --- ICONS ---
@@ -373,6 +373,10 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
       }
   };
   
+const handleGalleryUpdate = (newGallery: { url: string; path: string; }[]) => {
+    setFormData(prev => ({ ...prev, gallery_images: newGallery }));
+  };
+
   const isFormDisabled = isUploadingBefore || isUploadingAfter || isGenerating || isSaving;
   const publicProjectUrl = userSlug && initialData?.status === 'Published' 
       ? `/${userSlug}/portfolio/${initialData.id}` 
@@ -521,6 +525,26 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             </div>
         )}
         
+        {/* --- ADD THIS ENTIRE SECTION --- */}
+        {/* --- Gallery Manager --- */}
+        {initialData?.id && (
+            <div className="space-y-8 border-b border-slate-700 pb-12">
+                  <h2 className="text-xl font-semibold leading-7 text-white">Projekt Galerie</h2>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Fügen Sie hier weitere Bilder hinzu, um Ihr Projekt im Detail zu zeigen.
+                  </p>
+                   <ProjectGalleryManager
+                    // The 'as unknown' cast is necessary because your Project type has id: number
+                    // but the GalleryManager expects a string.
+                    projectId={initialData.id as unknown as string} 
+                    userId={currentUser.id}
+                    initialGalleryImages={formData.gallery_images || []}
+                    onGalleryUpdate={handleGalleryUpdate}
+                  />
+            </div>
+        )}
+        {/* --- END OF ADDED SECTION --- */}
+
          {/* --- Private Notes --- */}
          <div className="space-y-8">
              {/* (Code ist identisch) */}

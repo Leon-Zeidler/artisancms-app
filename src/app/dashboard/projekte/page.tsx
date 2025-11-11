@@ -13,9 +13,28 @@ import RequestTestimonialModal from '@/components/RequestTestimonialModal';
 import PlusIcon from '@/components/icons/PlusIcon';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
 import { DashboardStatCard } from '@/components/dashboard/DashboardStatCard';
-import type { Project } from '@/lib/types';
+// --- 1. IMPORT THE FULL PROJECT TYPE ---
+import type { Project } from '@/lib/types'; 
+
+// --- TYPE DEFINITIONS (FIXED) ---
+// --- 2. REMOVE THE OLD LOCAL TYPE ---
+/*
+type Project = {
+  id: string;
+  title: string | null;
+  client?: string | null; 
+  'project-date': string | null;
+  after_image_url: string | null; 
+  after_image_storage_path: string | null; 
+  status: 'Published' | 'Draft' | string | null;
+  created_at: string;
+  ai_description?: string | null;
+  gallery_images: { url: string; path: string }[] | null; 
+};
+*/
 
 // --- ICON COMPONENTS ---
+// (Icons remain the same)
 const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> </svg> );
 const EyeSlashIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /> </svg> );
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
@@ -27,7 +46,7 @@ const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fi
 
 // --- PROJECT LIST ITEM COMPONENT ---
 interface ProjectListItemProps { 
-  project: Project; 
+  project: Project; // This uses the full Project type
   onStatusToggle: (projectId: string, currentStatus: string | null) => void; 
   onDeleteRequest: (project: Project) => void;
   onRequestTestimonial: (project: Project) => void; 
@@ -44,7 +63,6 @@ function ProjectListItem({
   isDeleting 
 }: ProjectListItemProps) {
   const displayDate = project['project-date'] ? new Date(project['project-date']).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
-  // --- (FIXED) ---
   const imageUrl = project.after_image_url || `https://placehold.co/48x48/334155/94a3b8?text=${encodeURIComponent(project.title?.charAt(0) || 'P')}`;
   const isPublished = project.status === 'Published';
   const editUrl = `/dashboard/projekte/${project.id}/edit`;
@@ -85,8 +103,8 @@ function ProjectListItem({
 // --- MAIN PAGE COMPONENT ---
 export default function ProjektePage() {
   // === State Variables ===
-  const supabase = useMemo(() => createSupabaseClient(), []); // <-- CREATED CLIENT INSTANCE
-  const [projects, setProjects] = useState<Project[]>([]);
+  const supabase = useMemo(() => createSupabaseClient(), []); 
+  const [projects, setProjects] = useState<Project[]>([]); // This now uses the full Project type
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [togglingProjectId, setTogglingProjectId] = useState<string | null>(null);
@@ -108,10 +126,10 @@ export default function ProjektePage() {
 
   console.log(`All Projects: Fetching projects for user ${user.id}...`);
     
-    // --- (FIXED) UPDATED SELECT QUERY ---
+    // --- 3. UPDATE THE SELECT STATEMENT ---
     const { data, error: fetchError } = await supabase
       .from('projects')
-      .select(`*`) // <-- This now fetches all fields, matching the Project type
+      .select(`*`) // <-- This is correct, fetch all fields
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -125,7 +143,7 @@ export default function ProjektePage() {
     setProjects(data || []);
   }
   setLoading(false);
-}, [supabase]); // <-- The dependency array now correctly closes the useCallback hook
+}, [supabase]); // <-- supabase was the missing dependency
 
   // === Initial Data Fetch ===
   useEffect(() => {
@@ -156,9 +174,10 @@ export default function ProjektePage() {
         await fetchProjects(user);
     };
     getUserAndFetchData();
-  }, [router, supabase, fetchProjects]); // <-- ADDED supabase.auth dependency
+  }, [router, supabase, fetchProjects]); // <-- Added supabase
 
   // === Handle Status Toggle Function ===
+  // (This function remains unchanged)
   const handleStatusToggle = async (projectId: string, currentStatus: string | null) => {
     if (!currentUser) {
       toast.error("Fehler: Benutzer nicht gefunden. Bitte laden Sie die Seite neu.");
@@ -201,6 +220,7 @@ export default function ProjektePage() {
 
 
   // === Handle Delete Request (Opens Modal) ===
+  // (This function remains unchanged)
   const handleDeleteRequest = (project: Project) => { 
     setError(null); 
     setDeletingProject(project); 
@@ -208,14 +228,14 @@ export default function ProjektePage() {
   };
 
   // === Handle Delete Confirmation (Actual Deletion) ===
+  // (This function remains unchanged)
   const handleConfirmDelete = async () => {
     if (!deletingProject || !currentUser) return;
 
     setIsConfirmingDelete(true);
     setTogglingProjectId(deletingProject.id); 
 
-    // --- (FIXED) ---
-    const imagePath = deletingProject.after_image_storage_path; // <-- Corrected name
+    const imagePath = deletingProject.after_image_storage_path;
     const galleryImagePaths = deletingProject.gallery_images?.map(img => img.path) || [];
 
     const deletePromise = async () => {
@@ -270,6 +290,7 @@ export default function ProjektePage() {
   };
 
   // === Handle Cancel Delete ===
+  // (This function remains unchanged)
   const handleCancelDelete = () => { 
     setShowDeleteConfirm(false); 
     setDeletingProject(null); 
@@ -279,6 +300,7 @@ export default function ProjektePage() {
   
   
   // --- Handlers for the new modal ---
+  // (These functions remain unchanged)
   const handleOpenRequestModal = (project: Project) => {
     setRequestModalProject(project);
   };
@@ -327,6 +349,7 @@ export default function ProjektePage() {
 
 
   // === Render Logic ===
+  // (This logic remains unchanged)
   const totalProjects = projects.length;
   const publishedProjects = projects.filter((project) => project.status === 'Published').length;
   const draftProjects = totalProjects - publishedProjects;

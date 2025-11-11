@@ -6,8 +6,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { useProfile } from '@/contexts/ProfileContext'; // <-- IMPORT CONTEXT
+// --- 1. FIX THE IMPORT ---
+import type { Project } from '@/lib/types'; // <-- Use Project, not ProjectCard
 
 // --- TYPE DEFINITIONS (Updated) ---
+// --- 2. REMOVE THE OLD LOCAL TYPE ---
+/*
 type Project = {
   id: string;
   title: string | null;
@@ -18,9 +22,11 @@ type Project = {
   ai_description: string | null;
   gallery_images: { url: string; path: string }[] | null;
 };
+*/
+
 // --- PORTFOLIO CARD COMPONENT ---
 interface PortfolioCardProps {
-  project: Project;
+  project: Project; // This now uses the correct, full Project type
   slug: string | null;
 }
 function PortfolioCard({ project, slug }: PortfolioCardProps) {
@@ -60,7 +66,7 @@ export default function ClientPortfolioPage() {
   // === State Variables ===
   const supabase = useMemo(() => createSupabaseClient(), []);
   const profile = useProfile(); // <-- GET PROFILE FROM CONTEXT
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]); // This now uses the correct Project type
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,11 +78,11 @@ export default function ClientPortfolioPage() {
       setLoading(true); setError(null); setProjects([]);
 
       try {
-        // --- Updated select query ---
+        // --- 3. FIX THE SELECT STATEMENT ---
         const { data, error: fetchError } = await supabase
           .from('projects')
-          .select(`*`) // <-- Updated to fetch all columns
-          .eq('user_id', profile.id) 
+          .select(`*`) // <-- Fetch all columns to match the Project type
+          .eq('user_id', profile.id)
           .eq('status', 'Published')
           .order('project-date', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false });
@@ -99,7 +105,7 @@ export default function ClientPortfolioPage() {
     };
 
     fetchPortfolioData();
-  }, [profile, supabase]); // <-- Depend on profile from context and supabase
+  }, [profile, supabase]);
 
   // === Render Logic ===
   if (loading) { return <div className="min-h-screen flex items-center justify-center">Lade Portfolio...</div>; }
