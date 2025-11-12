@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
 import PlusIcon from '@/components/icons/PlusIcon';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
-import { DashboardStatCard } from '@/components/dashboard/DashboardStatCard';
 // --- 1. IMPORT THE CORRECT TYPE ---
 import type { Project } from '@/lib/types';
 
@@ -130,12 +129,12 @@ function NewProjectCard() {
 
 function EmptyProjectsState() {
   return (
-    <div className="flex h-full flex-col justify-between rounded-2xl border border-orange-200 bg-white p-8 shadow-md shadow-orange-100/60">
+    <div className="flex h-full flex-col justify-between rounded-2xl border border-slate-200/70 bg-white/80 p-8 shadow-sm">
       <div className="space-y-4">
-        <span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-orange-600">
+        <span className="inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-orange-600">
           Los geht&apos;s
         </span>
-        <h2 className="text-2xl font-bold text-slate-900">Ihr Dashboard ist startklar</h2>
+        <h2 className="text-xl font-semibold text-slate-900">Ihr Dashboard ist startklar</h2>
         <p className="text-sm text-slate-600">
           Sie haben noch keine Projekte veröffentlicht. Legen Sie direkt los und zeigen Sie, was Ihr Unternehmen auszeichnet.
         </p>
@@ -157,7 +156,7 @@ function EmptyProjectsState() {
       <div className="relative mt-8 flex flex-col gap-3 sm:flex-row">
         <Link
           href="/dashboard/projekte/neu"
-          className="inline-flex items-center justify-center rounded-full bg-orange-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200"
+          className="inline-flex items-center justify-center rounded-full bg-orange-500 px-6 py-2.5 text-sm font-semibold text-white shadow-sm shadow-orange-200 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200"
         >
           Jetzt erstes Projekt erstellen
         </Link>
@@ -236,93 +235,122 @@ export default function DashboardPage() {
 
   const greeting = currentUser?.email ? currentUser.email.split('@')[0] : 'Artisan';
 
+  const summaryStats = [
+    {
+      title: 'Alle Projekte',
+      value: totalProjects,
+      description: hasProjects ? `${totalProjects} Projekte aktiv` : 'Noch keine Projekte',
+      icon: DocumentDuplicateIcon,
+    },
+    {
+      title: 'Entwürfe',
+      value: draftProjects,
+      description: draftProjects > 0 ? 'Feinschliff empfohlen' : 'Alles live geschaltet',
+      icon: PencilSquareIcon,
+    },
+    {
+      title: 'Veröffentlicht',
+      value: publishedProjects,
+      description: publishedProjects > 0 ? 'Sichtbar auf Ihrer Website' : 'Noch nichts live',
+      icon: CheckBadgeIcon,
+    },
+  ];
+
   return (
-    <main className="space-y-10 bg-gradient-to-b from-orange-50/60 via-white to-white px-6 py-10 lg:px-10">
+    <main className="space-y-8 bg-slate-50 px-4 py-8 sm:px-8">
       <DashboardHero
         eyebrow="Dashboard"
         title={`Willkommen zurück, ${greeting}!`}
-        subtitle="Behalten Sie Ihre wichtigsten Kennzahlen im Blick und führen Sie Besucher in wenigen Minuten zu einer eindrucksvollen Referenzseite."
+        subtitle="Ein kompakter Überblick über Ihren aktuellen Fortschritt."
         actions={[
           {
-            label: 'Neues Projekt erstellen',
+            label: 'Neues Projekt',
             href: '/dashboard/projekte/neu',
             icon: PlusIcon,
           },
           {
-            label: 'Hilfe-Center öffnen',
+            label: 'Hilfe-Center',
             href: '/dashboard/hilfe',
             variant: 'secondary',
           },
         ]}
       >
-        {currentUser && <p className="text-xs text-slate-500">Angemeldet als: {currentUser.email}</p>}
-        <div className="grid gap-4 md:grid-cols-3">
-          <DashboardStatCard
-            title="Alle Projekte"
-            value={totalProjects}
-            description="Gesamt erstellt"
-            icon={DocumentDuplicateIcon}
-            trend={hasProjects ? `${totalProjects} Projekte aktiv` : 'Noch keine Projekte angelegt'}
-          />
-          <DashboardStatCard
-            title="Entwürfe"
-            value={draftProjects}
-            description="Noch in Bearbeitung"
-            icon={PencilSquareIcon}
-            accent="indigo"
-            trend={draftProjects > 0 ? 'Feinschliff empfohlen' : 'Alle Projekte sind veröffentlicht'}
-          />
-          <DashboardStatCard
-            title="Veröffentlicht"
-            value={publishedProjects}
-            description="Öffentlich sichtbar"
-            icon={CheckBadgeIcon}
-            accent="emerald"
-            trend={publishedProjects > 0 ? 'Sichtbar auf Ihrer Webseite' : 'Noch nichts live geschaltet'}
-          />
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          {currentUser && (
+            <p className="text-xs text-slate-500">Angemeldet als {currentUser.email}</p>
+          )}
+          <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+            <span className="rounded-full bg-slate-100 px-3 py-1">{hasProjects ? 'Ihre Projekte laufen' : 'Noch keine Projekte angelegt'}</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1">{publishedProjects} veröffentlicht</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1">{draftProjects} in Arbeit</span>
+          </div>
         </div>
       </DashboardHero>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-orange-100/40">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <h2 className="text-xl font-semibold text-slate-900">Nächste Schritte</h2>
-            <p className="text-sm text-slate-600">Wählen Sie aus, wie Sie Ihr Dashboard weiter gestalten möchten.</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
+      <section className="grid gap-4 lg:grid-cols-[2fr,1fr]">
+        <div className="rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">Status im Blick</h2>
+              <p className="text-sm text-slate-500">Ihre wichtigsten Kennzahlen in einer ruhigen Übersicht.</p>
+            </div>
             <Link
               href="/dashboard/projekte"
-              className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-orange-200 transition hover:bg-orange-400"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-orange-200 hover:text-orange-500"
             >
-              Projekte ansehen
-              <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <Link
-              href="/dashboard/einstellungen#branding"
-              className="inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:text-orange-500"
-            >
-              Branding anpassen
-              <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <Link
-              href="/dashboard/hilfe"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-orange-200 hover:text-orange-500"
-            >
-              Hilfe-Center öffnen
+              Alle Projekte
               <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            {summaryStats.map(({ title, value, description, icon: Icon }) => (
+              <div key={title} className="rounded-xl border border-slate-200/60 bg-white/90 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                </div>
+                <p className="mt-3 text-2xl font-semibold text-slate-900">{value}</p>
+                <p className="mt-1 text-xs text-slate-500">{description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-sm">
+          <h2 className="text-base font-semibold text-slate-900">Schnelle Aktionen</h2>
+          <p className="mt-1 text-sm text-slate-500">Springen Sie direkt zu den häufigsten Aufgaben.</p>
+          <ul className="mt-4 space-y-3 text-sm text-slate-600">
+            <li>
+              <Link className="flex items-center justify-between rounded-xl border border-transparent px-3 py-2 transition hover:border-orange-200 hover:bg-orange-50" href="/dashboard/projekte/neu">
+                Neues Projekt starten
+                <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </li>
+            <li>
+              <Link className="flex items-center justify-between rounded-xl border border-transparent px-3 py-2 transition hover:border-orange-200 hover:bg-orange-50" href="/dashboard/einstellungen#branding">
+                Branding aktualisieren
+                <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </li>
+            <li>
+              <Link className="flex items-center justify-between rounded-xl border border-transparent px-3 py-2 transition hover:border-orange-200 hover:bg-orange-50" href="/dashboard/hilfe">
+                Hilfe-Center ansehen
+                <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </li>
+          </ul>
         </div>
       </section>
 
       {loading && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-600 shadow-sm">
+        <div className="rounded-2xl border border-slate-200/70 bg-white/80 p-10 text-center text-sm text-slate-600 shadow-sm">
           Lade Projekte...
         </div>
       )}
 
       {error && !loading && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-600">
+        <div className="rounded-2xl border border-rose-200/80 bg-rose-50/80 p-6 text-center text-sm text-rose-600">
           {error}
         </div>
       )}
@@ -330,7 +358,7 @@ export default function DashboardPage() {
       {!loading && !error && (
         <section className="space-y-6">
           {hasProjects ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-orange-100/40">
+            <div className="rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-sm">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-900">Aktuelle Projekte</h2>
