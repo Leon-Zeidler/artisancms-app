@@ -130,7 +130,7 @@ function NewProjectCard() {
 
 function EmptyProjectsState() {
   return (
-    <div className="flex h-full flex-col justify-between rounded-2xl border border-orange-200 bg-white p-8 shadow-md shadow-orange-100/60">
+    <div className="flex h-full flex-col justify-between rounded-3xl border border-orange-100 bg-white/90 p-8 shadow-sm shadow-orange-100/40">
       <div className="space-y-4">
         <span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-orange-600">
           Los geht&apos;s
@@ -237,132 +237,164 @@ export default function DashboardPage() {
   const greeting = currentUser?.email ? currentUser.email.split('@')[0] : 'Artisan';
 
   return (
-    <main className="space-y-10 bg-gradient-to-b from-orange-50/60 via-white to-white px-6 py-10 lg:px-10">
-      <DashboardHero
-        eyebrow="Dashboard"
-        title={`Willkommen zurück, ${greeting}!`}
-        subtitle="Behalten Sie Ihre wichtigsten Kennzahlen im Blick und führen Sie Besucher in wenigen Minuten zu einer eindrucksvollen Referenzseite."
-        actions={[
-          {
-            label: 'Neues Projekt erstellen',
-            href: '/dashboard/projekte/neu',
-            icon: PlusIcon,
-          },
-          {
-            label: 'Hilfe-Center öffnen',
-            href: '/dashboard/hilfe',
-            variant: 'secondary',
-          },
-        ]}
-      >
-        {currentUser && <p className="text-xs text-slate-500">Angemeldet als: {currentUser.email}</p>}
-        <div className="grid gap-4 md:grid-cols-3">
-          <DashboardStatCard
-            title="Alle Projekte"
-            value={totalProjects}
-            description="Gesamt erstellt"
-            icon={DocumentDuplicateIcon}
-            trend={hasProjects ? `${totalProjects} Projekte aktiv` : 'Noch keine Projekte angelegt'}
-          />
-          <DashboardStatCard
-            title="Entwürfe"
-            value={draftProjects}
-            description="Noch in Bearbeitung"
-            icon={PencilSquareIcon}
-            accent="indigo"
-            trend={draftProjects > 0 ? 'Feinschliff empfohlen' : 'Alle Projekte sind veröffentlicht'}
-          />
-          <DashboardStatCard
-            title="Veröffentlicht"
-            value={publishedProjects}
-            description="Öffentlich sichtbar"
-            icon={CheckBadgeIcon}
-            accent="emerald"
-            trend={publishedProjects > 0 ? 'Sichtbar auf Ihrer Webseite' : 'Noch nichts live geschaltet'}
-          />
-        </div>
-      </DashboardHero>
+    <main className="min-h-screen bg-slate-50 px-4 py-10 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+          <DashboardHero
+            eyebrow="Dashboard"
+            title={`Willkommen zurück, ${greeting}!`}
+            subtitle="Konzentrieren Sie sich auf die nächsten Schritte – wir behalten die wichtigsten Zahlen für Sie im Blick."
+            actions={[
+              {
+                label: 'Neues Projekt erstellen',
+                href: '/dashboard/projekte/neu',
+                icon: PlusIcon,
+              },
+              {
+                label: 'Hilfe-Center öffnen',
+                href: '/dashboard/hilfe',
+                variant: 'secondary',
+              },
+            ]}
+          >
+            {currentUser && <p className="text-xs text-slate-500">Angemeldet als: {currentUser.email}</p>}
+          </DashboardHero>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-orange-100/40">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <h2 className="text-xl font-semibold text-slate-900">Nächste Schritte</h2>
-            <p className="text-sm text-slate-600">Wählen Sie aus, wie Sie Ihr Dashboard weiter gestalten möchten.</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/dashboard/projekte"
-              className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-orange-200 transition hover:bg-orange-400"
-            >
-              Projekte ansehen
-              <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <Link
-              href="/dashboard/einstellungen#branding"
-              className="inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:text-orange-500"
-            >
-              Branding anpassen
-              <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <Link
-              href="/dashboard/hilfe"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:border-orange-200 hover:text-orange-500"
-            >
-              Hilfe-Center öffnen
-              <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {loading && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-600 shadow-sm">
-          Lade Projekte...
-        </div>
-      )}
-
-      {error && !loading && (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-600">
-          {error}
-        </div>
-      )}
-
-      {!loading && !error && (
-        <section className="space-y-6">
-          {hasProjects ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-orange-100/40">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Aktuelle Projekte</h2>
-                  <p className="text-sm text-slate-600">Eine Kurzübersicht Ihrer letzten Aktivitäten.</p>
-                </div>
-                <Link
-                  href="/dashboard/projekte"
-                  className="inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:text-orange-500"
-                >
-                  Alle Projekte anzeigen
-                  <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              </div>
-
-              <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                <NewProjectCard />
-                {projects.slice(0, 5).map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
-              </div>
-
-              {projects.length > 5 && (
-                <p className="mt-6 text-center text-xs text-slate-500">
-                  {projects.length - 5} weitere Projekte warten auf Ihre Aufmerksamkeit.
-                </p>
-              )}
+          <aside className="flex flex-col gap-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm shadow-slate-200/40">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold text-slate-900">Aktuelle Kennzahlen</h2>
+              <p className="text-sm text-slate-600">Eine ruhige Übersicht über Ihren Fortschritt.</p>
             </div>
-          ) : (
-            <EmptyProjectsState />
-          )}
+            <div className="space-y-4">
+              <DashboardStatCard
+                title="Alle Projekte"
+                value={totalProjects}
+                description="Gesamt erstellt"
+                icon={DocumentDuplicateIcon}
+                trend={hasProjects ? `${totalProjects} Projekte aktiv` : 'Noch keine Projekte angelegt'}
+              />
+              <DashboardStatCard
+                title="Entwürfe"
+                value={draftProjects}
+                description="Noch in Bearbeitung"
+                icon={PencilSquareIcon}
+                accent="indigo"
+                trend={draftProjects > 0 ? 'Feinschliff empfohlen' : 'Alle Projekte sind veröffentlicht'}
+              />
+              <DashboardStatCard
+                title="Veröffentlicht"
+                value={publishedProjects}
+                description="Öffentlich sichtbar"
+                icon={CheckBadgeIcon}
+                accent="emerald"
+                trend={publishedProjects > 0 ? 'Sichtbar auf Ihrer Webseite' : 'Noch nichts live geschaltet'}
+              />
+            </div>
+          </aside>
         </section>
-      )}
+
+        <section className="grid gap-6 lg:grid-cols-2">
+          <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm shadow-slate-200/30">
+            <div className="space-y-1">
+              <h2 className="text-xl font-semibold text-slate-900">Nächste Schritte</h2>
+              <p className="text-sm text-slate-600">Wählen Sie ein Ziel und arbeiten Sie fokussiert weiter.</p>
+            </div>
+            <div className="mt-6 grid gap-3">
+              <Link
+                href="/dashboard/projekte"
+                className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-600"
+              >
+                <span>Projekte ansehen</span>
+                <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/dashboard/einstellungen#branding"
+                className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-600"
+              >
+                <span>Branding anpassen</span>
+                <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/dashboard/hilfe"
+                className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-600"
+              >
+                <span>Hilfe-Center öffnen</span>
+                <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm shadow-slate-200/30">
+            <div className="space-y-1">
+              <h2 className="text-xl font-semibold text-slate-900">Support &amp; Ressourcen</h2>
+              <p className="text-sm text-slate-600">Nutzen Sie hilfreiche Tools, um schneller voranzukommen.</p>
+            </div>
+            <ul className="mt-6 space-y-4 text-sm text-slate-600">
+              <li className="flex items-start gap-3">
+                <CheckBadgeIcon className="mt-1 h-5 w-5 text-orange-500" aria-hidden="true" />
+                <span>Nutzen Sie KI-Vorlagen, um Projekte in wenigen Minuten aufzusetzen.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <CheckBadgeIcon className="mt-1 h-5 w-5 text-orange-500" aria-hidden="true" />
+                <span>Planen Sie Feedbackrunden mit Ihrem Team direkt in den Projekt-Details.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <CheckBadgeIcon className="mt-1 h-5 w-5 text-orange-500" aria-hidden="true" />
+                <span>Besuchen Sie das Hilfe-Center für Schritt-für-Schritt-Anleitungen und Best Practices.</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        {loading && (
+          <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-600 shadow-sm">
+            Lade Projekte...
+          </div>
+        )}
+
+        {error && !loading && (
+          <div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-600">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && (
+          <section className="space-y-6">
+            {hasProjects ? (
+              <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-sm shadow-slate-200/30">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Aktuelle Projekte</h2>
+                    <p className="text-sm text-slate-600">Eine Kurzübersicht Ihrer letzten Aktivitäten.</p>
+                  </div>
+                  <Link
+                    href="/dashboard/projekte"
+                    className="inline-flex items-center gap-2 rounded-full border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:border-orange-300 hover:text-orange-500"
+                  >
+                    Alle Projekte anzeigen
+                    <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </div>
+
+                <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                  <NewProjectCard />
+                  {projects.slice(0, 5).map((project) => (
+                    <ProjectCard key={project.id} project={project} />
+                  ))}
+                </div>
+
+                {projects.length > 5 && (
+                  <p className="mt-6 text-center text-xs text-slate-500">
+                    {projects.length - 5} weitere Projekte warten auf Ihre Aufmerksamkeit.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <EmptyProjectsState />
+            )}
+          </section>
+        )}
+      </div>
     </main>
   );
 }
