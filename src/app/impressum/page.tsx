@@ -2,6 +2,7 @@
 "use client";
 
 import Link from 'next/link';
+import LegalDisclaimer from '@/components/LegalDisclaimer';
 
 export default function ImpressumPage() {
   return (
@@ -21,6 +22,8 @@ export default function ImpressumPage() {
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Impressum
           </h1>
+
+          <LegalDisclaimer />
 
           {/* This 'prose' class adds nice default styling for text */}
           <div className="mt-10 prose prose-lg prose-slate max-w-none">

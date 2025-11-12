@@ -2,6 +2,7 @@
 "use client";
 
 import React from 'react';
+import LegalDisclaimer from '@/components/LegalDisclaimer';
 import { useProfile } from '@/contexts/ProfileContext'; // <-- IMPORT CONTEXT
 
 export default function DatenschutzPage() {
@@ -14,6 +15,8 @@ export default function DatenschutzPage() {
         <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
           Datenschutzerklärung
         </h1>
+
+        <LegalDisclaimer />
 
         <div className="mt-10 prose prose-lg prose-slate max-w-none">
           {profile.datenschutz_text ? (

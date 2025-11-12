@@ -7,6 +7,8 @@ import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import LegalDisclaimer from '@/components/LegalDisclaimer';
+import { DATENSCHUTZERKLAERUNG_TEMPLATE } from '@/lib/legalTemplates';
 
 // --- TYPE DEFINITIONS ---
 type Profile = {
@@ -408,6 +410,11 @@ export default function EinstellungenPage() {
     }
   };
 
+  const handleInsertDatenschutzTemplate = () => {
+    setFormData(prev => ({ ...prev, datenschutz_text: DATENSCHUTZERKLAERUNG_TEMPLATE }));
+    toast.success('Datenschutz-Vorlage eingefügt. Bitte passe sie auf deinen Betrieb an.');
+  };
+
   // --- Handle Save Profile ---
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -717,8 +724,21 @@ export default function EinstellungenPage() {
               <h3 className="text-xl font-semibold text-slate-900">Rechtliches</h3>
               <p className="mt-1 text-sm text-slate-600">WICHTIG: Diese Texte sind für den Betrieb einer Webseite in Deutschland gesetzlich vorgeschrieben.</p>
               <div className="mt-6 space-y-6 rounded-2xl border border-orange-100 bg-white/90 p-6 shadow-sm shadow-orange-100">
+                <LegalDisclaimer variant="dashboard" className="mt-0" />
                 <SettingsInput label="Impressum" name="impressum_text" value={formData.impressum_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihr Impressum ein..." type="textarea" rows={10} />
-                <SettingsInput label="Datenschutzerklärung" name="datenschutz_text" value={formData.datenschutz_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihre Datenschutzerklärung ein..." type="textarea" rows={10} />
+                <div className="space-y-2">
+                  <SettingsInput label="Datenschutzerklärung" name="datenschutz_text" value={formData.datenschutz_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihre Datenschutzerklärung ein..." type="textarea" rows={10} />
+                  <div className="flex flex-col gap-2 rounded-xl bg-amber-50/80 p-4 text-xs text-amber-900 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:text-sm">
+                    <p>Nutze unsere Vorlage als Ausgangspunkt und passe sie auf deinen Betrieb an.</p>
+                    <button
+                      type="button"
+                      onClick={handleInsertDatenschutzTemplate}
+                      className="inline-flex items-center justify-center rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-orange-400"
+                    >
+                      Vorlage einfügen
+                    </button>
+                  </div>
+                </div>
               </div>
             </section>
           
