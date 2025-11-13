@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js'; // Import createClient
+import { INDUSTRY_TEMPLATES, resolveIndustry } from '@/lib/industry-templates';
 
 export async function POST(request: Request) {
   
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
   
   // --- 4. NEW: Fetch User's Profile Keywords ---
   let userKeywords = '';
+  let industry = 'sonstiges';
   try {
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
     );
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('keywords')
+      .select('keywords, industry')
       .eq('id', user.id)
       .single();
     
@@ -49,14 +51,17 @@ export async function POST(request: Request) {
     if (profile && profile.keywords) {
       userKeywords = profile.keywords;
     }
+    industry = resolveIndustry(profile?.industry);
   } catch (err) {
     console.warn("Could not fetch user keywords for AI prompt, proceeding without them.");
   }
+  const template = INDUSTRY_TEMPLATES[industry];
+  const templateServices = template.defaultServices.join(', ');
   // --- END OF NEW SECTION ---
 
 
   // --- 5. Construct the Prompt (Now with keywords) ---
-  let prompt = `Write a short, professional project description (max 2-3 sentences) in German for a portfolio, based on the following project title: "${title}". Focus on the work performed and the quality.`;
+  let prompt = `Schreibe eine kurze, professionelle Projektbeschreibung (max. 2-3 Sätze) auf Deutsch für das Portfolio eines ${template.label}s. Projekt: "${title}". Betone die ausgeführten Arbeiten, Qualität und typische Leistungen wie ${templateServices}.`;
 
   if (notes && notes.trim() !== '') {
     prompt += `\n\nIncorporate these specific notes about the project: "${notes}"`;
@@ -64,7 +69,7 @@ export async function POST(request: Request) {
   
   // --- ADDED KEYWORDS TO PROMPT ---
   if (userKeywords && userKeywords.trim() !== '') {
-     prompt += `\n\nAlso, try to relate this project to the business's main keywords, which are: "${userKeywords}".`;
+     prompt += `\n\nBeziehe die wichtigsten Schlagworte des Betriebs mit ein: "${userKeywords}".`;
   }
 
   // --- 6. Call OpenAI API (no changes needed below) ---

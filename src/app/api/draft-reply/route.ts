@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { INDUSTRY_TEMPLATES, resolveIndustry } from '@/lib/industry-templates';
 
 export async function POST(request: Request) {
   const cookieStore = cookies();
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
     // --- 1. ADD 'keywords' TO THE SELECT ---
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('services_description, business_name, keywords')
+      .select('services_description, business_name, keywords, industry')
       .eq('id', user.id)
       .single();
 
@@ -46,22 +47,26 @@ export async function POST(request: Request) {
     }
 
     const { services_description, business_name, keywords } = profile;
+    const industry = resolveIndustry(profile.industry);
+    const template = INDUSTRY_TEMPLATES[industry];
+    const templateServices = template.defaultServices.join('\n');
 
     // 5. Construct the prompt for OpenAI
     // --- 2. ADD 'keywords' TO THE PROMPT ---
     const prompt = `
-      Du bist ein professioneller und freundlicher Assistent für einen deutschen Handwerksbetrieb namens "${business_name || 'mein Betrieb'}".
+      Du bist ein professioneller und freundlicher Assistent für einen ${template.label} namens "${business_name || 'mein Betrieb'}".
       Ein Kunde hat die folgende Anfrage gesendet:
       ---
       ${customerMessage}
       ---
-      
+
       Dies sind die Leistungen, die mein Betrieb anbietet:
       ---
-      ${services_description || 'Allgemeine Handwerksleistungen'}
+      ${services_description || templateServices}
       ---
 
       Die Haupt-Schlagworte des Betriebs sind: "${keywords || 'keine Angabe'}".
+      Typische Leistungen dieser Branche sind außerdem: ${template.defaultServices.join(', ')}.
 
       Bitte verfasse einen kurzen, höflichen Antwortentwurf.
       - Sprich den Kunden mit "Sehr geehrte/r Anfragesteller/in" an (wir kennen den Namen nicht).

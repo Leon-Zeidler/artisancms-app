@@ -55,7 +55,7 @@ export async function GET() {
   // on the 'profiles' table, but 'updated_at' does.
   const { data, error } = await supabaseAdmin
     .from('profiles')
-    .select('id, business_name, slug, email')
+    .select('id, business_name, slug, email, industry')
     .order('updated_at', { ascending: false });
   // --- END OF FIX ---
 

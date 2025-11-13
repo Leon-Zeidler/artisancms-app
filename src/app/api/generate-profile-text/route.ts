@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
+import { INDUSTRY_TEMPLATES, resolveIndustry } from '@/lib/industry-templates';
 
 export async function POST(request: Request) {
   
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
   }
 
   // <-- 1. EXTRACT 'keywords' FROM REQUEST BODY -->
-  const { context, type, keywords } = requestData;
+  const { context, type, keywords, industry: requestedIndustry } = requestData;
 
   if (!context || !type) {
     return NextResponse.json({ error: "Context (e.g., business name) and type ('services' or 'about') are required" }, { status: 400 });
@@ -36,19 +37,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Server configuration error (API key missing)" }, { status: 500 });
   }
 
-  // --- 2. Construct the Prompt based on type AND keywords ---
+  const industry = resolveIndustry(requestedIndustry);
+  const template = INDUSTRY_TEMPLATES[industry];
+  const templateServices = template.defaultServices.join(', ');
+
+  // --- 2. Construct the Prompt based on type, keywords, and industry ---
   let prompt = '';
   let maxTokens = 150; // Default
 
   if (type === 'services') {
-    prompt = `Schreibe eine kurze, professionelle Zusammenfassung der typischen Leistungen (max 3-4 Sätze oder Stichpunkte) für einen deutschen Handwerksbetrieb mit dem Namen "${context}". Nutze relevante Keywords.`;
+    prompt = `Schreibe eine kurze, professionelle Zusammenfassung der typischen Leistungen (max 3-4 Sätze oder Stichpunkte) für einen ${template.label} namens "${context}". Nutze einen freundlichen Ton und beschreibe Leistungen wie: ${templateServices}.`;
     // --- ADD KEYWORDS IF THEY EXIST ---
     if (keywords && keywords.trim() !== '') {
       prompt += ` Berücksichtige dabei besonders die folgenden Schlagworte: "${keywords}".`;
     }
     maxTokens = 100;
   } else if (type === 'about') {
-    prompt = `Schreibe einen kurzen, ansprechenden "Über uns"-Text (ca. 3-5 Sätze) für die Webseite eines deutschen Handwerksbetriebs namens "${context}". Betone Erfahrung, Qualität oder regionale Verbundenheit.`;
+    prompt = `Schreibe einen kurzen, ansprechenden "Über uns"-Text (ca. 3-5 Sätze) für die Webseite eines ${template.label}s namens "${context}". Betone typische Vorteile der Branche und gehe auf Leistungen wie ${templateServices} ein.`;
     // --- ADD KEYWORDS IF THEY EXIST ---
     if (keywords && keywords.trim() !== '') {
       prompt += ` Gehe dabei auf folgende Spezialisierungen ein: "${keywords}".`;

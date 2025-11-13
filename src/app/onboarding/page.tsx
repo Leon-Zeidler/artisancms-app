@@ -6,6 +6,7 @@ import { createSupabaseClient } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
+import { INDUSTRY_OPTIONS, resolveIndustry, type Industry } from '@/lib/industry-templates';
 
 // --- Icons (SparklesIcon, CheckIcon, ArrowPathIcon) ---
 const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z" /> </svg> );
@@ -38,6 +39,7 @@ export default function OnboardingPage() {
   const [businessName, setBusinessName] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
+  const [industry, setIndustry] = useState<Industry>('sonstiges');
   const [keywords, setKeywords] = useState(''); // <-- 1. ADD NEW STATE
   const [servicesDescription, setServicesDescription] = useState('');
   const [aboutText, setAboutText] = useState('');
@@ -62,7 +64,7 @@ export default function OnboardingPage() {
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             // <-- 2. ADD 'keywords' TO THE SELECT STATEMENT -->
-            .select('business_name, address, phone, services_description, about_text, onboarding_complete, slug, email, keywords')
+            .select('business_name, address, phone, services_description, about_text, onboarding_complete, slug, email, keywords, industry')
             .eq('id', user.id).single();
 
         if (profileError && profileError.code !== 'PGRST116') {
@@ -71,6 +73,7 @@ export default function OnboardingPage() {
             console.log("Existing profile found:", profile);
             setBusinessName(profile.business_name || ''); setAddress(profile.address || ''); setPhone(profile.phone || '');
             setKeywords(profile.keywords || ''); // <-- 3. SET THE STATE
+            setIndustry(resolveIndustry(profile.industry));
             setServicesDescription(profile.services_description || ''); setAboutText(profile.about_text || '');
             setSlug(profile.slug || '');
             if (profile.slug) setSlugStatus('available');
@@ -141,7 +144,7 @@ export default function OnboardingPage() {
       const response = await fetch('/api/generate-profile-text', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ context: context, type: type, keywords: keywords }), 
+        body: JSON.stringify({ context: context, type: type, keywords: keywords, industry }),
       }); 
       if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error || `Failed to generate ${type} text`); } 
       const data = await response.json(); 
@@ -178,7 +181,8 @@ export default function OnboardingPage() {
         'keywords': keywords, // <-- 5. ADD 'keywords' TO SAVE OBJECT
         'services_description': servicesDescription, 
         'about_text': aboutText,
-        'slug': slug, 
+        'slug': slug,
+        'industry': industry,
         'onboarding_complete': true, 
         'updated_at': new Date().toISOString(),
         'email': currentUser.email
@@ -205,10 +209,15 @@ export default function OnboardingPage() {
     };
 
     await toast.promise(
-        upsertProfile(), 
+        upsertProfile(),
         {
             loading: 'Profil wird gespeichert...',
             success: (data) => {
+                fetch('/api/industry-defaults', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ profileId: currentUser.id, industry }),
+                }).catch((err) => console.error('Industry defaults failed', err));
                 router.push('/dashboard');
                 return 'Profil erfolgreich gespeichert!';
             },
@@ -239,6 +248,26 @@ export default function OnboardingPage() {
           <div>
             <label htmlFor="businessName" className="mb-2 block text-sm font-medium text-gray-700"> Name des Betriebs * </label>
             <input type="text" id="businessName" value={businessName} onChange={(e) => setBusinessName(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="z.B. Tischlerei Mustermann"/>
+          </div>
+
+          {/* Industry */}
+          <div>
+            <label htmlFor="industry" className="mb-2 block text-sm font-medium text-gray-700">
+              Branche auswählen
+            </label>
+            <p className="mb-2 text-xs text-gray-500">Wählen Sie die Branche Ihres Betriebs, damit Texte und Website besser zu Ihnen passen.</p>
+            <select
+              id="industry"
+              value={industry}
+              onChange={(e) => setIndustry(resolveIndustry(e.target.value))}
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+            >
+              {INDUSTRY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Slug Input */}

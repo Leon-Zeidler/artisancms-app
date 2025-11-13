@@ -7,11 +7,13 @@ import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { INDUSTRY_OPTIONS, resolveIndustry, type Industry } from '@/lib/industry-templates';
 
 // --- TYPE DEFINITIONS ---
 type Profile = {
   id: string;
   business_name: string | null;
+  industry: Industry;
   address: string | null;
   phone: string | null;
   email: string | null;
@@ -335,6 +337,7 @@ export default function EinstellungenPage() {
   
   const [formData, setFormData] = useState<Omit<Profile, 'id' | 'logo_url' | 'logo_storage_path'>>({
     business_name: '',
+    industry: 'sonstiges',
     address: '',
     phone: '',
     email: '', 
@@ -376,9 +379,10 @@ export default function EinstellungenPage() {
         setProfile(profileData as Profile);
         setFormData({
           business_name: profileData.business_name || '',
+          industry: resolveIndustry(profileData.industry),
           address: profileData.address || '',
           phone: profileData.phone || '',
-          email: profileData.email || '', 
+          email: profileData.email || '',
           primary_color: profileData.primary_color || '#F97316',
           secondary_color: profileData.secondary_color || '#F8FAFC',
           keywords: profileData.keywords || '',
@@ -398,10 +402,10 @@ export default function EinstellungenPage() {
   }, [router, supabase]);
 
   // --- Handle form input changes ---
-  const handleFormChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    if (type === 'checkbox') {
-      const { checked } = e.target as HTMLInputElement;
+  const handleFormChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (e.target instanceof HTMLInputElement && e.target.type === 'checkbox') {
+      const { checked } = e.target;
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -426,6 +430,11 @@ export default function EinstellungenPage() {
       toast.error(`Fehler: ${error.message}`);
     } else {
       setProfile(updatedProfile as Profile);
+      fetch('/api/industry-defaults', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profileId: currentUser.id, industry: formData.industry }),
+      }).catch((err) => console.error('Industry defaults failed', err));
       toast.success("Einstellungen gespeichert!");
     }
   };
@@ -442,7 +451,7 @@ export default function EinstellungenPage() {
       const response = await fetch('/api/generate-profile-text', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ context: context, type: type, keywords: formData.keywords }), 
+        body: JSON.stringify({ context: context, type: type, keywords: formData.keywords, industry: formData.industry }),
       }); 
       
       if (!response.ok) { 
@@ -651,6 +660,29 @@ export default function EinstellungenPage() {
               <p className="mt-1 text-sm text-slate-600">Diese Informationen werden auf Ihrer Webseite (z.B. im Impressum) angezeigt.</p>
               <div className="mt-6 space-y-6 rounded-2xl border border-orange-100 bg-white/90 p-6 shadow-sm shadow-orange-100">
                 <SettingsInput label="Firmenname" name="business_name" value={formData.business_name ?? ''} onChange={handleFormChange} placeholder="z.B. Max Mustermann GmbH" />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <label htmlFor="industry" className="block text-sm font-medium text-slate-600">
+                    Branche
+                  </label>
+                  <div>
+                    <select
+                      id="industry"
+                      name="industry"
+                      value={formData.industry}
+                      onChange={handleFormChange}
+                      className="mt-0 block w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    >
+                      {INDUSTRY_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Wählen Sie die Branche Ihres Betriebs, damit Texte und Website besser zu Ihnen passen.
+                    </p>
+                  </div>
+                </div>
                 <SettingsInput label="Adresse" name="address" value={formData.address ?? ''} onChange={handleFormChange} placeholder="z.B. Musterstraße 1, 12345 Musterstadt" type="textarea" rows={3} />
                 <SettingsInput label="Telefon" name="phone" value={formData.phone ?? ''} onChange={handleFormChange} placeholder="z.B. 01234 567890" />
                 <SettingsInput label="E-Mail (Öffentlich)" name="email" value={formData.email ?? ''} onChange={handleFormChange} placeholder="z.B. info@mustermann.de" />

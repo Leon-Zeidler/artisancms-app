@@ -4,6 +4,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { INDUSTRY_TEMPLATES, resolveIndustry } from '@/lib/industry-templates';
 
 // --- Define Profile type for the joined data ---
 // (Dieser Typ wird nicht mehr benötigt, da wir den Join entfernen)
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
     // Abfrage 2: Das Profil abrufen
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('business_name')
+      .select('business_name, industry')
       .eq('id', user.id) // Profil basierend auf dem authentifizierten Benutzer abrufen
       .single();
 
@@ -94,6 +95,8 @@ export async function POST(request: Request) {
     
     const projectTitle = projectData.title || 'ein kürzliches Projekt';
     const businessName = profileData.business_name || 'Ihrem Handwerksbetrieb';
+    const industry = resolveIndustry(profileData.industry);
+    const template = INDUSTRY_TEMPLATES[industry];
     // --- ENDE DER KORREKTUR ---
 
 
@@ -134,8 +137,9 @@ export async function POST(request: Request) {
     }
 
     const prompt = `Schreibe eine kurze, höfliche E-Mail (auf Deutsch) an einen Kunden, um nach einer Kundenstimme für ein abgeschlossenes Projekt zu fragen.
-    - Absender (Betrieb): "${businessName}"
+    - Absender (Betrieb): "${businessName}" (${template.label})
     - Projektname: "${projectTitle}"
+    - Typische Leistungen des Betriebs: ${template.defaultServices.join(', ')}
     - E-Mail soll den Kunden direkt ansprechen (z.B. "Sehr geehrter Kunde," oder neutraler).
     - Mache es kurz und freundlich.
     - Erwähne, dass es nur ein paar Minuten dauert.

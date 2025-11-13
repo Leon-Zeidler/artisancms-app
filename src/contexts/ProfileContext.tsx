@@ -1,12 +1,14 @@
 "use client";
 
 import React, { createContext, useContext, ReactNode } from 'react';
+import type { Industry } from '@/lib/industry-templates';
 
 // Define the shape of the profile data
 export type Profile = {
   id: string;
   slug: string | null;
   business_name: string | null;
+  industry: Industry;
   address: string | null;
   phone: string | null;
   email: string | null;
