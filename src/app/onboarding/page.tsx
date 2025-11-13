@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
+import { INDUSTRY_OPTIONS, resolveIndustry, type Industry } from '@/lib/industry-templates';
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
@@ -41,7 +42,8 @@ export default function OnboardingPage() {
   const [keywords, setKeywords] = useState(''); // <-- 1. ADD NEW STATE
   const [servicesDescription, setServicesDescription] = useState('');
   const [aboutText, setAboutText] = useState('');
-  const [slug, setSlug] = useState(''); 
+  const [slug, setSlug] = useState('');
+  const [industry, setIndustry] = useState<Industry>('sonstiges');
   const [slugStatus, setSlugStatus] = useState<SlugStatus>('idle'); 
   const [slugCheckTimeout, setSlugCheckTimeout] = useState<NodeJS.Timeout | null>(null); 
 
@@ -62,7 +64,7 @@ export default function OnboardingPage() {
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             // <-- 2. ADD 'keywords' TO THE SELECT STATEMENT -->
-            .select('business_name, address, phone, services_description, about_text, onboarding_complete, slug, email, keywords')
+            .select('business_name, address, phone, services_description, about_text, onboarding_complete, slug, email, keywords, industry')
             .eq('id', user.id).single();
 
         if (profileError && profileError.code !== 'PGRST116') {
@@ -73,6 +75,7 @@ export default function OnboardingPage() {
             setKeywords(profile.keywords || ''); // <-- 3. SET THE STATE
             setServicesDescription(profile.services_description || ''); setAboutText(profile.about_text || '');
             setSlug(profile.slug || '');
+            setIndustry(resolveIndustry(profile.industry));
             if (profile.slug) setSlugStatus('available');
             if (profile.onboarding_complete) {
                 console.log("Onboarding already complete, redirecting..."); router.push('/dashboard'); return;
@@ -178,8 +181,9 @@ export default function OnboardingPage() {
         'keywords': keywords, // <-- 5. ADD 'keywords' TO SAVE OBJECT
         'services_description': servicesDescription, 
         'about_text': aboutText,
-        'slug': slug, 
-        'onboarding_complete': true, 
+        'slug': slug,
+        'industry': industry,
+        'onboarding_complete': true,
         'updated_at': new Date().toISOString(),
         'email': currentUser.email
      };
@@ -205,10 +209,20 @@ export default function OnboardingPage() {
     };
 
     await toast.promise(
-        upsertProfile(), 
+        upsertProfile(),
         {
             loading: 'Profil wird gespeichert...',
-            success: (data) => {
+            success: async (data) => {
+                try {
+                  await fetch('/api/industry-defaults', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ industry }),
+                  });
+                } catch (defaultsError) {
+                  console.error('Failed to apply industry defaults after onboarding', defaultsError);
+                }
+
                 router.push('/dashboard');
                 return 'Profil erfolgreich gespeichert!';
             },
@@ -239,6 +253,25 @@ export default function OnboardingPage() {
           <div>
             <label htmlFor="businessName" className="mb-2 block text-sm font-medium text-gray-700"> Name des Betriebs * </label>
             <input type="text" id="businessName" value={businessName} onChange={(e) => setBusinessName(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="z.B. Tischlerei Mustermann"/>
+          </div>
+
+          <div>
+            <label htmlFor="industry" className="mb-2 block text-sm font-medium text-gray-700"> Branche Ihres Betriebs * </label>
+            <select
+              id="industry"
+              value={industry}
+              onChange={(event) => setIndustry(event.target.value as Industry)}
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
+            >
+              {INDUSTRY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              Wählen Sie die Branche Ihres Betriebs, damit Texte und Website besser zu Ihnen passen.
+            </p>
           </div>
 
           {/* Slug Input */}

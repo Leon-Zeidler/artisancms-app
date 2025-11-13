@@ -4,6 +4,8 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
+import { INDUSTRY_TEMPLATES, resolveIndustry } from '@/lib/industry-templates';
+
 export async function POST(request: Request) {
   const cookieStore = cookies();
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
@@ -36,7 +38,7 @@ export async function POST(request: Request) {
     // --- 1. ADD 'keywords' TO THE SELECT ---
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('services_description, business_name, keywords')
+      .select('services_description, business_name, keywords, industry')
       .eq('id', user.id)
       .single();
 
@@ -45,12 +47,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Could not find user profile" }, { status: 500 });
     }
 
-    const { services_description, business_name, keywords } = profile;
+    const { services_description, business_name, keywords, industry } = profile;
+    const resolvedIndustry = resolveIndustry(industry);
+    const template = INDUSTRY_TEMPLATES[resolvedIndustry] ?? INDUSTRY_TEMPLATES.sonstiges;
 
     // 5. Construct the prompt for OpenAI
     // --- 2. ADD 'keywords' TO THE PROMPT ---
     const prompt = `
-      Du bist ein professioneller und freundlicher Assistent für einen deutschen Handwerksbetrieb namens "${business_name || 'mein Betrieb'}".
+      Du bist ein professioneller und freundlicher Assistent für einen ${template.label} namens "${business_name || 'mein Betrieb'}".
+      Der Betrieb ist in der Branche ${template.label} tätig.
       Ein Kunde hat die folgende Anfrage gesendet:
       ---
       ${customerMessage}

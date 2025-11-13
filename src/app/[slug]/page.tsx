@@ -240,6 +240,14 @@ export default function ClientHomepage() {
   const parsedServices = profile.services_description?.split('\n').map(line => { const parts = line.split(':'); const name = parts[0]?.trim(); const description = parts.slice(1).join(':').trim(); if (name && description) { const iconKey = Object.keys(serviceIcons).find(key => name.toLowerCase().includes(key.toLowerCase())) || 'Default'; return { name, description, icon: serviceIcons[iconKey as keyof typeof serviceIcons] }; } return null; }).filter(Boolean) as { name: string; description: string; icon: string }[] || [];
   const heroHighlights = parsedServices.slice(0, 3);
 
+  const heroTitle = profile.hero_title?.trim() || profile.business_name || 'Ihr Meisterbetrieb für exzellentes Handwerk';
+  const aboutSnippet = profile.about_text?.substring(0, 220) ?? '';
+  const heroSubtitle =
+    profile.hero_subtitle?.trim() ||
+    (profile.about_text
+      ? `${aboutSnippet}${profile.about_text.length > 220 ? '…' : ''}`
+      : 'Präzision, Qualität und Zuverlässigkeit für Ihr nächstes Projekt.');
+
   // --- Handle Contact Form Submission ---
   const handleContactSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -281,10 +289,10 @@ export default function ClientHomepage() {
               {profile.services_description ? 'Ihr regionaler Partner' : 'Handwerk mit Handschlagqualität'}
             </span>
             <h1 className="mt-6 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
-              {profile.business_name || 'Ihr Meisterbetrieb für exzellentes Handwerk'}
+              {heroTitle}
             </h1>
             <p className="mt-6 text-base leading-7 text-gray-600 sm:text-lg sm:leading-8">
-              {profile.about_text?.substring(0, 220) + (profile.about_text && profile.about_text.length > 220 ? '…' : '') || 'Präzision, Qualität und Zuverlässigkeit für Ihr nächstes Projekt.'}
+              {heroSubtitle}
             </p>
             {heroHighlights.length > 0 && (
               <ul className="mt-8 flex flex-col gap-3 text-sm text-gray-700 sm:flex-row sm:flex-wrap">
