@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js'; // Import createClient
 
 import { INDUSTRY_TEMPLATES, resolveIndustry } from '@/lib/industry-templates';
+import type { Industry } from '@/lib/industry-templates';
 
 export async function POST(request: Request) {
   
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
   
   // --- 4. NEW: Fetch User's Profile Keywords ---
   let userKeywords = '';
-  let userIndustry = 'sonstiges';
+  let userIndustry: Industry = 'sonstiges';
   let businessName = '';
   let servicesDescription = '';
   try {
