@@ -51,7 +51,7 @@ export default function DashboardHelpPage() {
             ))}
           </nav>
           <div className="mt-4 border-t border-orange-100 pt-4 text-xs text-slate-500">
-            Persönliche Hilfe? <a className="font-semibold text-orange-600 underline hover:text-orange-500" href="mailto:leon@northcoded.com">leon@northcoded.com</a>
+            Persönliche Hilfe? <a className="font-semibold text-orange-600 underline hover:text-orange-500" href="mailto:leon@artisancms.app">leon@argtisancms.app</a>
           </div>
         </aside>
 
