@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
+import { INDUSTRY_TEMPLATES, resolveIndustry } from '@/lib/industry-templates';
+
 export async function POST(request: Request) {
   
   // --- 1. ADD AUTHENTICATION CHECK ---
@@ -36,24 +38,48 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Server configuration error (API key missing)" }, { status: 500 });
   }
 
+  const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .select('business_name, industry, services_description, keywords, hero_title, hero_subtitle, address')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError) {
+    console.error('Error fetching profile for AI prompt:', profileError.message);
+    return NextResponse.json({ error: 'Profil konnte nicht geladen werden.' }, { status: 500 });
+  }
+
+  const businessName = profileData?.business_name || context;
+  const industry = resolveIndustry(profileData?.industry);
+  const template = INDUSTRY_TEMPLATES[industry] ?? INDUSTRY_TEMPLATES.sonstiges;
+  const servicesList = profileData?.services_description?.trim()?.length
+    ? profileData.services_description
+    : template.defaultServices.join('\n');
+  const keywordPool = [keywords, profileData?.keywords]
+    .filter(Boolean)
+    .map((entry) => (entry as string).trim())
+    .filter(Boolean)
+    .join(', ');
+
   // --- 2. Construct the Prompt based on type AND keywords ---
   let prompt = '';
   let maxTokens = 150; // Default
 
   if (type === 'services') {
-    prompt = `Schreibe eine kurze, professionelle Zusammenfassung der typischen Leistungen (max 3-4 Sätze oder Stichpunkte) für einen deutschen Handwerksbetrieb mit dem Namen "${context}". Nutze relevante Keywords.`;
-    // --- ADD KEYWORDS IF THEY EXIST ---
-    if (keywords && keywords.trim() !== '') {
-      prompt += ` Berücksichtige dabei besonders die folgenden Schlagworte: "${keywords}".`;
+    prompt = `Schreibe eine kurze, professionelle Zusammenfassung der typischen Leistungen (maximal 4 Sätze oder Stichpunkte) für einen ${template.label} namens "${businessName}".`;
+    prompt += `\nDer Betrieb bietet unter anderem folgende Leistungen an:\n${servicesList}`;
+    if (keywordPool) {
+      prompt += `\nBeziehe diese Schlagworte ein: ${keywordPool}.`;
     }
-    maxTokens = 100;
+    maxTokens = 120;
   } else if (type === 'about') {
-    prompt = `Schreibe einen kurzen, ansprechenden "Über uns"-Text (ca. 3-5 Sätze) für die Webseite eines deutschen Handwerksbetriebs namens "${context}". Betone Erfahrung, Qualität oder regionale Verbundenheit.`;
-    // --- ADD KEYWORDS IF THEY EXIST ---
-    if (keywords && keywords.trim() !== '') {
-      prompt += ` Gehe dabei auf folgende Spezialisierungen ein: "${keywords}".`;
+    prompt = `Schreibe einen freundlichen "Über uns"-Text (ca. 3-5 Sätze) für einen ${template.label} namens "${businessName}".`;
+    prompt += `\nNutze eine Tonalität wie: "${template.heroSubtitle}" und erwähne, was den Betrieb besonders macht.`;
+    prompt += `\nDiese Leistungen stehen im Fokus:\n${servicesList}`;
+    if (keywordPool) {
+      prompt += `\nBerücksichtige außerdem diese Spezialisierungen: ${keywordPool}.`;
     }
-    maxTokens = 150;
+    maxTokens = 200;
   } else {
     return NextResponse.json({ error: "Invalid generation type specified" }, { status: 400 });
   }

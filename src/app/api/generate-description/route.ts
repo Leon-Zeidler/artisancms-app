@@ -4,6 +4,8 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js'; // Import createClient
 
+import { INDUSTRY_TEMPLATES, resolveIndustry } from '@/lib/industry-templates';
+
 export async function POST(request: Request) {
   
   // --- 1. AUTHENTICATION (already in place) ---
@@ -33,6 +35,9 @@ export async function POST(request: Request) {
   
   // --- 4. NEW: Fetch User's Profile Keywords ---
   let userKeywords = '';
+  let userIndustry = 'sonstiges';
+  let businessName = '';
+  let servicesDescription = '';
   try {
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,14 +46,15 @@ export async function POST(request: Request) {
     );
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('keywords')
+      .select('keywords, industry, services_description, business_name')
       .eq('id', user.id)
       .single();
-    
+
     if (profileError) throw profileError;
-    if (profile && profile.keywords) {
-      userKeywords = profile.keywords;
-    }
+    userKeywords = profile?.keywords || '';
+    userIndustry = resolveIndustry(profile?.industry);
+    businessName = profile?.business_name || '';
+    servicesDescription = profile?.services_description || '';
   } catch (err) {
     console.warn("Could not fetch user keywords for AI prompt, proceeding without them.");
   }
@@ -56,15 +62,20 @@ export async function POST(request: Request) {
 
 
   // --- 5. Construct the Prompt (Now with keywords) ---
-  let prompt = `Write a short, professional project description (max 2-3 sentences) in German for a portfolio, based on the following project title: "${title}". Focus on the work performed and the quality.`;
+  const template = INDUSTRY_TEMPLATES[userIndustry] ?? INDUSTRY_TEMPLATES.sonstiges;
+  const servicesContext = servicesDescription?.trim()?.length ? servicesDescription : template.defaultServices.join('\n');
+
+  let prompt = `Schreibe eine kurze, professionelle Projektbeschreibung (2-3 Sätze) auf Deutsch für das Portfolio eines ${template.label} namens "${businessName || 'Handwerksbetrieb'}".`;
+  prompt += `\nDer Projekttitel lautet: "${title}".`;
+  prompt += `\nDieser Betrieb bietet typischerweise folgende Leistungen an:\n${servicesContext}`;
 
   if (notes && notes.trim() !== '') {
-    prompt += `\n\nIncorporate these specific notes about the project: "${notes}"`;
+    prompt += `\n\nBerücksichtige außerdem folgende Notizen: "${notes}"`;
   }
-  
+
   // --- ADDED KEYWORDS TO PROMPT ---
   if (userKeywords && userKeywords.trim() !== '') {
-     prompt += `\n\nAlso, try to relate this project to the business's main keywords, which are: "${userKeywords}".`;
+     prompt += `\n\nBeziehe diese Schlagworte mit ein: "${userKeywords}".`;
   }
 
   // --- 6. Call OpenAI API (no changes needed below) ---

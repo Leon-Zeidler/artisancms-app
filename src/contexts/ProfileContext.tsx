@@ -2,11 +2,16 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 
+import type { Industry } from '@/lib/industry-templates';
+
 // Define the shape of the profile data
 export type Profile = {
   id: string;
   slug: string | null;
   business_name: string | null;
+  hero_title: string | null;
+  hero_subtitle: string | null;
+  industry: Industry | null;
   address: string | null;
   phone: string | null;
   email: string | null;

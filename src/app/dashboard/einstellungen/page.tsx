@@ -7,11 +7,15 @@ import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { INDUSTRY_OPTIONS, resolveIndustry, type Industry } from '@/lib/industry-templates';
 
 // --- TYPE DEFINITIONS ---
 type Profile = {
   id: string;
   business_name: string | null;
+  hero_title: string | null;
+  hero_subtitle: string | null;
+  industry: Industry | null;
   address: string | null;
   phone: string | null;
   email: string | null;
@@ -148,6 +152,28 @@ const SettingsInput = ({ label, name, value, onChange, placeholder, type = 'text
         placeholder={placeholder}
       />
     )}
+  </div>
+);
+
+const SettingsSelect = ({ label, name, value, onChange, options, helperText }: { label: string, name: string, value: string, onChange: (e: ChangeEvent<HTMLSelectElement>) => void, options: { label: string; value: string }[], helperText?: string }) => (
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <label htmlFor={name} className="block text-sm font-medium text-slate-600">{label}</label>
+    <div>
+      <select
+        id={name}
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="mt-0 block w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {helperText && <p className="mt-1 text-xs text-slate-500">{helperText}</p>}
+    </div>
   </div>
 );
 
@@ -335,6 +361,9 @@ export default function EinstellungenPage() {
   
   const [formData, setFormData] = useState<Omit<Profile, 'id' | 'logo_url' | 'logo_storage_path'>>({
     business_name: '',
+    hero_title: '',
+    hero_subtitle: '',
+    industry: 'sonstiges',
     address: '',
     phone: '',
     email: '', 
@@ -376,6 +405,9 @@ export default function EinstellungenPage() {
         setProfile(profileData as Profile);
         setFormData({
           business_name: profileData.business_name || '',
+          hero_title: profileData.hero_title || '',
+          hero_subtitle: profileData.hero_subtitle || '',
+          industry: resolveIndustry(profileData.industry),
           address: profileData.address || '',
           phone: profileData.phone || '',
           email: profileData.email || '', 
@@ -398,13 +430,17 @@ export default function EinstellungenPage() {
   }, [router, supabase]);
 
   // --- Handle form input changes ---
-  const handleFormChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleFormChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     if (type === 'checkbox') {
       const { checked } = e.target as HTMLInputElement;
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      if (name === 'industry') {
+        setFormData(prev => ({ ...prev, [name]: resolveIndustry(value) }));
+      } else {
+        setFormData(prev => ({ ...prev, [name]: value }));
+      }
     }
   };
 
@@ -427,6 +463,15 @@ export default function EinstellungenPage() {
     } else {
       setProfile(updatedProfile as Profile);
       toast.success("Einstellungen gespeichert!");
+      try {
+        await fetch('/api/industry-defaults', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ industry: formData.industry }),
+        });
+      } catch (defaultsError) {
+        console.error('Failed to apply industry defaults after saving settings', defaultsError);
+      }
     }
   };
   
@@ -651,6 +696,14 @@ export default function EinstellungenPage() {
               <p className="mt-1 text-sm text-slate-600">Diese Informationen werden auf Ihrer Webseite (z.B. im Impressum) angezeigt.</p>
               <div className="mt-6 space-y-6 rounded-2xl border border-orange-100 bg-white/90 p-6 shadow-sm shadow-orange-100">
                 <SettingsInput label="Firmenname" name="business_name" value={formData.business_name ?? ''} onChange={handleFormChange} placeholder="z.B. Max Mustermann GmbH" />
+                <SettingsSelect
+                  label="Branche"
+                  name="industry"
+                  value={formData.industry || 'sonstiges'}
+                  onChange={handleFormChange}
+                  options={INDUSTRY_OPTIONS}
+                  helperText="Damit AI-Texte und Ihre Webseite zur Branche passen."
+                />
                 <SettingsInput label="Adresse" name="address" value={formData.address ?? ''} onChange={handleFormChange} placeholder="z.B. Musterstraße 1, 12345 Musterstadt" type="textarea" rows={3} />
                 <SettingsInput label="Telefon" name="phone" value={formData.phone ?? ''} onChange={handleFormChange} placeholder="z.B. 01234 567890" />
                 <SettingsInput label="E-Mail (Öffentlich)" name="email" value={formData.email ?? ''} onChange={handleFormChange} placeholder="z.B. info@mustermann.de" />
@@ -664,7 +717,9 @@ export default function EinstellungenPage() {
               <div className="mt-6 space-y-6 rounded-2xl border border-orange-100 bg-white/90 p-6 shadow-sm shadow-orange-100">
                 <ColorInput label="Primärfarbe (Brand)" name="primary_color" value={formData.primary_color ?? '#F97316'} onChange={handleFormChange} />
                 <ColorInput label="Sekundärfarbe (Hintergrund)" name="secondary_color" value={formData.secondary_color ?? '#F8FAFC'} onChange={handleFormChange} />
-                <LogoUploader 
+                <SettingsInput label="Hero Überschrift" name="hero_title" value={formData.hero_title ?? ''} onChange={handleFormChange} placeholder="z.B. Ihr Malerbetrieb in Musterstadt" />
+                <SettingsInput label="Hero Untertitel" name="hero_subtitle" value={formData.hero_subtitle ?? ''} onChange={handleFormChange} placeholder="Kurzbeschreibung für den Seitenanfang" type="textarea" rows={3} />
+                <LogoUploader
                   logoUrl={profile?.logo_url || null}
                   onFileChange={handleLogoUpload}
                   onRemoveLogo={handleRemoveLogo}
