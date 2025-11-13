@@ -54,7 +54,7 @@ function Sidebar({ user, userSlug, isAdmin }: { user: User | null; userSlug: str
 
   return (
     <aside className="w-64 flex flex-col flex-shrink-0 border-r border-slate-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 h-screen sticky top-0">
-      <div className="flex items-center mb-8">
+      <div className="flex items-center mb-8 px-5 pt-6">
         <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md">
           <DashboardIcon className="h-6 w-6 text-white"/>
         </div>
