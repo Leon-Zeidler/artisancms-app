@@ -209,32 +209,37 @@ export default function OnboardingPage() {
     };
 
     await toast.promise(
-        upsertProfile(),
-        {
-            loading: 'Profil wird gespeichert...',
-            success: async (data) => {
-                try {
-                  await fetch('/api/industry-defaults', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ industry }),
-                  });
-                } catch (defaultsError) {
-                  console.error('Failed to apply industry defaults after onboarding', defaultsError);
-                }
-
-                router.push('/dashboard');
-                return 'Profil erfolgreich gespeichert!';
-            },
-            error: (err: any) => {
-                console.error('Error saving profile (toast):', err);
-                if (err.message.includes("bereits vergeben")) {
-                   setSlugStatus('taken'); 
-                }
-                return `Fehler beim Speichern: ${err.message}`;
-            }
+  upsertProfile(),
+  {
+    loading: 'Profil wird gespeichert...',
+    success: (data) => {
+      // Async Side-Effects separat ausführen
+      (async () => {
+        try {
+          await fetch('/api/industry-defaults', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ industry }),
+          });
+        } catch (defaultsError) {
+          console.error('Failed to apply industry defaults after onboarding', defaultsError);
         }
-    );
+
+        router.push('/dashboard');
+      })();
+
+      // Wichtig: synchron einen Renderable zurückgeben
+      return 'Profil erfolgreich gespeichert!';
+    },
+    error: (err: any) => {
+      console.error('Error saving profile (toast):', err);
+      if (err.message.includes('bereits vergeben')) {
+        setSlugStatus('taken');
+      }
+      return `Fehler beim Speichern: ${err.message}`;
+    },
+  }
+);
 
     setLoading(false); 
   };
