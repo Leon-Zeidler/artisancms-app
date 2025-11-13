@@ -53,7 +53,7 @@ function Sidebar({ user, userSlug, isAdmin }: { user: User | null; userSlug: str
   };
 
   return (
-    <aside className="relative w-64 flex-shrink-0 border-r border-slate-200 bg-white/80 px-5 py-6 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+    <aside className="w-64 flex flex-col flex-shrink-0 border-r border-slate-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 h-screen sticky top-0">
       <div className="flex items-center mb-8">
         <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md">
           <DashboardIcon className="h-6 w-6 text-white"/>
@@ -63,7 +63,7 @@ function Sidebar({ user, userSlug, isAdmin }: { user: User | null; userSlug: str
           <p className="text-xs text-slate-500">Projektverwaltung</p>
         </div>
       </div>
-      <nav className="space-y-2">
+      <nav className="flex-1 space-y-2 px-5 overflow-y-auto">
         <SidebarLink icon={DashboardIcon} text="Dashboard" href="/dashboard" active={pathname === '/dashboard'} />
         <SidebarLink icon={ProjectsIcon} text="Projekte" href="/dashboard/projekte" active={pathname?.startsWith('/dashboard/projekte')} />
         <SidebarLink icon={UserGroupIcon} text="Team / Über Uns" href="/dashboard/team" active={pathname === '/dashboard/team'} />
