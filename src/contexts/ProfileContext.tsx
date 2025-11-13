@@ -1,3 +1,4 @@
+// src/contexts/ProfileContext.tsx
 "use client";
 
 import React, { createContext, useContext, ReactNode } from 'react';
@@ -27,6 +28,11 @@ export type Profile = {
   show_services_section: boolean;
   show_team_page: boolean;
   show_testimonials_page: boolean;
+  
+  // --- NEU HINZUGEFÜGT ---
+  onboarding_complete?: boolean | null;
+  has_seen_welcome_modal?: boolean | null;
+  role?: string | null;
 };
 
 // 1. Create the context
