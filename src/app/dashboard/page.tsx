@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
 import PlusIcon from '@/components/icons/PlusIcon';
 import { DashboardHero } from '@/components/dashboard/DashboardHero';
+import DashboardProgress from '@/components/dashboard/DashboardProgress';
 // --- 1. IMPORT THE CORRECT TYPE ---
 import type { Project } from '@/lib/types';
 
@@ -286,6 +287,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </DashboardHero>
+      <DashboardProgress />
 
       <section className="grid gap-4 lg:grid-cols-[2fr,1fr]">
         <div className="rounded-2xl border border-slate-200/70 bg-white/80 p-6 shadow-sm">

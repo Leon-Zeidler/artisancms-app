@@ -58,12 +58,17 @@ export default function FeedbackWidget() {
 
     setIsLoading(true);
 
+    const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : 'Unknown';
+    const screenSize = typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : 'Unknown';
+    const technicalInfo = `\n\n--- Auto-Generated Tech Info ---\nBrowser: ${userAgent}\nScreen: ${screenSize}\nPath: ${pathname}`;
+    const fullMessage = message + technicalInfo;
+
     const { error } = await supabase
       .from('feedback')
       .insert({
         user_id: currentUser.id,
         category,
-        message,
+        message: fullMessage,
         page_url: pathname
       });
 
