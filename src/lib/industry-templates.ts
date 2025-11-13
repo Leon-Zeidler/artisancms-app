@@ -11,6 +11,8 @@ export type IndustryTemplate = {
   heroTitle: string;
   heroSubtitle: string;
   defaultServices: string[];
+  servicesSectionTitle: string;
+  heroImageUrl: string; // <--- NEU
 };
 
 export const INDUSTRY_TEMPLATES: Record<Industry, IndustryTemplate> = {
@@ -25,6 +27,8 @@ export const INDUSTRY_TEMPLATES: Record<Industry, IndustryTemplate> = {
       'Lackierarbeiten: Türen, Fenster und Holzoberflächen in neuem Glanz',
       'Tapezierarbeiten: Von Vliestapeten bis hin zu Spezialtechniken',
     ],
+    servicesSectionTitle: 'Unsere Kompetenzen im Bereich Malerarbeiten',
+    heroImageUrl: 'https://images.unsplash.com/photo-1613844044163-1ad2f2d0b152?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Example: Painter
   },
   fliesenleger: {
     label: 'Fliesenlegerbetrieb',
@@ -37,6 +41,8 @@ export const INDUSTRY_TEMPLATES: Record<Industry, IndustryTemplate> = {
       'Großformat- & Naturstein: Exklusive Materialien perfekt verarbeitet',
       'Barrierefreie Umbauten: Bodengleiche Duschen und sichere Lösungen',
     ],
+    servicesSectionTitle: 'Unsere Fachgebiete als Fliesenleger',
+    heroImageUrl: 'https://images.unsplash.com/photo-1547414857-c9f61632b250?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Example: Tiling
   },
   tischler: {
     label: 'Tischlerei',
@@ -49,6 +55,8 @@ export const INDUSTRY_TEMPLATES: Record<Industry, IndustryTemplate> = {
       'Innenausbau: Türen, Decken- und Wandverkleidungen',
       'Reparaturen & Aufarbeitung: Liebevolle Pflege von Lieblingsstücken',
     ],
+    servicesSectionTitle: 'Unsere Leistungen im modernen Holzhandwerk',
+    heroImageUrl: 'https://images.unsplash.com/photo-1619759247378-6a73e3ad45f1?q=80&w=1742&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Example: Carpenter
   },
   dachdecker: {
     label: 'Dachdeckerbetrieb',
@@ -61,6 +69,8 @@ export const INDUSTRY_TEMPLATES: Record<Industry, IndustryTemplate> = {
       'Flachdach & Abdichtung: Nachhaltig dicht mit Garantie',
       'Dachreparaturen & Wartung: Schnelle Hilfe bei Sturmschäden',
     ],
+    servicesSectionTitle: 'Unsere Expertise als Dachdeckerbetrieb',
+    heroImageUrl: 'https://images.unsplash.com/photo-1643225523483-e2c434191bba?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Example: Roofer
   },
   galabau: {
     label: 'GaLaBau-Betrieb',
@@ -73,6 +83,8 @@ export const INDUSTRY_TEMPLATES: Record<Industry, IndustryTemplate> = {
       'Pflaster- & Wegebau: Präzise Ausführung für Zufahrten und Flächen',
       'Pflege & Pflanzarbeiten: Nachhaltige Betreuung Ihrer Anlage',
     ],
+    servicesSectionTitle: 'Unsere Leistungen im Garten- und Landschaftsbau',
+    heroImageUrl: 'https://images.unsplash.com/photo-1734079692160-fcbe4be6ab96?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Example: Landscaper
   },
   sonstiges: {
     label: 'Handwerksbetrieb',
@@ -85,6 +97,8 @@ export const INDUSTRY_TEMPLATES: Record<Industry, IndustryTemplate> = {
       'Reparaturen & Service: Schnelle Hilfe bei Problemen',
       'Koordination & Partnernetzwerk: Alles aus einer Hand',
     ],
+    servicesSectionTitle: 'Unsere Kernkompetenzen',
+    heroImageUrl: 'https://plus.unsplash.com/premium_photo-1682370891536-ff08a5479f35?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // Example: Generic Workshop
   },
 };
 

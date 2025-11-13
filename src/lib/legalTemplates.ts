@@ -1,13 +1,23 @@
+export const IMPRESSUM_TEMPLATE = `Angaben gemäß § 5 TMG:
+
+[FIRMENNAME]
+[ADRESSE_MEHRZEILIG]
+
+Vertreten durch:
+[FIRMENNAME]
+
+Kontakt:
+Telefon: [TELEFON]
+E-Mail: [EMAIL]
+`;
+
+
 export const DATENSCHUTZERKLAERUNG_TEMPLATE = `1. Verantwortlicher
 
-[Bitte hier Ihre Unternehmensdaten eintragen]
-[Name des Unternehmens / Inhabers]
-[Straße und Hausnummer]
-[PLZ, Ort]
-[Land]
-E-Mail: [Ihre E-Mail-Adresse]
-Telefon: [Ihre Telefonnummer]
-Impressum: [Link zur /impressum-Seite]
+[FIRMENNAME]
+[ADRESSE_MEHRZEILIG]
+E-Mail: [EMAIL]
+Telefon: [TELEFON]
 
 ---
 

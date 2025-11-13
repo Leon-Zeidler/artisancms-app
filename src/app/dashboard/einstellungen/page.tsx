@@ -7,7 +7,9 @@ import { createSupabaseClient } from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
-import { INDUSTRY_OPTIONS, resolveIndustry, type Industry } from '@/lib/industry-templates';
+import { INDUSTRY_OPTIONS, resolveIndustry, type Industry, INDUSTRY_TEMPLATES, formatDefaultServices } from '@/lib/industry-templates';
+import { DATENSCHUTZERKLAERUNG_TEMPLATE, IMPRESSUM_TEMPLATE } from '@/lib/legalTemplates'; 
+import { DynamicGlobalStyles } from '@/components/DynamicGlobalStyles'; // <--- WICHTIG: Sicherstellen, dass dies importiert ist
 
 // --- TYPE DEFINITIONS ---
 type Profile = {
@@ -32,6 +34,7 @@ type Profile = {
   show_services_section: boolean;
   show_team_page: boolean;
   show_testimonials_page: boolean;
+  slug: string | null; 
 };
 
 type AIGenerationType = 'services' | 'about';
@@ -48,6 +51,92 @@ const BookOpenIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http
 const ShieldCheckIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.24-.32 2.395-.88 3.428l-6.118 6.118-6.117-6.118C3.32 14.395 3 13.24 3 12c0-5.188 4.5-9.428 9-9.428s9 4.24 9 9.428z" /></svg>);
 const MagnifyingGlassIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>);
 const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z" /> </svg> );
+
+
+// --- MODAL KOMPONENTE (Datenschutz) ---
+const LegalWarningModal = ({ isOpen, onConfirm, onCancel }: { isOpen: boolean; onConfirm: () => void; onCancel: () => void }) => {
+  if (!isOpen) return null;
+
+  const warningText = `Dies ist eine automatisch generierte Vorlage. Sie als Webseitenbetreiber sind rechtlich dafür verantwortlich, diese Angaben zu prüfen, zu vervollständigen (insbesondere Ihre eigenen Kontaktdaten unter "Verantwortlicher") und anwaltlich prüfen zu lassen. Sie müssen ebenfalls alle Dienste hinzufügen, die Sie selbst einbetten (z.B. Google Maps, YouTube, Calendly, etc.).`;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog">
+        <div className="w-full max-w-lg rounded-3xl border border-red-200 bg-white p-8 shadow-2xl shadow-red-200/40">
+            <div className="flex items-start">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+                    <ExclamationTriangleIcon className="h-6 w-6" aria-hidden="true" />
+                </div>
+                <div className="ml-4">
+                    <h3 className="text-xl font-bold leading-6 text-slate-900">Wichtiger Rechtlicher Hinweis</h3>
+                    <div className="mt-4">
+                        <p className="text-sm leading-6 text-red-700 whitespace-pre-line">{warningText}</p>
+                    </div>
+                </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-4">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
+                >
+                    Abbrechen
+                </button>
+                <button
+                    type="button"
+                    onClick={onConfirm}
+                    className="inline-flex items-center rounded-full bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-500"
+                >
+                    Ich habe verstanden & Vorlage einfügen
+                </button>
+            </div>
+        </div>
+    </div>
+  );
+};
+
+// --- MODAL KOMPONENTE (Impressum & Datenschutz Autofill) ---
+const LegalAutofillWarningModal = ({ isOpen, onConfirm, onCancel }: { isOpen: boolean; onConfirm: () => void; onCancel: () => void }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm" aria-modal="true" role="dialog">
+        <div className="w-full max-w-lg rounded-3xl border border-amber-200 bg-white p-8 shadow-2xl shadow-amber-200/40">
+            <div className="flex items-start">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                    <ExclamationTriangleIcon className="h-6 w-6" aria-hidden="true" />
+                </div>
+                <div className="ml-4">
+                    <h3 className="text-xl font-bold leading-6 text-slate-900">Rechtstexte überschreiben?</h3>
+                    <div className="mt-4">
+                        <p className="text-sm leading-6 text-slate-700">
+                          Sind Sie sicher? Diese Aktion **überschreibt** Ihre aktuellen Inhalte in den Feldern "Impressum" und "Datenschutz" mit den automatischen Vorlagen.
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-red-600">
+                          Bestehende Texte gehen dabei verloren!
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3 border-t border-slate-200 pt-4">
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="rounded-full px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
+                >
+                    Abbrechen
+                </button>
+                <button
+                    type="button"
+                    onClick={onConfirm}
+                    className="inline-flex items-center rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-red-200 transition hover:bg-red-500"
+                >
+                    Ja, Texte überschreiben
+                </button>
+            </div>
+        </div>
+    </div>
+  );
+};
 
 
 // --- REUSABLE COMPONENTS ---
@@ -179,13 +268,12 @@ const SettingsSelect = ({ label, name, value, onChange, options, helperText }: {
 
 // --- KORRIGIERTE TOGGLE KOMPONENTE ---
 const SettingsToggle = ({ label, description, name, isChecked, onChange, disabled = false }: { label: string, description: string, name: string, isChecked: boolean, onChange: (e: ChangeEvent<HTMLInputElement>) => void, disabled?: boolean }) => (
-  <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${disabled ? 'opacity-60' : ''}`}>
+  <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 items-center ${disabled ? 'opacity-60' : ''}`}>
     <span className="flex flex-grow flex-col">
       <span className={`text-sm font-medium ${disabled ? 'text-slate-400' : 'text-slate-600'}`}>{label}</span>
       <span className="text-xs text-slate-500">{description}</span>
     </span>
-    {/* KORREKTUR: sm:justify-self-end richtet den Schalter rechtsbündig aus */}
-    <label className="relative inline-flex items-center cursor-pointer sm:justify-self-end">
+    <label className="relative inline-flex items-center cursor-pointer justify-self-end">
       <input
         type="checkbox"
         name={name}
@@ -194,7 +282,6 @@ const SettingsToggle = ({ label, description, name, isChecked, onChange, disable
         disabled={disabled}
         className="sr-only peer"
       />
-      {/* KORREKTUR: after:border-gray-300 und after:border wieder hinzugefügt */}
       <div
         className={`h-6 w-11 rounded-full bg-slate-200 transition peer peer-focus:ring-2 peer-focus:ring-orange-200 peer-focus:ring-offset-2 peer-focus:ring-offset-white peer-checked:bg-orange-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-slate-200 after:bg-white after:transition-all peer-disabled:cursor-not-allowed ${disabled ? 'cursor-not-allowed' : ''}`}
       ></div>
@@ -279,7 +366,6 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
         description="Wichtige Aktionen mit dauerhaften Konsequenzen."
       >
         <div className="space-y-4 rounded-2xl border border-orange-100 bg-white/90 p-4 shadow-inner shadow-orange-100/40">
-          {/* KORREKTUR: sm:grid-cols-2 und sm:gap-4 hinzugefügt für korrekte Ausrichtung */}
           <div className="grid grid-cols-1 sm:grid-cols-2 sm:gap-4 items-start justify-between gap-4">
             <div>
               <h4 className="text-base font-semibold text-slate-900">Website veröffentlichen</h4>
@@ -293,7 +379,6 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
                 </p>
               )}
             </div>
-            {/* KORREKTUR: sm:justify-self-end hinzugefügt */}
             <label className="relative inline-flex items-center cursor-pointer sm:justify-self-end">
               <input
                 type="checkbox"
@@ -302,7 +387,6 @@ function DangerZone({ profile, user, onUpdateProfile, router }: { profile: Profi
                 disabled={isPublishing || (!isPublished && !canPublish)}
                 className="sr-only peer"
               />
-              {/* KORREKTUR: Border-Klassen wiederhergestellt */}
               <div
                 className={`h-6 w-11 rounded-full bg-slate-200 transition peer peer-focus:ring-2 peer-focus:ring-orange-200 peer-focus:ring-offset-2 peer-focus:ring-offset-white peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-slate-200 after:bg-white after:transition-all ${
                   isPublishing || (!isPublished && !canPublish) ? 'cursor-not-allowed opacity-60' : ''
@@ -358,6 +442,8 @@ export default function EinstellungenPage() {
   const [newEmail, setNewEmail] = useState('');
   const [isChangingEmail, setIsChangingEmail] = useState(false);
   const [aiLoading, setAiLoading] = useState<AIGenerationType | null>(null); 
+  const [showDatenschutzWarning, setShowDatenschutzWarning] = useState(false);
+  const [showAutofillWarning, setShowAutofillWarning] = useState(false);
   
   const [formData, setFormData] = useState<Omit<Profile, 'id' | 'logo_url' | 'logo_storage_path'>>({
     business_name: '',
@@ -378,9 +464,77 @@ export default function EinstellungenPage() {
     show_services_section: true,
     show_team_page: true,
     show_testimonials_page: true,
+    slug: null, 
   });
 
   const router = useRouter();
+  
+  // --- NEU: Helper-Funktion zum Auflösen der URL (aus Onboarding kopiert) ---
+  const resolveSiteUrl = (): string | null => {
+    const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (envUrl && envUrl.trim().length > 0) { return envUrl; }
+    if (typeof window !== 'undefined' && window.location?.origin) { return window.location.origin; }
+    return null;
+  };
+
+  // --- HINZUGEFÜGTE FUNKTION: Öffnet das Datenschutz-Modal ---
+  const handleInsertDatenschutzTemplateClick = () => {
+      setShowDatenschutzWarning(true);
+  };
+  
+  // --- HINZUGEFÜGTE FUNKTION: Fügt Datenschutz-Vorlage ein nach Bestätigung ---
+  const handleInsertDatenschutzTemplateConfirm = () => {
+      setFormData(prev => ({ ...prev, datenschutz_text: DATENSCHUTZERKLAERUNG_TEMPLATE }));
+      setShowDatenschutzWarning(false);
+      toast.success("Datenschutz-Vorlage eingefügt!");
+  };
+
+  // --- NEU: Handler für das Überschreiben-Modal ---
+  const handleAutofillLegalClick = () => {
+    setShowAutofillWarning(true);
+  };
+  
+  const handleAutofillLegalCancel = () => {
+    setShowAutofillWarning(false);
+  };
+
+  const handleAutofillLegalConfirm = () => {
+    if (!currentUser || !profile || !profile.slug) {
+        toast.error("Profil oder URL-Slug nicht geladen. Speichern Sie zuerst.");
+        setShowAutofillWarning(false);
+        return;
+    }
+    
+    const baseUrl = resolveSiteUrl() || ''; // Holt die Basis-URL
+    const impressumLink = `${baseUrl}/${profile.slug}/impressum`;
+    const datenschutzLink = `${baseUrl}/${profile.slug}/datenschutz`;
+    
+    // Ersetzt Platzhalter
+    const impressumText = IMPRESSUM_TEMPLATE
+        .replace(/\[FIRMENNAME\]/g, formData.business_name || '')
+        .replace(/\[ADRESSE_MEHRZEILIG\]/g, formData.address || '')
+        .replace(/\[TELEFON\]/g, formData.phone || '')
+        .replace(/\[EMAIL\]/g, formData.email || '') // Nimmt die öffentliche E-Mail
+        .replace(/\[DATENSCHUTZ_LINK\]/g, datenschutzLink);
+
+    const datenschutzText = DATENSCHUTZERKLAERUNG_TEMPLATE
+        .replace(/\[FIRMENNAME\]/g, formData.business_name || '')
+        .replace(/\[ADRESSE_MEHRZEILIG\]/g, formData.address || '')
+        .replace(/\[TELEFON\]/g, formData.phone || '')
+        .replace(/\[EMAIL\]/g, formData.email || '')
+        .replace(/\[IMPRESSUM_LINK\]/g, impressumLink);
+
+    setFormData(prev => ({ 
+        ...prev, 
+        impressum_text: impressumText,
+        datenschutz_text: datenschutzText 
+    }));
+    
+    setShowAutofillWarning(false);
+    toast.success("Impressum & Datenschutz mit Vorlagen überschrieben!");
+  };
+  // --- ENDE NEUE FUNKTIONEN ---
+
 
   // --- Fetch data ---
   useEffect(() => {
@@ -422,6 +576,7 @@ export default function EinstellungenPage() {
           show_services_section: profileData.show_services_section ?? true,
           show_team_page: profileData.show_team_page ?? true,
           show_testimonials_page: profileData.show_testimonials_page ?? true,
+          slug: profileData.slug || null, // Slug wird geladen
         });
       }
       setLoading(false);
@@ -429,20 +584,42 @@ export default function EinstellungenPage() {
     getUserAndProfile();
   }, [router, supabase]);
 
-  // --- Handle form input changes ---
+  // --- *** NEUE handleFormChange FUNKTION *** ---
   const handleFormChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    
     if (type === 'checkbox') {
       const { checked } = e.target as HTMLInputElement;
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
+      // Check if the industry field is the one being changed
       if (name === 'industry') {
-        setFormData(prev => ({ ...prev, [name]: resolveIndustry(value) }));
+        const newIndustry = resolveIndustry(value);
+        const currentServices = formData.services_description;
+
+        // Check if the services field is empty or just whitespace
+        if (!currentServices || currentServices.trim() === '') {
+          // It's empty, so let's autofill it
+          const newServices = formatDefaultServices(newIndustry);
+          setFormData(prev => ({
+            ...prev,
+            industry: newIndustry,
+            services_description: newServices // <-- Autofill
+          }));
+          // Feedback an den Nutzer geben
+          toast.success(`Leistungs-Vorschläge für '${INDUSTRY_TEMPLATES[newIndustry].label}' geladen!`);
+        } else {
+          // It's not empty, just update the industry
+          setFormData(prev => ({ ...prev, industry: newIndustry }));
+        }
       } else {
+        // It's some other field, just update its value
         setFormData(prev => ({ ...prev, [name]: value }));
       }
     }
   };
+  // --- *** ENDE NEUE handleFormChange FUNKTION *** ---
+
 
   // --- Handle Save Profile ---
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -450,9 +627,12 @@ export default function EinstellungenPage() {
     if (!currentUser) return;
     setSaving(true);
     
+    // Entferne 'slug', da es nicht Teil des Updates sein soll
+    const { slug, ...dataToUpdate } = formData;
+    
     const { error, data: updatedProfile } = await supabase
       .from('profiles')
-      .update(formData)
+      .update(dataToUpdate)
       .eq('id', currentUser.id)
       .select()
       .single();
@@ -651,6 +831,21 @@ export default function EinstellungenPage() {
   // === RENDER ===
   return (
     <main className="space-y-10 px-6 py-10 lg:px-10">
+      
+      {/* MODAL FÜR DATENSCHUTZ-VORLAGE */}
+      <LegalWarningModal
+         isOpen={showDatenschutzWarning}
+         onConfirm={handleInsertDatenschutzTemplateConfirm}
+         onCancel={() => setShowDatenschutzWarning(false)}
+      />
+      
+      {/* NEUES MODAL FÜR AUTOFILL */}
+      <LegalAutofillWarningModal
+        isOpen={showAutofillWarning}
+        onConfirm={handleAutofillLegalConfirm}
+        onCancel={handleAutofillLegalCancel}
+      />
+      
       {/* This is the main 2-column layout */}
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-4">
         
@@ -678,7 +873,7 @@ export default function EinstellungenPage() {
           <form onSubmit={handleSaveProfile} className="space-y-12">
             
             {/* Sticky Save Header */}
-            <div className="-mx-1 -mt-1 flex items-center justify-between border-b border-orange-100 bg-white/90 py-4 shadow-sm shadow-orange-100/40 backdrop-blur">
+            <div className="sticky top-0 z-10 -mx-1 -mt-1 flex items-center justify-between border-b border-orange-100 bg-white/90 px-6 py-4 shadow-sm shadow-orange-100/40 backdrop-blur">
               <h2 className="text-xl font-semibold text-slate-900">Allgemeine Einstellungen</h2>
               <button
                 type="submit"
@@ -771,12 +966,69 @@ export default function EinstellungenPage() {
             <section id="rechtliches" className="scroll-mt-32">
               <h3 className="text-xl font-semibold text-slate-900">Rechtliches</h3>
               <p className="mt-1 text-sm text-slate-600">WICHTIG: Diese Texte sind für den Betrieb einer Webseite in Deutschland gesetzlich vorgeschrieben.</p>
+              
+              {/* PERSISTENTER RECHTLICHER HINWEIS */}
+              <div className="mt-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50/80 p-4 text-sm text-red-700 shadow-sm shadow-red-100">
+                <ExclamationTriangleIcon className="mt-0.5 h-6 w-6 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold text-slate-900">Keine Rechtsberatung!</p>
+                  <p>
+                    ArtisanCMS stellt lediglich die technischen Eingabefelder bereit. Sie sind **allein** für die Richtigkeit und Aktualität Ihrer Texte verantwortlich. Lassen Sie diese **zwingend von einem Anwalt** prüfen und individuell anpassen.
+                  </p>
+                </div>
+              </div>
+              
+              {/* --- NEU: BUTTON FÜR AUTOFILL --- */}
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={handleAutofillLegalClick}
+                  className="rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-orange-400 transition"
+                  title="Überschreibt bestehende Texte mit den Vorlagen"
+                >
+                  Vorlagen für Impressum & Datenschutz (neu) befüllen
+                </button>
+              </div>
+              {/* --- ENDE NEUER BUTTON --- */}
+
+
               <div className="mt-6 space-y-6 rounded-2xl border border-orange-100 bg-white/90 p-6 shadow-sm shadow-orange-100">
+                
+                {/* Impressum Input (unverändert) */}
                 <SettingsInput label="Impressum" name="impressum_text" value={formData.impressum_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihr Impressum ein..." type="textarea" rows={10} />
-                <SettingsInput label="Datenschutzerklärung" name="datenschutz_text" value={formData.datenschutz_text ?? ''} onChange={handleFormChange} placeholder="Fügen Sie hier Ihre Datenschutzerklärung ein..." type="textarea" rows={10} />
+                
+                {/* Datenschutzerklärung Input MIT BUTTON */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <label htmlFor="datenschutz_text" className="block text-sm font-medium text-slate-600">Datenschutzerklärung</label>
+                    <div className="relative">
+                       <textarea name="datenschutz_text" id="datenschutz_text" rows={10} value={formData.datenschutz_text ?? ''} onChange={handleFormChange} className="mt-0 block w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100" placeholder="Fügen Sie hier Ihre Datenschutzerklärung ein..." />
+                       {/* BUTTON ZUM EINFÜGEN DER VORLAGE - Öffnet Modal */}
+                       <button
+                           type="button"
+                           onClick={handleInsertDatenschutzTemplateClick}
+                           className="absolute right-2 top-2 inline-flex items-center gap-x-1.5 rounded-full bg-orange-500 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg hover:bg-orange-400 transition"
+                           title="Fügt eine Vorlage ein (bestehender Text wird überschrieben)"
+                       >
+                           Nur Datenschutz-Vorlage einfügen
+                       </button>
+                    </div>
+                 </div>
               </div>
             </section>
-          
+            
+            {/* --- NEU: ZWEITER SPEICHERN-BUTTON --- */}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={saving || isUploading || !!aiLoading}
+                className="inline-flex items-center gap-x-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:opacity-50"
+              >
+                {saving ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
+                {saving ? 'Wird gespeichert...' : 'Änderungen speichern'}
+              </button>
+            </div>
+            {/* --- ENDE ZWEITER SPEICHERN-BUTTON --- */}
+            
           </form> {/* End of main profile form */}
 
           {/* --- Section 5: Sicherheit (Separate components) --- */}
@@ -797,7 +1049,6 @@ export default function EinstellungenPage() {
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><AtSymbolIcon className="h-5 w-5 text-slate-400" /></div>
                   </div>
                 </div>
-                {/* KORREKTUR: "text-right" stellt sicher, dass der Button rechts ist */}
                 <div className="text-right">
                   <button type="submit" disabled={isChangingEmail || !newEmail} className="inline-flex items-center gap-x-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:opacity-50">
                     {isChangingEmail ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
@@ -806,19 +1057,6 @@ export default function EinstellungenPage() {
                 </div>
               </form>
             </SectionCard>
-            <form onSubmit={handleSaveProfile} className="space-y-12">
-            {/* Sticky Save Header */}
-            <div className="-mx-1 -mt-1 flex items-center justify-end border-b border-orange-100 bg-white/90 py-4 pr-6 shadow-sm shadow-orange-100/40 backdrop-blur">
-              <button
-                type="submit"
-                disabled={saving || isUploading || !!aiLoading}
-                className="inline-flex items-center gap-x-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:opacity-50"
-              >
-                {saving ? <ArrowPathIcon /> : <CheckIcon className="h-5 w-5" />}
-                {saving ? 'Wird gespeichert...' : 'Änderungen speichern'}
-              </button>
-            </div>
-          </form>
 
             <DangerZone 
               profile={profile} 

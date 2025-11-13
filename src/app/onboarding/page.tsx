@@ -7,6 +7,8 @@ import { INDUSTRY_OPTIONS, resolveIndustry, type Industry } from '@/lib/industry
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
+// --- NEU: Vorlagen importieren ---
+import { DATENSCHUTZERKLAERUNG_TEMPLATE, IMPRESSUM_TEMPLATE } from '@/lib/legalTemplates';
 
 // --- Icons (SparklesIcon, CheckIcon, ArrowPathIcon) ---
 const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z" /> </svg> );
@@ -39,13 +41,16 @@ export default function OnboardingPage() {
   const [businessName, setBusinessName] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
-  const [keywords, setKeywords] = useState(''); // <-- 1. ADD NEW STATE
+  const [keywords, setKeywords] = useState('');
   const [servicesDescription, setServicesDescription] = useState('');
   const [aboutText, setAboutText] = useState('');
   const [slug, setSlug] = useState('');
   const [industry, setIndustry] = useState<Industry>('sonstiges');
   const [slugStatus, setSlugStatus] = useState<SlugStatus>('idle'); 
   const [slugCheckTimeout, setSlugCheckTimeout] = useState<NodeJS.Timeout | null>(null); 
+  
+  // --- NEU: State für Legal-Checkbox ---
+  const [autoFillLegal, setAutoFillLegal] = useState(true);
 
   const [loading, setLoading] = useState(false); 
   const [aiLoading, setAiLoading] = useState<AIGenerationType | null>(null);
@@ -63,7 +68,6 @@ export default function OnboardingPage() {
         console.log("Checking profile for user:", user.id);
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            // <-- 2. ADD 'keywords' TO THE SELECT STATEMENT -->
             .select('business_name, address, phone, services_description, about_text, onboarding_complete, slug, email, keywords, industry')
             .eq('id', user.id).single();
 
@@ -72,7 +76,7 @@ export default function OnboardingPage() {
         } else if (profile) {
             console.log("Existing profile found:", profile);
             setBusinessName(profile.business_name || ''); setAddress(profile.address || ''); setPhone(profile.phone || '');
-            setKeywords(profile.keywords || ''); // <-- 3. SET THE STATE
+            setKeywords(profile.keywords || '');
             setServicesDescription(profile.services_description || ''); setAboutText(profile.about_text || '');
             setSlug(profile.slug || '');
             setIndustry(resolveIndustry(profile.industry));
@@ -86,7 +90,6 @@ export default function OnboardingPage() {
         setInitialLoading(false);
     };
     checkUserAndProfile();
-  // --- FIX: Added supabase.auth to dependency array ---
   }, [router, supabase]);
 
   // --- Auto-suggest slug based on business name ---
@@ -116,7 +119,6 @@ export default function OnboardingPage() {
         else if (data && data.length > 0) setSlugStatus('taken');
         else setSlugStatus('available');
     } catch (err) { console.error("Exception checking slug:", err); setSlugStatus('idle'); setError("Fehler bei der Slug-Prüfung."); }
-  // --- FIX: Added supabase to dependency array ---
   }, [currentUser, supabase]);
 
 
@@ -140,7 +142,6 @@ export default function OnboardingPage() {
     if (!context) { setError("Bitte geben Sie zuerst den Namen des Betriebs ein."); return; } 
     setAiLoading(type); setError(null); 
     try { 
-      // <-- 4. ADD 'keywords' TO THE API CALL BODY -->
       const response = await fetch('/api/generate-profile-text', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
@@ -158,9 +159,17 @@ export default function OnboardingPage() {
       setAiLoading(null); 
     } 
   };
+  
+  // --- Helper zum Auflösen der URL (wird für Legal Links benötigt) ---
+  const resolveSiteUrl = (): string | null => {
+    const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (envUrl && envUrl.trim().length > 0) { return envUrl; }
+    if (typeof window !== 'undefined' && window.location?.origin) { return window.location.origin; }
+    return null;
+  };
 
 
-  // === Handle Form Submission ===
+  // === Handle Form Submission (MIT LEGAL-LOGIK) ===
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!currentUser) { setError("Benutzer nicht identifiziert."); return; }
@@ -173,19 +182,47 @@ export default function OnboardingPage() {
     setLoading(true); setError(null);
     console.log("Submitting onboarding data for user:", currentUser.id);
 
+    // --- NEU: Legal-Texte vorbereiten ---
+    let impressumText = '';
+    let datenschutzText = '';
+    
+    if (autoFillLegal) {
+        const baseUrl = resolveSiteUrl() || ''; // Holt die Basis-URL
+        const impressumLink = `${baseUrl}/${slug}/impressum`;
+        const datenschutzLink = `${baseUrl}/${slug}/datenschutz`;
+        
+        // Ersetzt Platzhalter
+        impressumText = IMPRESSUM_TEMPLATE
+            .replace(/\[FIRMENNAME\]/g, businessName)
+            .replace(/\[ADRESSE_MEHRZEILIG\]/g, address)
+            .replace(/\[TELEFON\]/g, phone)
+            .replace(/\[EMAIL\]/g, currentUser.email || '') // Nimmt Login-E-Mail
+            .replace(/\[DATENSCHUTZ_LINK\]/g, datenschutzLink);
+
+        datenschutzText = DATENSCHUTZERKLAERUNG_TEMPLATE
+            .replace(/\[FIRMENNAME\]/g, businessName)
+            .replace(/\[ADRESSE_MEHRZEILIG\]/g, address)
+            .replace(/\[TELEFON\]/g, phone)
+            .replace(/\[EMAIL\]/g, currentUser.email || '')
+            .replace(/\[IMPRESSUM_LINK\]/g, impressumLink);
+    }
+    // --- ENDE NEU ---
+
     const profileData = {
         'id': currentUser.id, 
         'business_name': businessName, 
         'address': address,
         'phone': phone, 
-        'keywords': keywords, // <-- 5. ADD 'keywords' TO SAVE OBJECT
+        'keywords': keywords,
         'services_description': servicesDescription, 
         'about_text': aboutText,
         'slug': slug,
         'industry': industry,
         'onboarding_complete': true,
         'updated_at': new Date().toISOString(),
-        'email': currentUser.email
+        'email': currentUser.email,
+        'impressum_text': impressumText,       // <--- NEU
+        'datenschutz_text': datenschutzText    // <--- NEU
      };
     console.log("Data being sent to upsert:", profileData);
 
@@ -209,37 +246,37 @@ export default function OnboardingPage() {
     };
 
     await toast.promise(
-  upsertProfile(),
-  {
-    loading: 'Profil wird gespeichert...',
-    success: (data) => {
-      // Async Side-Effects separat ausführen
-      (async () => {
-        try {
-          await fetch('/api/industry-defaults', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ industry }),
-          });
-        } catch (defaultsError) {
-          console.error('Failed to apply industry defaults after onboarding', defaultsError);
-        }
+      upsertProfile(),
+      {
+        loading: 'Profil wird gespeichert...',
+        success: (data) => {
+          // Async Side-Effects separat ausführen
+          (async () => {
+            try {
+              await fetch('/api/industry-defaults', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ industry }),
+              });
+            } catch (defaultsError) {
+              console.error('Failed to apply industry defaults after onboarding', defaultsError);
+            }
 
-        router.push('/dashboard');
-      })();
+            router.push('/dashboard');
+          })();
 
-      // Wichtig: synchron einen Renderable zurückgeben
-      return 'Profil erfolgreich gespeichert!';
-    },
-    error: (err: any) => {
-      console.error('Error saving profile (toast):', err);
-      if (err.message.includes('bereits vergeben')) {
-        setSlugStatus('taken');
+          // Wichtig: synchron einen Renderable zurückgeben
+          return 'Profil erfolgreich gespeichert!';
+        },
+        error: (err: any) => {
+          console.error('Error saving profile (toast):', err);
+          if (err.message.includes('bereits vergeben')) {
+            setSlugStatus('taken');
+          }
+          return `Fehler beim Speichern: ${err.message}`;
+        },
       }
-      return `Fehler beim Speichern: ${err.message}`;
-    },
-  }
-);
+    );
 
     setLoading(false); 
   };
@@ -286,9 +323,6 @@ export default function OnboardingPage() {
                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 sm:text-sm">
                    artisancms.app/
                  </span>
-                {/* NOTE: The `eslint-disable` comment for line 274 was incorrect.
-                  It is removed, as the real error was elsewhere.
-                */}
                 <input
                     type="text" id="slug" name="slug"
                     value={slug}
@@ -309,7 +343,6 @@ export default function OnboardingPage() {
                 Dies wird Teil Ihrer Webseiten-URL (nur Kleinbuchstaben, Zahlen und Bindestriche).
             </p>
             {slugStatus === 'taken' && <p className="mt-1 text-xs text-red-600">Dieser Pfad ist leider schon vergeben.</p>}
-            {/* --- THIS IS THE FIX --- */}
             {slugStatus === 'invalid' && <p className="mt-1 text-xs text-red-600">Ungültige Zeichen. Nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt. Darf nicht leer sein oder mit &apos;-&apos; beginnen/enden.</p>}
           </div>
 
@@ -324,7 +357,7 @@ export default function OnboardingPage() {
             <input type="tel" id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="+49 123 456789"/>
           </div>
 
-          {/* --- 6. ADD KEYWORDS INPUT FIELD --- */}
+          {/* Keywords Input Field */}
           <div>
             <label htmlFor="keywords" className="mb-2 block text-sm font-medium text-gray-700"> Wichtige Schlagworte (Optional) </label>
             <input 
@@ -367,6 +400,31 @@ export default function OnboardingPage() {
                  </button>
              </div>
           </div>
+
+          {/* --- NEUE LEGAL-CHECKBOX --- */}
+          <div className="relative flex items-start rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="flex h-6 items-center">
+                <input
+                  id="autoFillLegal"
+                  name="autoFillLegal"
+                  type="checkbox"
+                  checked={autoFillLegal}
+                  onChange={(e) => setAutoFillLegal(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-600"
+                />
+              </div>
+              <div className="ml-3 text-sm leading-6">
+                <label htmlFor="autoFillLegal" className="font-medium text-gray-900">
+                  Rechtstexte automatisch ausfüllen
+                </label>
+                <p className="text-gray-600">
+                  Füllt Ihr Impressum und Ihre Datenschutzerklärung mit einer Vorlage basierend auf Ihren obigen Angaben. 
+                  <span className="font-semibold text-red-600"> Sie müssen diese Texte vor der Veröffentlichung prüfen und anpassen.</span>
+                </p>
+              </div>
+          </div>
+          {/* --- ENDE NEUE LEGAL-CHECKBOX --- */}
+
 
           {/* General Error Message Display */}
           {error && ( <p className="text-center text-sm text-red-600">{error}</p> )}

@@ -41,6 +41,7 @@
   },
   "overrides": {
     "rimraf": "^4",
-    "glob": "^9"
+    "glob": "^9",
+    "semver": "7.x"
   }
 }

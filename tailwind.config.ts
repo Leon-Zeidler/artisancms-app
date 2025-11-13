@@ -8,10 +8,8 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      // --- ADD THIS SECTION ---
-      // Extend Tailwind's color palette to include 'brand' colors
-      // These colors will read their values from the CSS variables
-      // we inject in the [slug]/page.tsx file.
+      // --- HIER IST DIE KORREKTUR ---
+      // 'colors' muss INNERHALB von 'extend' sein.
       colors: {
         brand: {
           DEFAULT: 'var(--color-brand-primary)', // Main brand color
@@ -21,10 +19,9 @@ const config: Config = {
            DEFAULT: 'var(--color-brand-secondary)', // Secondary brand color
         }
       },
-      // --- END OF ADDED SECTION ---
+      // --- ENDE DER KORREKTUR ---
     },
   },
   plugins: [],
 };
 export default config;
-

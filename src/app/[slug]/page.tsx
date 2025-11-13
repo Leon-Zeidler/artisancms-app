@@ -6,14 +6,11 @@ import Image from 'next/image';
 import React, { useState, useEffect, useMemo } from 'react';
 import { createSupabaseClient } from '@/lib/supabaseClient';
 import { useProfile } from '@/contexts/ProfileContext'; // <-- IMPORT CONTEXT
-// --- 1. IMPORT THE CORRECT TYPE ---
+// --- 1. IMPORT TEMPLATES UND RESOLVE-FUNKTIONEN ---
+import { INDUSTRY_TEMPLATES, resolveIndustry } from '@/lib/industry-templates';
 import type { Project } from '@/lib/types';
 
 // --- TYPE DEFINITIONS (Updated) ---
-// --- 2. REMOVE THE OLD LOCAL TYPE ---
-/*
-type Project = { id: string; title: string | null; 'project-date': string | null; image_url: string | null; status: 'Published' | 'Draft' | string | null; created_at: string; ai_description?: string | null; };
-*/
 type Testimonial = {
   id: string;
   author_name: string;
@@ -22,7 +19,7 @@ type Testimonial = {
 };
 
 // --- Icons ---
-// (Icons remain the same)
+// (Icons bleiben unverändert)
 const Icon = ({ path, className, color }: { path: string, className?: string, color?: string }) => (
     <svg className={className || "h-6 w-6 text-white"} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke={color || "currentColor"} aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" d={path} />
@@ -48,7 +45,8 @@ const EnvelopeIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 type FormStatus = 'idle' | 'loading' | 'success' | 'error';
-// (Rest of the helper functions)
+// (Rest of the helper functions bleiben unverändert)
+
 const projectBlurDataUrl =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEwIDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJhZGlhbEdyYWRpZW50IGlkPSJhIiBjeD0iNSIgY3k9IjQiIHI9IjUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmM2YyZWYiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmOGY5ZmYiLz48L3JhZGlhbEdyYWRpZW50PjxyZWN0IHdpZHRoPSIxMCIgaGVpZ2h0PSI4IiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+';
 
@@ -196,6 +194,12 @@ export default function ClientHomepage() {
   const supabase = useMemo(() => createSupabaseClient(), []);
   const profile = useProfile(); // <-- GET PROFILE FROM CONTEXT
   
+  // --- NEU: Dynamischen Template-Titel und Bild-URL abrufen ---
+  const currentIndustry = resolveIndustry(profile.industry);
+  const industryTemplate = INDUSTRY_TEMPLATES[currentIndustry];
+  const heroImageUrl = industryTemplate.heroImageUrl; // <--- NEU: Bild-URL abrufen
+  // --- ENDE NEU ---
+  
   // These states are specific to this page
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]); // Uses ProjectCard
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
@@ -278,13 +282,21 @@ export default function ClientHomepage() {
   return (
     <>
       {/* ========== HERO SECTION ========== */}
-      <section className="relative isolate overflow-hidden px-6 pb-20 pt-20 sm:pb-24 sm:pt-28 lg:px-8">
+      <section 
+        className="relative isolate overflow-hidden px-6 pb-20 pt-20 sm:pb-24 sm:pt-28 lg:px-8 bg-gray-50 bg-cover bg-center min-h-[70vh] flex items-center" // <-- min-h-[70vh] und flex items-center hinzugefügt
+        style={{ backgroundImage: `url(${heroImageUrl})`, backgroundColor: 'transparent' }} 
+      >
+        {/* Overlay zur Reduzierung der Unschärfe und Erhöhung der Lesbarkeit */}
+        <div className="absolute inset-0 bg-white/20" /> {/* opacity von 70 zu 50 reduziert */}
+        
+        {/* Farbverlauf über dem Bild (verbleibt, da er den Inhalt etwas hervorhebt) */}
         <div
           className="absolute inset-x-0 top-0 -z-10 h-[520px] bg-gradient-to-b from-brand/20 via-white/70 to-transparent blur-3xl"
           aria-hidden="true"
         />
-        <div className="mx-auto flex max-w-7xl flex-col gap-16 lg:flex-row lg:items-center lg:gap-24">
-          <div className="flex-1 text-center lg:text-left">
+        
+        <div className="mx-auto flex max-w-7xl flex-col gap-16 lg:flex-row lg:items-center lg:gap-24 relative z-10 w-full"> {/* w-full hinzugefügt */}
+          <div className="flex-1 text-center lg:text-left card-surface p-8 sm:p-10 rounded-2xl shadow-xl bg-white/80 backdrop-blur-md"> {/* Text Island Style */}
             <span className="inline-flex items-center rounded-full bg-brand/10 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-brand">
               {profile.services_description ? 'Ihr regionaler Partner' : 'Handwerk mit Handschlagqualität'}
             </span>
@@ -337,6 +349,25 @@ export default function ClientHomepage() {
                     <address className="mt-1 whitespace-pre-line not-italic text-gray-600">{profile.address}</address>
                   </div>
                 )}
+                {/* NEU: Telefonnummer-Block */}
+                {profile.phone && (
+                  <div className="rounded-2xl bg-white/60 p-4 shadow-sm">
+                    <p className="font-semibold text-gray-900">Telefon</p>
+                    <a href={`tel:${profile.phone}`} className="mt-1 block text-gray-600 hover:text-brand hover:underline">
+                      {profile.phone}
+                    </a>
+                  </div>
+                )}
+
+                {/* NEU: E-Mail-Block */}
+                {profile.email && (
+                  <div className="rounded-2xl bg-white/60 p-4 shadow-sm">
+                    <p className="font-semibold text-gray-900">E-Mail</p>
+                    <a href={`mailto:${profile.email}`} className="mt-1 block text-gray-600 hover:text-brand hover:underline">
+                      {profile.email}
+                    </a>
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-3">
                   {profile.phone && (
                     <a
@@ -373,7 +404,7 @@ export default function ClientHomepage() {
             <div className="mx-auto max-w-2xl text-center lg:max-w-3xl">
               <h2 className="text-base font-semibold uppercase tracking-wider text-brand">Leistungen</h2>
               <p className={`mt-3 text-3xl font-bold tracking-tight sm:text-4xl ${servicesHeadingColor}`}>
-                Unsere Kernkompetenzen
+                {industryTemplate.servicesSectionTitle}
               </p>
               <p className={`mt-3 text-sm lg:text-base ${servicesTextColor}`}>
                 Passgenaue Lösungen für private und gewerbliche Projekte – sorgfältig geplant und zuverlässig umgesetzt.

@@ -9,6 +9,7 @@ import { User } from '@supabase/supabase-js';
 import { Toaster, toast } from 'react-hot-toast';
 import FeedbackWidget from '@/components/FeedbackWidget';
 import WelcomeModal from '@/components/WelcomeModal';
+import { DynamicGlobalStyles } from '@/components/DynamicGlobalStyles';
 
 // --- TYPE DEFINITIONS ---
 type SidebarLinkProps = { 
@@ -24,6 +25,8 @@ type Profile = {
     onboarding_complete?: boolean | null;
     has_seen_welcome_modal?: boolean | null;
     role?: string | null; 
+    primary_color?: string | null; 
+    secondary_color?: string | null; 
 };
 
 // --- KORRIGIERTE ICON COMPONENTS ---
@@ -84,7 +87,10 @@ function Sidebar({ user, userSlug, isAdmin }: { user: User | null; userSlug: str
   const isDisabled = false; 
 
   return (
-    <aside className="relative w-64 flex-shrink-0 border-r border-slate-200 bg-white/80 px-5 py-6 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+    // --- HIER IST ÄNDERUNG #1 ---
+    // 'sticky top-0' hinzugefügt, damit die Sidebar beim Scrollen oben klebt.
+    // 'h-screen' hinzugefügt, damit sie die volle Höhe hat.
+    <aside className="sticky top-0 h-screen w-64 flex-shrink-0 border-r border-slate-200 bg-white/80 px-5 py-6 backdrop-blur supports-[backdrop-filter]:bg-white/70">
       <div className="flex items-center mb-8">
         <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md">
           <DashboardIcon className="h-6 w-6 text-white"/>
@@ -207,7 +213,8 @@ export default function DashboardLayout({
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false); 
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [colors, setColors] = useState({ primary: '#F97316', secondary: '#F8FAFC' }); 
   const router = useRouter(); 
   const pathname = usePathname(); 
 
@@ -226,7 +233,7 @@ export default function DashboardLayout({
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('onboarding_complete, slug, has_seen_welcome_modal, role') 
+        .select('onboarding_complete, slug, has_seen_welcome_modal, role, primary_color, secondary_color') 
         .eq('id', currentUser.id)
         .maybeSingle(); 
 
@@ -234,7 +241,12 @@ export default function DashboardLayout({
         console.error("DashboardLayout: Error checking profile:", profileError);
       } else if (profile) {
           if (isMounted) {
-              setUserSlug(profile.slug); 
+              setUserSlug(profile.slug);
+              
+              setColors({
+                  primary: profile.primary_color || '#F97316',
+                  secondary: profile.secondary_color || '#F8FAFC'
+              });
               
               if (profile.has_seen_welcome_modal === false) {
                 setShowWelcomeModal(true);
@@ -306,6 +318,11 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-orange-50 via-white to-slate-50 text-slate-900">
+      {/* --- 6. DYNAMISCHE STYLES HINZUFÜGEN --- */}
+      <DynamicGlobalStyles 
+        primaryColor={colors.primary} 
+        secondaryColor={colors.secondary} 
+      />
       <Toaster
         position="bottom-right"
         toastOptions={{
@@ -337,7 +354,10 @@ export default function DashboardLayout({
       )}
 
       <Sidebar user={user} userSlug={userSlug} isAdmin={isAdmin} />
-      <div className="flex-1 overflow-y-auto">
+      
+      {/* --- HIER IST ÄNDERUNG #2 --- */}
+      {/* 'overflow-y-auto' entfernt, damit die ganze Seite scrollt */}
+      <div className="flex-1">
         {children}
       </div>
     </div>
