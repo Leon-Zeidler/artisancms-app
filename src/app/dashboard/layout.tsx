@@ -9,8 +9,8 @@ import { User } from '@supabase/supabase-js';
 import { Toaster, toast } from 'react-hot-toast';
 import FeedbackWidget from '@/components/FeedbackWidget';
 import WelcomeModal from '@/components/WelcomeModal';
-// --- 1. IMPORT HINZUGEFÜGT ---
 import { ProfileProvider, type Profile } from '@/contexts/ProfileContext';
+import { isBetaActive } from '@/lib/subscription';
 
 // --- TYPE DEFINITIONS ---
 type SidebarLinkProps = { 
@@ -316,6 +316,13 @@ export default function DashboardLayout({
       <Sidebar user={user} userSlug={userSlug} isAdmin={isAdmin} />
       
       <div className="flex-1 overflow-y-auto">
+        {fullProfile && isBetaActive(fullProfile) && (
+          <div className="sticky top-0 z-10 mx-6 mt-6 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-xs text-orange-800 shadow-sm">
+            <span className="font-semibold">Beta-Version:</span>{' '}
+            Sie nutzen ArtisanCMS derzeit im Rahmen einer kostenlosen Beta-Phase.
+          </div>
+        )}
+        
         {/* --- 6. WRAP CHILDREN WITH PROVIDER --- */}
         {fullProfile ? (
            <ProfileProvider profile={fullProfile}>
