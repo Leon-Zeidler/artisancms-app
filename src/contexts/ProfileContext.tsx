@@ -1,6 +1,8 @@
 // src/contexts/ProfileContext.tsx
+"use client"; // <--- DAS IST DIE LÖSUNG
 
 import React, { createContext, useContext, ReactNode } from 'react';
+
 import type { Industry } from '@/lib/industry-templates';
 
 // Define the shape of the profile data
@@ -27,17 +29,17 @@ export type Profile = {
   show_team_page: boolean;
   show_testimonials_page: boolean;
   
+  // --- NEU HINZUGEFÜGT ---
   onboarding_complete?: boolean | null;
   has_seen_welcome_modal?: boolean | null;
   role?: string | null;
-  
-  // --- NEUE ABO-FELDER ---
+
+  // --- ABO-FELDER ---
   is_beta_tester?: boolean | null;
-  beta_expires_at?: string | null; // Als string für einfaches JSON-Parsing
+  beta_expires_at?: string | null; 
   stripe_customer_id?: string | null;
   stripe_subscription_id?: string | null;
   subscription_status?: string | null;
-  // --- ENDE NEUE FELDER ---
 };
 
 // 1. Create the context
