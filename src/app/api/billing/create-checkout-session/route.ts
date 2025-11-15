@@ -7,9 +7,7 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { isBetaActive } from "@/lib/subscription";
 import type { Profile, PlanId } from "@/contexts/ProfileContext";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-10-29.clover", // Sicherstellen, dass diese Version aktuell ist
-});
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
 // Map unserer internen Namen zu den Stripe Preis-IDs
 const PLAN_ID_TO_PRICE_ID: Record<PlanId, string | undefined> = {
@@ -22,6 +20,17 @@ export async function POST(request: Request) {
   // Request-Objekt hinzufügen
   const cookieStore = cookies();
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+
+  if (!stripeSecretKey) {
+    return NextResponse.json(
+      { error: "STRIPE_SECRET_KEY is not configured" },
+      { status: 500 },
+    );
+  }
+
+  const stripe = new Stripe(stripeSecretKey, {
+    apiVersion: "2025-10-29.clover", // Sicherstellen, dass diese Version aktuell ist
+  });
 
   // --- NEU: planId aus dem Request-Body lesen ---
   let planId: PlanId;

@@ -7,13 +7,30 @@ import { Resend } from "resend";
 import { v4 as uuidv4 } from "uuid";
 import { resolveIndustry, type Industry } from "@/lib/industry-templates"; // Import von resolveIndustry und Industry
 
-// Resend-Client initialisieren
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resendApiKey = process.env.RESEND_API_KEY;
 const fromEmail = process.env.FROM_EMAIL || "onboarding@resend.dev"; // Fallback
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export async function POST(request: Request) {
   const cookieStore = cookies();
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+
+  if (!resendApiKey) {
+    return NextResponse.json(
+      { error: "RESEND_API_KEY is not configured" },
+      { status: 500 },
+    );
+  }
+
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    return NextResponse.json(
+      { error: "Supabase admin credentials are not configured" },
+      { status: 500 },
+    );
+  }
+
+  const resend = new Resend(resendApiKey);
 
   // 1. Benutzer authentifizieren
   const {
@@ -44,10 +61,7 @@ export async function POST(request: Request) {
   }
 
   // --- 3. NEU: Profil des Nutzers holen (mit Admin-Client) ---
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
   let businessName = "unserem Betrieb"; // Standard-Fallback
   let industry: Industry = "sonstiges"; // Standard-Fallback
