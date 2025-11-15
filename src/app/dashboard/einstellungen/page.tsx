@@ -8,7 +8,7 @@ import { User } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { INDUSTRY_OPTIONS, resolveIndustry, type Industry, INDUSTRY_TEMPLATES, formatDefaultServices } from '@/lib/industry-templates';
-import { DATENSCHUTZERKLAERUNG_TEMPLATE, IMPRESSUM_TEMPLATE } from '@/lib/legalTemplates'; 
+import { DATENSCHUTZ_TEMPLATE, IMPRESSUM_TEMPLATE } from '@/lib/legalTemplates';
 import { DynamicGlobalStyles } from '@/components/DynamicGlobalStyles'; // <--- WICHTIG: Sicherstellen, dass dies importiert ist
 
 // --- TYPE DEFINITIONS ---
@@ -479,12 +479,14 @@ export default function EinstellungenPage() {
 
   // --- HINZUGEFÜGTE FUNKTION: Öffnet das Datenschutz-Modal ---
   const handleInsertDatenschutzTemplateClick = () => {
+      setFormData(prev => ({ ...prev, datenschutz_text: DATENSCHUTZ_TEMPLATE(prev.business_name || '') }));
       setShowDatenschutzWarning(true);
+      toast.success("Datenschutz-Vorlage eingefügt!");
   };
   
   // --- HINZUGEFÜGTE FUNKTION: Fügt Datenschutz-Vorlage ein nach Bestätigung ---
   const handleInsertDatenschutzTemplateConfirm = () => {
-      setFormData(prev => ({ ...prev, datenschutz_text: DATENSCHUTZERKLAERUNG_TEMPLATE }));
+      setFormData(prev => ({ ...prev, datenschutz_text: DATENSCHUTZ_TEMPLATE(prev.business_name || '') }));
       setShowDatenschutzWarning(false);
       toast.success("Datenschutz-Vorlage eingefügt!");
   };
@@ -510,14 +512,14 @@ export default function EinstellungenPage() {
     const datenschutzLink = `${baseUrl}/${profile.slug}/datenschutz`;
     
     // Ersetzt Platzhalter
-    const impressumText = IMPRESSUM_TEMPLATE
+    const impressumText = IMPRESSUM_TEMPLATE(formData.business_name || '')
         .replace(/\[FIRMENNAME\]/g, formData.business_name || '')
         .replace(/\[ADRESSE_MEHRZEILIG\]/g, formData.address || '')
         .replace(/\[TELEFON\]/g, formData.phone || '')
         .replace(/\[EMAIL\]/g, formData.email || '') // Nimmt die öffentliche E-Mail
         .replace(/\[DATENSCHUTZ_LINK\]/g, datenschutzLink);
 
-    const datenschutzText = DATENSCHUTZERKLAERUNG_TEMPLATE
+    const datenschutzText = DATENSCHUTZ_TEMPLATE(formData.business_name || '')
         .replace(/\[FIRMENNAME\]/g, formData.business_name || '')
         .replace(/\[ADRESSE_MEHRZEILIG\]/g, formData.address || '')
         .replace(/\[TELEFON\]/g, formData.phone || '')
