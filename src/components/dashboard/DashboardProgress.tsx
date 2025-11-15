@@ -8,6 +8,15 @@ import { useProfile } from "@/contexts/ProfileContext";
 export default function DashboardProgress() {
   const profile = useProfile();
 
+  if (!profile) {
+    return (
+      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="mb-3 h-5 w-1/2 rounded bg-slate-100" />
+        <div className="h-3 w-full rounded-full bg-slate-100" />
+      </div>
+    );
+  }
+
   // Prüfungen für die einzelnen Schritte
   const hasFirmData = !!(profile.business_name && profile.address);
   const hasLegalTexts = !!(

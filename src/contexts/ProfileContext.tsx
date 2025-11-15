@@ -25,6 +25,11 @@ export type Profile = {
   datenschutz_text: string | null;
   is_published: boolean;
   has_seen_welcome_modal: boolean;
+  
+  // --- HIER IST DER FIX ---
+  is_beta_tester: boolean; // <-- Dieses Feld hat gefehlt
+  // --- ENDE FIX ---
+
   beta_expires_at: string | null;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
@@ -36,7 +41,7 @@ export type Profile = {
   show_services_section: boolean;
   show_team_page: boolean;
   show_testimonials_page: boolean;
-  show_zertifikate_page: boolean; // <-- Dein neues Feld
+  show_zertifikate_page: boolean; 
 };
 // ---
 
@@ -60,8 +65,7 @@ export const ProfileProvider = ({
   );
 };
 
-// --- FIX 1: HIER WIRD DER useProfile HOOK KORRIGIERT ---
-// Er gibt jetzt wieder direkt 'profile' zurück, was alle Fehler auf deinen [slug] Seiten behebt.
+// (useProfile Hook ist korrekt)
 export const useProfile = () => {
   const context = useContext(ProfileContext);
   if (context === undefined) {
@@ -69,9 +73,6 @@ export const useProfile = () => {
   }
   return context.profile; 
 };
-// --- ENDE FIX 1 ---
 
-// --- FIX 2: Fehlender 'PlanId' Typ hinzugefügt ---
-// Dies behebt den Fehler in 'api/billing/create-checkout-session/route.ts'
+// (PlanId Typ ist korrekt)
 export type PlanId = 'free' | 'pro' | 'unlimited' | string;
-// --- ENDE FIX 2 ---
