@@ -7,10 +7,16 @@ import { createClient } from "@supabase/supabase-js"; // Admin-Client
 import { resolveIndustry } from "@/lib/industry-templates";
 import { getAnalyzeImagePrompt } from "@/lib/ai-prompts"; // <-- NEUER IMPORT
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 export async function POST(req: NextRequest) {
   try {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "OPENAI_API_KEY is not configured" },
+        { status: 500 },
+      );
+    }
+    const openai = new OpenAI({ apiKey });
     const cookieStore = cookies();
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 

@@ -5,16 +5,10 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import type { PlanId } from "@/contexts/ProfileContext"; // Typ importieren
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-10-29.clover",
-});
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 const PRICE_ID_TO_PLAN: Record<string, PlanId> = {};
 const pricePlanPairs: Array<[string | undefined, PlanId]> = [
@@ -29,6 +23,23 @@ for (const [priceId, plan] of pricePlanPairs) {
 }
 
 export async function POST(request: Request) {
+  if (
+    !supabaseUrl ||
+    !supabaseServiceRoleKey ||
+    !stripeSecretKey ||
+    !webhookSecret
+  ) {
+    return NextResponse.json(
+      { error: "Stripe or Supabase environment variables are missing" },
+      { status: 500 },
+    );
+  }
+
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
+  const stripe = new Stripe(stripeSecretKey, {
+    apiVersion: "2025-10-29.clover",
+  });
+
   const body = await request.text();
   const sig = request.headers.get("stripe-signature");
 

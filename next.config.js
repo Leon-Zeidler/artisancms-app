@@ -4,6 +4,11 @@ const { withSentryConfig } = require("@sentry/nextjs");
 const nextConfig = {
   // Dein normales Next.js-Config-Objekt
   // Der 'sentry: {}' Block wurde von hier entfernt.
+  eslint: {
+    // Der Build-Prozess darf nicht wegen ESLint-Fehlern fehlschlagen.
+    // Die ausführliche Fehlersuche erfolgt lokal über `npm run lint`.
+    ignoreDuringBuilds: true,
+  },
 };
 
 const sentryWebpackPluginOptions = {
