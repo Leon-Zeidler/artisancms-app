@@ -97,10 +97,12 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (e: any) {
-    console.error("Error creating Stripe session:", e.message);
+    // KORREKTUR: 'any' zu 'unknown' geändert und Typprüfung
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.error("Error creating Stripe session:", message);
     return NextResponse.json(
-      { error: `Stripe error: ${e.message}` },
+      { error: `Stripe error: ${message}` },
       { status: 500 },
     );
   }

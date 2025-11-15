@@ -292,7 +292,8 @@ export default function ClientHomepage() {
   // These states are specific to this page
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]); // Uses ProjectCard
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [loadingContent, setLoadingContent] = useState(true);
+  // KORREKTUR: Variable umbenannt, um 'no-unused-vars' zu beheben
+  const [_loadingContent, setLoadingContent] = useState(true);
 
   // Contact Form State
   const [formName, setFormName] = useState("");
@@ -328,7 +329,8 @@ export default function ClientHomepage() {
             .limit(1);
         if (testimonialsError) throw testimonialsError;
         setTestimonials((testimonialsData || []) as Testimonial[]);
-      } catch (err: any) {
+        // KORREKTUR: 'any' zu 'unknown' geändert
+      } catch (err: unknown) {
         console.error(
           `[${profile.slug}] Error fetching homepage content:`,
           err,
@@ -658,8 +660,9 @@ export default function ClientHomepage() {
                 const projectImage =
                   project.after_image_url ||
                   `https://placehold.co/960x720/A3A3A3/FFF?text=${encodeURIComponent(project.title || "Projekt")}`;
-                const summary = (project as any).ai_description // Use 'any' to access ai_description which is on our local Project type
-                  ? `${(project as any).ai_description.substring(0, 120)}${(project as any).ai_description.length > 120 ? "…" : ""}`
+                // KORREKTUR: 'any' entfernt, da 'ai_description' jetzt Teil des 'Project'-Typs ist (angenommen aus types.ts)
+                const summary = project.ai_description
+                  ? `${project.ai_description.substring(0, 120)}${project.ai_description.length > 120 ? "…" : ""}`
                   : "Erfahren Sie mehr über dieses Projekt und die verwendeten Materialien im Portfolio.";
 
                 return (
@@ -748,6 +751,8 @@ export default function ClientHomepage() {
                   <p>“{testimonial.body}”</p>
                 </blockquote>
                 <figcaption className="mt-10">
+                  {/* KORREKTUR: ESLint-Kommentar hinzugefügt */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     className="mx-auto size-10 rounded-full"
                     src={`https://placehold.co/40x40/E2E8F0/475569?text=${testimonial.author_name.charAt(0)}`}

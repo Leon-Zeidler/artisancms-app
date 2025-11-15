@@ -1,12 +1,14 @@
 // src/app/api/admin/users/route.ts
 import { NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { createClient } from "@supabase/supabase-js";
+// KORREKTUR: SupabaseClient importiert
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
-async function checkAdmin(supabase: any) {
+// KORREKTUR: 'any' durch 'SupabaseClient' ersetzt
+async function checkAdmin(supabase: SupabaseClient) {
   const {
     data: { user },
   } = await supabase.auth.getUser();

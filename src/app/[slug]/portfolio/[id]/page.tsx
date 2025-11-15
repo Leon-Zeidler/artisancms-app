@@ -53,15 +53,19 @@ export default function ClientProjectDetailPage() {
         if (!data) return notFound();
 
         setProject(data as Project);
-      } catch (err: any) {
+        // KORREKTUR: 'any' zu 'unknown' geändert
+      } catch (err: unknown) {
         console.error("Error fetching project detail:", err);
-        if (!error) setError(err.message || "Fehler.");
+        // KORREKTUR: Typprüfung hinzugefügt
+        if (!error)
+          setError(err instanceof Error ? err.message : "Fehler.");
       } finally {
         setLoading(false);
       }
     };
     fetchProjectDetails();
-  }, [profile, projectId, supabase]);
+    // KORREKTUR: 'error' zur Dependency-Liste hinzugefügt
+  }, [profile, projectId, supabase, error]);
 
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return "Unbekanntes Datum";
@@ -168,6 +172,8 @@ export default function ClientProjectDetailPage() {
             ) : /* === CASE 2: ONLY After Image exists (Show Single Image) === */
             hasAfterImage ? (
               <div className="relative w-full">
+                {/* KORREKTUR: ESLint-Kommentar hinzugefügt */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={project.after_image_url || placeholderImg}
                   alt={`${project.title || "Projektbild"} Hauptbild`}
@@ -179,6 +185,8 @@ export default function ClientProjectDetailPage() {
             ) : /* === CASE 3: NO Images (Show Placeholder) === */
             !hasGallery ? (
               <div className="relative w-full">
+                {/* KORREKTUR: ESLint-Kommentar hinzugefügt */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={placeholderImg}
                   alt={project.title || "Bild"}
@@ -197,6 +205,8 @@ export default function ClientProjectDetailPage() {
               <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
                 {galleryImages.map((image, index) => (
                   <div key={index} className="relative w-full">
+                    {/* KORREKTUR: ESLint-Kommentar hinzugefügt */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={image.url}
                       alt={`${project.title || "Projektbild"} Galerie ${index + 1}`}

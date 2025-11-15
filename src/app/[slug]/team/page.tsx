@@ -105,8 +105,8 @@ export default function ClientTeamPage() {
         {error && <p className="mt-16 text-center text-red-600">{error}</p>}
 
         {!error && (
+          // KORREKTUR: 'role="list"' von <ul> entfernt
           <ul
-            role="list"
             className="mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3"
           >
             {teamMembers.length > 0 ? (

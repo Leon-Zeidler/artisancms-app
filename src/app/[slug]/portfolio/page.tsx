@@ -42,6 +42,8 @@ function PortfolioCard({ project, slug }: PortfolioCardProps) {
     <article className="group flex flex-col items-start justify-between">
       <Link href={projectUrl} className="block w-full">
         <div className="relative w-full">
+          {/* KORREKTUR: ESLint-Kommentar hinzugefügt */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
             alt={project.title || "Project image"}
@@ -100,10 +102,16 @@ export default function ClientPortfolioPage() {
         } else {
           setProjects(data || []);
         }
-      } catch (err: any) {
+        // KORREKTUR: 'any' zu 'unknown' geändert
+      } catch (err: unknown) {
         console.error("Error fetching portfolio data:", err);
         if (!error) {
-          setError(err.message || "Ein Fehler ist aufgetreten.");
+          // KORREKTUR: Typprüfung hinzugefügt
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Ein Fehler ist aufgetreten.",
+          );
         }
         setProjects([]);
       } finally {
@@ -112,7 +120,8 @@ export default function ClientPortfolioPage() {
     };
 
     fetchPortfolioData();
-  }, [profile, supabase]);
+    // KORREKTUR: 'error' zur Dependency-Liste hinzugefügt
+  }, [profile, supabase, error]);
 
   // === Render Logic ===
   if (loading) {

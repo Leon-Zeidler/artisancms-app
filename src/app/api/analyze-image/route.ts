@@ -94,10 +94,12 @@ export async function POST(req: NextRequest) {
 
     const description = aiResponse.choices[0].message?.content;
     return NextResponse.json({ description });
-  } catch (error: any) {
-    console.error("Error in AI image analysis:", error.message);
+    // KORREKTUR: 'any' zu 'unknown' geändert und Typprüfung
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Error in AI image analysis:", message);
     return NextResponse.json(
-      { error: `Fehler bei der AI-Generierung: ${error.message}` },
+      { error: `Fehler bei der AI-Generierung: ${message}` },
       { status: 500 },
     );
   }
