@@ -96,3 +96,4 @@ export default function DashboardProgress() {
     </div>
   );
 }
+// src/components/dashboard/DashboardProgress.tsx
