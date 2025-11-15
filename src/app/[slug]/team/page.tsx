@@ -4,7 +4,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+// notFound() ist für Client Components nicht ideal, wir ersetzen es durch Lade-Logik
+// import { notFound } from "next/navigation"; 
 import { createSupabaseClient } from "@/lib/supabaseClient";
 import { useProfile } from "@/contexts/ProfileContext";
 
@@ -16,6 +17,7 @@ type TeamMember = {
   bio: string | null;
   avatar_url: string | null;
 };
+
 const UserGroupIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
@@ -37,17 +39,22 @@ const UserGroupIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function ClientTeamPage() {
   // === State Variables ===
   const supabase = useMemo(() => createSupabaseClient(), []);
-  const profile = useProfile(); // <-- GET PROFILE FROM CONTEXT
+  const profile = useProfile(); // <-- Gibt Profile | null zurück
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Dieser State ist für das Laden des TEAMS
   const [error, setError] = useState<string | null>(null);
 
   // === Data Fetching ===
   useEffect(() => {
-    if (!profile) return notFound();
+    // Wenn das Profil noch nicht geladen ist (aus dem Context), tue nichts.
+    if (!profile) {
+      setLoading(true); // Stelle sicher, dass wir "Lade Profil..." anzeigen
+      return;
+    }
 
+    // Wenn das Profil geladen ist, lade die Team-Mitglieder
     const fetchTeamData = async () => {
-      setLoading(true);
+      setLoading(true); // Beginne das Laden des Teams
       setError(null);
       setTeamMembers([]);
 
@@ -55,7 +62,7 @@ export default function ClientTeamPage() {
         const { data, error: fetchError } = await supabase
           .from("team_members")
           .select("id, name, role, bio, avatar_url")
-          .eq("profile_id", profile.id) // <-- Use profile.id from context
+          .eq("profile_id", profile.id) // <-- profile.id ist hier sicher
           .order("display_order", { ascending: true })
           .order("created_at", { ascending: true });
 
@@ -72,14 +79,27 @@ export default function ClientTeamPage() {
         setError(message);
         setTeamMembers([]);
       } finally {
-        setLoading(false);
+        setLoading(false); // Beende das Laden des Teams
       }
     };
 
     fetchTeamData();
-  }, [profile, supabase]);
+  }, [profile, supabase]); // Hängt nur von profile und supabase ab
 
   // === Render Logic ===
+
+  // --- FIX: ZUERST auf das Profil prüfen ---
+  // Das fängt den Zustand ab, in dem das Layout das Profil noch lädt.
+  if (!profile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Lade Profil...
+      </div>
+    );
+  }
+  // --- ENDE FIX ---
+
+  // ZWEITENS: Auf das Laden des Teams prüfen (passiert nur, wenn profile existiert)
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -88,7 +108,7 @@ export default function ClientTeamPage() {
     );
   }
 
-  // Layout (Navbar, Footer, CSS vars) is handled by layout.tsx
+  // Ab hier ist `profile` garantiert NICHT `null`.
   return (
     <div className="bg-white py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -105,7 +125,6 @@ export default function ClientTeamPage() {
         {error && <p className="mt-16 text-center text-red-600">{error}</p>}
 
         {!error && (
-          // KORREKTUR: 'role="list"' von <ul> entfernt
           <ul
             className="mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3"
           >
