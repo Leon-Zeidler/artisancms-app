@@ -2,6 +2,7 @@
 "use client";
 
 import React, {
+  // ... (alle imports bleiben gleich)
   useState,
   useEffect,
   useMemo,
@@ -22,8 +23,9 @@ import {
   formatDefaultServices,
 } from "@/lib/industry-templates";
 import { DATENSCHUTZ_TEMPLATE, IMPRESSUM_TEMPLATE } from "@/lib/legalTemplates";
-import { DynamicGlobalStyles } from "@/components/DynamicGlobalStyles"; // <--- WICHTIG: Sicherstellen, dass dies importiert ist
+import { DynamicGlobalStyles } from "@/components/DynamicGlobalStyles";
 
+// ... (Code für TYPE DEFINITIONS, ICONS, MODALS, COMPONENTS bleibt unverändert)
 // --- TYPE DEFINITIONS ---
 type Profile = {
   id: string;
@@ -49,10 +51,10 @@ type Profile = {
   show_testimonials_page: boolean;
   slug: string | null;
 };
-
 type AIGenerationType = "services" | "about";
 
 // --- ICONS ---
+// ... (alle Icons)
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
@@ -245,6 +247,7 @@ const LegalWarningModal = ({
 }) => {
   if (!isOpen) return null;
 
+  // --- FIX: Dieser Text wird jetzt hier angezeigt, nicht in der Vorlage ---
   const warningText = `Dies ist eine automatisch generierte Vorlage. Sie als Webseitenbetreiber sind rechtlich dafür verantwortlich, diese Angaben zu prüfen, zu vervollständigen (insbesondere Ihre eigenen Kontaktdaten unter "Verantwortlicher") und anwaltlich prüfen zu lassen. Sie müssen ebenfalls alle Dienste hinzufügen, die Sie selbst einbetten (z.B. Google Maps, YouTube, Calendly, etc.).`;
 
   return (
@@ -290,6 +293,7 @@ const LegalWarningModal = ({
   );
 };
 
+// ... (Restliche Modals und Komponenten bleiben gleich)
 // --- MODAL KOMPONENTE (Impressum & Datenschutz Autofill) ---
 const LegalAutofillWarningModal = ({
   isOpen,
@@ -602,6 +606,7 @@ function DangerZone({
   onUpdateProfile: (updatedProfile: Profile) => void;
   router: any;
 }) {
+  // ... (DangerZone bleibt gleich)
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [confirmDeleteModal, setConfirmDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -762,8 +767,10 @@ function DangerZone({
   );
 }
 
+
 // --- MAIN PAGE COMPONENT ---
 export default function EinstellungenPage() {
+  // ... (State und Hooks bleiben gleich)
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -802,8 +809,8 @@ export default function EinstellungenPage() {
 
   const router = useRouter();
 
-  // --- NEU: Helper-Funktion zum Auflösen der URL (aus Onboarding kopiert) ---
   const resolveSiteUrl = (): string | null => {
+    // ... (bleibt gleich)
     const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
     if (envUrl && envUrl.trim().length > 0) {
       return envUrl;
@@ -881,9 +888,6 @@ export default function EinstellungenPage() {
       formData.email || null,
     );
     // --- ENDE FIX ---
-    
-    // HINWEIS: Die .replace() Logik habe ich entfernt,
-    // da die Templates jetzt direkt die Werte einfügen und keine Platzhalter mehr haben.
 
     setFormData((prev) => ({
       ...prev,
@@ -898,6 +902,7 @@ export default function EinstellungenPage() {
 
   // --- Fetch data ---
   useEffect(() => {
+    // ... (bleibt gleich)
     const getUserAndProfile = async () => {
       setLoading(true);
       const {
@@ -946,10 +951,11 @@ export default function EinstellungenPage() {
     getUserAndProfile();
   }, [router, supabase]);
 
-  // --- *** NEUE handleFormChange FUNKTION *** ---
+  // --- handleFormChange ---
   const handleFormChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
+    // ... (bleibt gleich)
     const { name, value, type } = e.target;
 
     if (type === "checkbox") {
@@ -984,10 +990,10 @@ export default function EinstellungenPage() {
       }
     }
   };
-  // --- *** ENDE NEUE handleFormChange FUNKTION *** ---
 
   // --- Handle Save Profile ---
   const handleSaveProfile = async (e: React.FormEvent) => {
+    // ... (bleibt gleich)
     e.preventDefault();
     if (!currentUser) return;
     setSaving(true);
@@ -1023,11 +1029,11 @@ export default function EinstellungenPage() {
     }
   };
 
+  // --- handleGenerateProfileText ---
   const handleGenerateProfileText = async (type: AIGenerationType) => {
-    // --- FIX: business_name auf `|| ""` prüfen ---
+    // ... (bleibt gleich)
     const context = formData.business_name || ""; 
     if (!context) {
-    // --- ENDE FIX ---
       toast.error("Bitte geben Sie zuerst den Namen des Betriebs ein.");
       return;
     }
@@ -1038,15 +1044,13 @@ export default function EinstellungenPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          // --- FIX: API-Aufruf benötigt `industry` und `heroSubtitle` ---
           industry: formData.industry,
-          businessName: formData.business_name || "", // <-- FIX
+          businessName: formData.business_name || "",
           heroSubtitle: formData.hero_subtitle || "",
           servicesList: formData.services_description || "",
           keywordPool: formData.keywords || "",
           address: formData.address || "",
           phone: formData.phone || "",
-          // --- ENDE FIX ---
           type: type, // 'services' or 'about'
         }),
       });
@@ -1073,8 +1077,9 @@ export default function EinstellungenPage() {
     }
   };
 
-  // --- Handle Logo Upload ---
+  // --- Logo Handlers & Email Handler (bleiben gleich) ---
   const handleLogoUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    // ... (bleibt gleich)
     if (
       !e.target.files ||
       e.target.files.length === 0 ||
@@ -1121,9 +1126,8 @@ export default function EinstellungenPage() {
     }
     setIsUploading(false);
   };
-
-  // --- Handle Logo Removal ---
   const handleRemoveLogo = async () => {
+    // ... (bleibt gleich)
     if (!currentUser || !profile || !profile.logo_storage_path) return;
     setIsUploading(true);
     const toastId = toast.loading("Logo wird entfernt...");
@@ -1152,9 +1156,8 @@ export default function EinstellungenPage() {
     }
     setIsUploading(false);
   };
-
-  // --- Handle Change Email ---
   const handleChangeEmail = async (e: FormEvent) => {
+    // ... (bleibt gleich)
     e.preventDefault();
     if (!newEmail || !currentUser || newEmail === currentUser.email) {
       toast.error("Bitte geben Sie eine neue, andere E-Mail-Adresse ein.");
@@ -1204,9 +1207,8 @@ export default function EinstellungenPage() {
       );
     }
   };
-
-  // --- Callback to update local profile state (same) ---
   const handleProfileUpdate = (updatedProfile: Profile) => {
+    // ... (bleibt gleich)
     setProfile(updatedProfile);
     setFormData((prev) => ({
       ...prev,
@@ -1216,6 +1218,7 @@ export default function EinstellungenPage() {
 
   // --- Navigation Items for new layout ---
   const navItems = [
+    // ... (bleibt gleich)
     { id: "firmendaten", label: "Firmendaten", icon: BuildingOfficeIcon },
     { id: "branding", label: "Branding & Inhalt", icon: PaintBrushIcon },
     { id: "seo", label: "SEO & AI", icon: MagnifyingGlassIcon },
@@ -1224,6 +1227,7 @@ export default function EinstellungenPage() {
   ];
 
   if (loading) {
+    // ... (bleibt gleich)
     return (
       <div className="flex h-full items-center justify-center p-10 text-sm text-slate-500">
         Lade Einstellungen...
@@ -1234,24 +1238,24 @@ export default function EinstellungenPage() {
   // === RENDER ===
   return (
     <main className="space-y-10 px-6 py-10 lg:px-10">
-      {/* MODAL FÜR DATENSCHUTZ-VORLAGE */}
+      {/* ... (Modals bleiben gleich) */}
       <LegalWarningModal
         isOpen={showDatenschutzWarning}
         onConfirm={handleInsertDatenschutzTemplateConfirm}
         onCancel={() => setShowDatenschutzWarning(false)}
       />
-
-      {/* NEUES MODAL FÜR AUTOFILL */}
       <LegalAutofillWarningModal
         isOpen={showAutofillWarning}
         onConfirm={handleAutofillLegalConfirm}
         onCancel={handleAutofillLegalCancel}
       />
 
+
       {/* This is the main 2-column layout */}
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-4">
         {/* === LEFT COLUMN: STICKY NAV === */}
         <aside className="lg:col-span-1">
+          {/* ... (Nav bleibt gleich) */}
           <nav className="sticky top-16 space-y-1">
             <h2 className="mb-4 text-2xl font-bold text-slate-900">
               Einstellungen
@@ -1273,7 +1277,7 @@ export default function EinstellungenPage() {
         <div className="space-y-12 lg:col-span-3">
           {/* --- Main Form for Profile Data --- */}
           <form onSubmit={handleSaveProfile} className="space-y-12">
-            {/* Sticky Save Header */}
+            {/* ... (Sticky Header, Section 1, 2, 3 bleiben gleich) */}
             <div className="sticky top-0 z-10 -mx-1 -mt-1 flex items-center justify-between border-b border-orange-100 bg-white/90 px-6 py-4 shadow-sm shadow-orange-100/40 backdrop-blur">
               <h2 className="text-xl font-semibold text-slate-900">
                 Allgemeine Einstellungen
@@ -1288,7 +1292,6 @@ export default function EinstellungenPage() {
               </button>
             </div>
 
-            {/* --- Section 1: Firmendaten --- */}
             <section id="firmendaten" className="scroll-mt-32">
               <h3 className="text-xl font-semibold text-slate-900">
                 Firmendaten
@@ -1339,7 +1342,6 @@ export default function EinstellungenPage() {
               </div>
             </section>
 
-            {/* --- Section 2: Branding --- */}
             <section id="branding" className="scroll-mt-32">
               <h3 className="text-xl font-semibold text-slate-900">
                 Webseiten-Branding & Inhalte
@@ -1407,7 +1409,6 @@ export default function EinstellungenPage() {
               </div>
             </section>
 
-            {/* --- Section 3: SEO & AI (MIT BUTTONS) --- */}
             <section id="seo" className="scroll-mt-32">
               <h3 className="text-xl font-semibold text-slate-900">
                 SEO & AI-Inhalte
@@ -1497,7 +1498,7 @@ export default function EinstellungenPage() {
               </div>
             </section>
 
-            {/* --- Section 4: Rechtliches --- */}
+            {/* --- Section 4: Rechtliches (FIX: Mit Hilfetext) --- */}
             <section id="rechtliches" className="scroll-mt-32">
               <h3 className="text-xl font-semibold text-slate-900">
                 Rechtliches
@@ -1507,7 +1508,6 @@ export default function EinstellungenPage() {
                 Deutschland gesetzlich vorgeschrieben.
               </p>
 
-              {/* PERSISTENTER RECHTLICHER HINWEIS */}
               <div className="mt-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50/80 p-4 text-sm text-red-700 shadow-sm shadow-red-100">
                 <ExclamationTriangleIcon className="mt-0.5 size-6 shrink-0" />
                 <div>
@@ -1524,7 +1524,6 @@ export default function EinstellungenPage() {
                 </div>
               </div>
 
-              {/* --- NEU: BUTTON FÜR AUTOFILL --- */}
               <div className="mt-4">
                 <button
                   type="button"
@@ -1535,10 +1534,9 @@ export default function EinstellungenPage() {
                   Vorlagen für Impressum & Datenschutz (neu) befüllen
                 </button>
               </div>
-              {/* --- ENDE NEUER BUTTON --- */}
 
               <div className="mt-6 space-y-6 rounded-2xl border border-orange-100 bg-white/90 p-6 shadow-sm shadow-orange-100">
-                {/* Impressum Input (unverändert) */}
+                
                 <SettingsInput
                   label="Impressum"
                   name="impressum_text"
@@ -1549,14 +1547,24 @@ export default function EinstellungenPage() {
                   rows={10}
                 />
 
-                {/* Datenschutzerklärung Input MIT BUTTON */}
+                {/* --- FIX: HINWEISTEXT HIER EINGEFÜGT --- */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <label
-                    htmlFor="datenschutz_text"
-                    className="block text-sm font-medium text-slate-600"
-                  >
-                    Datenschutzerklärung
-                  </label>
+                  <div>
+                    <label
+                      htmlFor="datenschutz_text"
+                      className="block text-sm font-medium text-slate-600"
+                    >
+                      Datenschutzerklärung
+                    </label>
+                    {/* --- NEUER HILFETEXT --- */}
+                    <p className="mt-2 text-xs text-slate-500">
+                      <strong>Hinweis:</strong> Dies ist eine automatisch generierte Vorlage. 
+                      Sie sind rechtlich dafür verantwortlich, diese Angaben zu prüfen, 
+                      zu vervollständigen (z.B. Google Maps, YouTube) und anwaltlich prüfen zu lassen.
+                    </p>
+                    {/* --- ENDE --- */}
+                  </div>
+
                   <div className="relative">
                     <textarea
                       name="datenschutz_text"
@@ -1567,7 +1575,6 @@ export default function EinstellungenPage() {
                       className="mt-0 block w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                       placeholder="Fügen Sie hier Ihre Datenschutzerklärung ein..."
                     />
-                    {/* BUTTON ZUM EINFÜGEN DER VORLAGE - Öffnet Modal */}
                     <button
                       type="button"
                       onClick={handleInsertDatenschutzTemplateClick}
@@ -1578,10 +1585,11 @@ export default function EinstellungenPage() {
                     </button>
                   </div>
                 </div>
+                {/* --- ENDE FIX --- */}
               </div>
             </section>
 
-            {/* --- NEU: ZWEITER SPEICHERN-BUTTON --- */}
+            {/* --- ZWEITER SPEICHERN-BUTTON --- */}
             <div className="flex justify-end">
               <button
                 type="submit"
@@ -1592,10 +1600,10 @@ export default function EinstellungenPage() {
                 {saving ? "Wird gespeichert..." : "Änderungen speichern"}
               </button>
             </div>
-            {/* --- ENDE ZWEITER SPEICHERN-BUTTON --- */}
           </form>{" "}
           {/* End of main profile form */}
-          {/* --- Section 5: Sicherheit (Separate components) --- */}
+
+          {/* --- Section 5: Sicherheit (unverändert) --- */}
           <section id="sicherheit" className="scroll-mt-32 space-y-8">
             <SectionCard
               title="Account-Sicherheit"

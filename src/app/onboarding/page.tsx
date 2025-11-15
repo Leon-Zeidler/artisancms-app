@@ -17,9 +17,9 @@ import {
   DATENSCHUTZ_TEMPLATE,
 } from "@/lib/legalTemplates";
 import toast from "react-hot-toast";
-import LogoUploader from "@/components/LogoUploader"; // <-- NEU
+import LogoUploader from "@/components/LogoUploader"; 
 
-// --- Icons ---
+// --- Icons (unverändert) ---
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
@@ -188,8 +188,8 @@ export default function OnboardingPage() {
             industry,
             keywords,
             servicesDescription,
-            address, // <-- NEU
-            phone, // <-- NEU
+            address, 
+            phone, 
           }),
         });
         if (!response.ok) throw new Error("Fehler beim Generieren der Texte.");
@@ -531,30 +531,63 @@ export default function OnboardingPage() {
           </form>
         )}
         
-        {/* --- SCHRITT 5: Rechtliches --- */}
+        {/* --- SCHRITT 5: Rechtliches (FIX: Mit Vorschau statt <textarea>) --- */}
         {step === 5 && (
           <form
             onSubmit={handleSubmit}
             className="space-y-6 rounded-2xl bg-white p-8 shadow-xl shadow-orange-100/50"
           >
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-slate-900">Rechtstexte (Vorschlag)</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Rechtstexte (Vorschau)</h3>
               <p className="mt-1 text-sm text-slate-600">
                 Diese Texte wurden mit Ihren Kontaktdaten vorbefüllt. 
-                <span className="font-semibold">Bitte prüfen Sie sie sorgfältig.</span>
+                <span className="font-semibold"> Sie können sie später im Dashboard bearbeiten.</span>
               </p>
             </div>
             
-             <div>
-              <label htmlFor="impressumText" className={labelStyle}>Impressum</label>
-              <p className={subLabelStyle}>Sie können dies später im Dashboard genauer anpassen.</p>
-              <textarea id="impressumText" name="impressumText" rows={8} value={impressumText} onChange={(e) => setImpressumText(e.target.value)} className={inputStyle + " text-xs"} />
+            {/* --- FIX: <textarea> durch gerenderte Vorschau ersetzt --- */}
+            <div>
+              <label className={labelStyle}>Vorschau: Impressum</label>
+               {/* --- NEUER HILFETEXT --- */}
+
+              <p className="mb-2 mt-1 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-700">
+
+                <strong>Hinweis:</strong> Dies ist eine Vorlage. Sie sind rechtlich 
+
+                verpflichtet, alle Angaben zu prüfen und zu vervollständigen (z.B. USt-IdNr.).
+
+              </p>
+
+              {/* --- ENDE --- */}
+              <div 
+                className="prose prose-sm mt-2 h-40 max-w-none overflow-y-auto rounded-lg border border-slate-300 bg-slate-50 p-3 text-xs"
+                dangerouslySetInnerHTML={{ __html: impressumText }}
+              />
             </div>
             
             <div>
-              <label htmlFor="datenschutzText" className={labelStyle}>Datenschutzerklärung</label>
-              <p className={subLabelStyle}>Basiert auf der ArtisanCMS-Standardvorlage.</p>
-              <textarea id="datenschutzText" name="datenschutzText" rows={8} value={datenschutzText} onChange={(e) => setDatenschutzText(e.target.value)} className={inputStyle + " text-xs"} />
+              <label className={labelStyle}>Vorschau: Datenschutzerklärung</label>
+               {/* --- NEUER HILFETEXT (DER ENTFERNTE BLOCK) --- */}
+
+              <p className="mb-2 mt-1 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-700">
+
+                <strong>Hinweis:</strong> Dies ist eine Vorlage. Sie müssen diese prüfen und
+
+                alle Dienste (z.B. Google Maps, YouTube), die Sie nutzen, ergänzen.
+
+              </p>
+
+              {/* --- ENDE --- */}
+              <div 
+                className="prose prose-sm mt-2 h-40 max-w-none overflow-y-auto rounded-lg border border-slate-300 bg-slate-50 p-3 text-xs"
+                dangerouslySetInnerHTML={{ __html: datenschutzText }}
+              />
+            </div>
+            {/* --- ENDE FIX --- */}
+            
+            <div className="pt-2 text-center text-xs text-slate-500">
+              <p>Durch Klicken auf "Weiter" akzeptieren Sie diese automatisch generierten Vorlagen als Platzhalter.</p>
+              <p className="mt-1 font-semibold">Keine Rechtsberatung: Sie sind selbst für die Korrektheit Ihrer Rechtstexte verantwortlich.</p>
             </div>
             
             <button type="submit" disabled={loading} className={submitButtonStyle}>
