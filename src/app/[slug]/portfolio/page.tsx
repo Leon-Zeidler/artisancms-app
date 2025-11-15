@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { createSupabaseClient } from "@/lib/supabaseClient";
 import { useProfile } from "@/contexts/ProfileContext"; // <-- IMPORT CONTEXT
 // --- 1. FIX THE IMPORT ---
@@ -78,7 +77,7 @@ export default function ClientPortfolioPage() {
 
   // === Data Fetching ===
   useEffect(() => {
-    if (!profile) return notFound(); // Profile is guaranteed by layout
+    if (!profile) return;
 
     const fetchPortfolioData = async () => {
       setLoading(true);
@@ -122,6 +121,14 @@ export default function ClientPortfolioPage() {
     fetchPortfolioData();
     // KORREKTUR: 'error' zur Dependency-Liste hinzugefügt
   }, [profile, supabase, error]);
+
+  if (!profile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Profil wird geladen...
+      </div>
+    );
+  }
 
   // === Render Logic ===
   if (loading) {

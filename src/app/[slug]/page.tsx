@@ -5,21 +5,61 @@ import Link from "next/link";
 import Image from "next/image";
 import React, { useState, useEffect, useMemo } from "react";
 import { createSupabaseClient } from "@/lib/supabaseClient";
-import { useProfile } from "@/contexts/ProfileContext"; // <-- IMPORT CONTEXT
-// --- 1. IMPORT TEMPLATES UND RESOLVE-FUNKTIONEN ---
+import { useProfile } from "@/contexts/ProfileContext"; 
 import { INDUSTRY_TEMPLATES, resolveIndustry } from "@/lib/industry-templates";
 import type { Project } from "@/lib/types";
+import { LegalDisclaimer } from "@/components/LegalDisclaimer";
 
-// --- TYPE DEFINITIONS (Updated) ---
-type Testimonial = {
-  id: string;
-  author_name: string;
-  author_handle: string | null;
-  body: string;
-};
-
-// --- Icons ---
-// (Icons bleiben unverändert)
+// --- Icons (Hier nur ein paar als Beispiel) ---
+const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="size-6"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M4.5 12.75l6 6 9-13.5"
+    />
+  </svg>
+);
+const PhoneIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    {...props}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M2.25 6.75c0 8.284 6.716 15 15 15h1.125a2.25 2.25 0 002.25-2.25V17.4a1.125 1.125 0 00-.933-1.11l-3.768-.754a1.125 1.125 0 00-1.173.57l-.83 1.554a1.125 1.125 0 01-1.21.588 12.04 12.04 0 01-7.09-7.09 1.125 1.125 0 01.588-1.21l1.553-.83a1.125 1.125 0 00.571-1.173l-.754-3.768A1.125 1.125 0 006.6 4.875H4.5A2.25 2.25 0 002.25 7.125v-.375z"
+    />
+  </svg>
+);
+const EnvelopeIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    {...props}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+    />
+  </svg>
+);
+// ... (Restliche Icons und Helferfunktionen)
 const Icon = ({
   path,
   className,
@@ -66,23 +106,6 @@ const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => (
     />{" "}
   </svg>
 );
-const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    {...props}
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    className="size-5"
-  >
-    {" "}
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-    />{" "}
-  </svg>
-);
 const ExclamationCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
@@ -100,44 +123,32 @@ const ExclamationCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     />{" "}
   </svg>
 );
-const PhoneIcon = (props: React.SVGProps<SVGSVGElement>) => (
+const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
-    xmlns="http://www.w3.org/2000/svg"
+    {...props}
     fill="none"
     viewBox="0 0 24 24"
     strokeWidth={1.5}
     stroke="currentColor"
-    {...props}
+    className="size-5"
   >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
-      d="M2.25 6.75c0 8.284 6.716 15 15 15h1.125a2.25 2.25 0 002.25-2.25V17.4a1.125 1.125 0 00-.933-1.11l-3.768-.754a1.125 1.125 0 00-1.173.57l-.83 1.554a1.125 1.125 0 01-1.21.588 12.04 12.04 0 01-7.09-7.09 1.125 1.125 0 01.588-1.21l1.553-.83a1.125 1.125 0 00.571-1.173l-.754-3.768A1.125 1.125 0 006.6 4.875H4.5A2.25 2.25 0 002.25 7.125v-.375z"
-    />
-  </svg>
-);
-const EnvelopeIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    {...props}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+      d="M9 12.75l1.5 1.5 4-4.5m6.25 2.25a9.75 9.75 0 11-19.5 0 9.75 9.75 0 0119.5 0z"
     />
   </svg>
 );
 type FormStatus = "idle" | "loading" | "success" | "error";
-// (Rest of the helper functions bleiben unverändert)
-
+type Testimonial = {
+  id: string;
+  author_name: string | null;
+  author_handle: string | null;
+  body: string | null;
+};
+// (Alle anderen Helferfunktionen wie projectBlurDataUrl, formatProjectDate, hexToRgb, etc. bleiben unverändert)
 const projectBlurDataUrl =
   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEwIDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJhZGlhbEdyYWRpZW50IGlkPSJhIiBjeD0iNSIgY3k9IjQiIHI9IjUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmM2YyZWYiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNmOGY5ZmYiLz48L3JhZGlhbEdyYWRpZW50PjxyZWN0IHdpZHRoPSIxMCIgaGVpZ2h0PSI4IiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+";
-
 const formatProjectDate = (value: string | null): string | null => {
   if (!value) return null;
   try {
@@ -148,11 +159,8 @@ const formatProjectDate = (value: string | null): string | null => {
     return null;
   }
 };
-
 type RGB = { r: number; g: number; b: number };
-
 const clampChannel = (value: number) => Math.max(0, Math.min(255, value));
-
 const hexToRgb = (value: string): RGB | null => {
   let hex = value.replace("#", "").trim();
   if (![3, 4, 6, 8].includes(hex.length)) return null;
@@ -168,7 +176,6 @@ const hexToRgb = (value: string): RGB | null => {
   if ([r, g, b].some((channel) => Number.isNaN(channel))) return null;
   return { r, g, b };
 };
-
 const rgbStringToRgb = (value: string): RGB | null => {
   const match = value.match(/rgba?\(([^)]+)\)/i);
   if (!match) return null;
@@ -196,7 +203,6 @@ const rgbStringToRgb = (value: string): RGB | null => {
   if ([r, g, b].some((channel) => Number.isNaN(channel))) return null;
   return { r, g, b };
 };
-
 const hslToRgb = (value: string): RGB | null => {
   const match = value.match(/hsla?\(([^)]+)\)/i);
   if (!match) return null;
@@ -240,7 +246,6 @@ const hslToRgb = (value: string): RGB | null => {
 
   return { r, g, b };
 };
-
 const extractColorToken = (value: string): string | null => {
   const hexMatch = value.match(/#[0-9a-fA-F]{3,8}/);
   if (hexMatch) return hexMatch[0];
@@ -250,7 +255,6 @@ const extractColorToken = (value: string): string | null => {
   if (hslMatch) return hslMatch[0];
   return null;
 };
-
 const parseColor = (value: string): RGB | null => {
   const trimmed = value.trim();
   if (!trimmed) return null;
@@ -262,8 +266,6 @@ const parseColor = (value: string): RGB | null => {
   if (!token) return null;
   return parseColor(token);
 };
-
-// Helper function to check if a color is dark
 const isColorDark = (color: string | null | undefined): boolean => {
   if (!color) return false;
   try {
@@ -277,23 +279,39 @@ const isColorDark = (color: string | null | undefined): boolean => {
   }
 };
 
+
+// --- Ladekomponente ---
+function PageLoadingSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="relative h-[60vh] min-h-[400px] bg-slate-200"></div>
+      <div className="mx-auto max-w-7xl px-6 py-16 sm:py-24 lg:px-8">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <div className="h-8 w-3/4 rounded bg-slate-200"></div>
+            <div className="mt-4 h-5 w-1/2 rounded bg-slate-200"></div>
+            <div className="mt-8 space-y-3">
+              <div className="h-4 rounded bg-slate-200"></div>
+              <div className="h-4 rounded bg-slate-200"></div>
+              <div className="h-4 w-5/6 rounded bg-slate-200"></div>
+            </div>
+          </div>
+          <div className="h-96 rounded-2xl bg-slate-200"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- MAIN PAGE ---
 export default function ClientHomepage() {
   // === State Variables ===
   const supabase = useMemo(() => createSupabaseClient(), []);
   const profile = useProfile(); // <-- GET PROFILE FROM CONTEXT
 
-  // --- NEU: Dynamischen Template-Titel und Bild-URL abrufen ---
-  const currentIndustry = resolveIndustry(profile.industry);
-  const industryTemplate = INDUSTRY_TEMPLATES[currentIndustry];
-  const heroImageUrl = industryTemplate.heroImageUrl; // <--- NEU: Bild-URL abrufen
-  // --- ENDE NEU ---
-
-  // These states are specific to this page
-  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]); // Uses ProjectCard
+  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]); 
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  // KORREKTUR: Variable umbenannt, um 'no-unused-vars' zu beheben
-  const [_loadingContent, setLoadingContent] = useState(true);
+  const [loadingContent, setLoadingContent] = useState(true);
 
   // Contact Form State
   const [formName, setFormName] = useState("");
@@ -304,51 +322,66 @@ export default function ClientHomepage() {
 
   // === Data Fetching (Only for page-specific content) ===
   useEffect(() => {
-    // profile is guaranteed to be loaded here by the layout
-    const fetchPageContent = async () => {
-      setLoadingContent(true);
-      try {
-        // --- 3. UPDATE THE SELECT STATEMENT ---
-        const { data: projects, error: projectsError } = await supabase
-          .from("projects")
-          .select(`*`)
-          .eq("user_id", profile.id)
-          .eq("status", "Published")
-          .order("created_at", { ascending: false })
-          .limit(3); // <-- Updated to select *
-        if (projectsError) throw projectsError;
-        setFeaturedProjects((projects || []) as Project[]);
-
-        const { data: testimonialsData, error: testimonialsError } =
-          await supabase
-            .from("testimonials")
-            .select("id, author_name, author_handle, body")
-            .eq("user_id", profile.id)
-            .eq("is_published", true)
+    // --- FIX: Nur ausführen, wenn profile geladen ist ---
+    if (profile) {
+      const fetchPageContent = async () => {
+        setLoadingContent(true);
+        try {
+          const { data: projects, error: projectsError } = await supabase
+            .from("projects")
+            .select(`*`)
+            .eq("user_id", profile.id) // <-- Sicher
+            .eq("status", "Published")
             .order("created_at", { ascending: false })
-            .limit(1);
-        if (testimonialsError) throw testimonialsError;
-        setTestimonials((testimonialsData || []) as Testimonial[]);
-        // KORREKTUR: 'any' zu 'unknown' geändert
-      } catch (err: unknown) {
-        console.error(
-          `[${profile.slug}] Error fetching homepage content:`,
-          err,
-        );
-        // We can set an error state here if needed
-      } finally {
-        setLoadingContent(false);
-      }
-    };
+            .limit(3); 
+          if (projectsError) throw projectsError;
+          setFeaturedProjects((projects || []) as Project[]);
 
-    fetchPageContent();
+          const { data: testimonialsData, error: testimonialsError } =
+            await supabase
+              .from("testimonials")
+              .select("id, author_name, author_handle, body")
+              .eq("user_id", profile.id) // <-- Sicher
+              .eq("is_published", true)
+              .order("created_at", { ascending: false })
+              .limit(1);
+          if (testimonialsError) throw testimonialsError;
+          setTestimonials((testimonialsData || []) as Testimonial[]);
+        
+        } catch (err: unknown) {
+          console.error(
+            `[${profile.slug}] Error fetching homepage content:`, // <-- Sicher
+            err,
+          );
+        } finally {
+          setLoadingContent(false);
+        }
+      };
+      fetchPageContent();
+    }
+    // --- ENDE FIX ---
   }, [profile, supabase]);
+
+
+  // --- FIX: "Null-Check" ---
+  // Wenn das Profil noch nicht geladen ist, zeige eine Lade-Komponente
+  if (!profile) {
+    return <PageLoadingSkeleton />;
+  }
+  // --- ENDE FIX ---
+
+  // Ab hier ist 'profile' garantiert nicht 'null'
+  
+  // --- Dynamischen Template-Titel und Bild-URL abrufen ---
+  const currentIndustry = resolveIndustry(profile.industry);
+  const industryTemplate = INDUSTRY_TEMPLATES[currentIndustry];
+  const heroImageUrl = industryTemplate.heroImageUrl; 
 
   // --- Helper to parse services ---
   const parsedServices =
     (profile.services_description
       ?.split("\n")
-      .map((line) => {
+      .map((line: string) => { // <-- FIX: 'line: any' zu 'line: string'
         const parts = line.split(":");
         const name = parts[0]?.trim();
         const description = parts.slice(1).join(":").trim();
@@ -398,7 +431,7 @@ export default function ClientHomepage() {
           name: formName,
           email: formEmail,
           message: formMessage,
-          profileId: profile.id,
+          profileId: profile.id, // <-- Sicher
         }),
       });
       const result = await response.json();
@@ -426,36 +459,29 @@ export default function ClientHomepage() {
 
   // --- 1. NEW LOGIC: Check if primary color is dark for icon contrast ---
   const isPrimaryDark = isColorDark(profile.primary_color);
-  const iconStackBg = "bg-brand"; // Always use the primary color for the background
-  // If the background is dark, use white text. If light, use dark text.
+  const iconStackBg = "bg-brand"; 
   const iconStackIconColor = isPrimaryDark ? "text-white" : "text-gray-900";
-  // --- END OF NEW LOGIC ---
-
-  // Layout is handled by layout.tsx, we just return the <main> content
+  
   return (
     <>
       {/* ========== HERO SECTION ========== */}
       <section
-        className="relative isolate flex min-h-[70vh] items-center overflow-hidden bg-gray-50 bg-cover bg-center px-6 py-20 sm:pb-24 sm:pt-28 lg:px-8" // <-- min-h-[70vh] und flex items-center hinzugefügt
+        className="relative isolate flex min-h-[70vh] items-center overflow-hidden bg-gray-50 bg-cover bg-center px-6 py-20 sm:pb-24 sm:pt-28 lg:px-8" 
         style={{
           backgroundImage: `url(${heroImageUrl})`,
           backgroundColor: "transparent",
         }}
       >
-        {/* Overlay zur Reduzierung der Unschärfe und Erhöhung der Lesbarkeit */}
+        {/* ... (Rest der Hero Section) */}
         <div className="absolute inset-0 bg-white/20" />{" "}
-        {/* opacity von 70 zu 50 reduziert */}
-        {/* Farbverlauf über dem Bild (verbleibt, da er den Inhalt etwas hervorhebt) */}
         <div
           className="from-brand/20 absolute inset-x-0 top-0 -z-10 h-[520px] bg-gradient-to-b via-white/70 to-transparent blur-3xl"
           aria-hidden="true"
         />
         <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-16 lg:flex-row lg:items-center lg:gap-24">
           {" "}
-          {/* w-full hinzugefügt */}
           <div className="card-surface flex-1 rounded-2xl bg-white/80 p-8 text-center shadow-xl backdrop-blur-md sm:p-10 lg:text-left">
             {" "}
-            {/* Text Island Style */}
             <span className="bg-brand/10 text-brand inline-flex items-center rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-wide">
               {profile.services_description
                 ? "Ihr regionaler Partner"
@@ -520,7 +546,6 @@ export default function ClientHomepage() {
                     </address>
                   </div>
                 )}
-                {/* NEU: Telefonnummer-Block */}
                 {profile.phone && (
                   <div className="rounded-2xl bg-white/60 p-4 shadow-sm">
                     <p className="font-semibold text-gray-900">Telefon</p>
@@ -533,7 +558,6 @@ export default function ClientHomepage() {
                   </div>
                 )}
 
-                {/* NEU: E-Mail-Block */}
                 {profile.email && (
                   <div className="rounded-2xl bg-white/60 p-4 shadow-sm">
                     <p className="font-semibold text-gray-900">E-Mail</p>
@@ -577,7 +601,8 @@ export default function ClientHomepage() {
           id="leistungen"
           className={`bg-brandsec py-24 sm:py-28 ${servicesSectionTextColor}`}
         >
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          {/* ... (Rest der Services Section) */}
+           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center lg:max-w-3xl">
               <h2 className="text-brand text-base font-semibold uppercase tracking-wider">
                 Leistungen
@@ -599,9 +624,7 @@ export default function ClientHomepage() {
                     key={service.name}
                     className="card-surface flex h-full flex-col p-6"
                   >
-                    {/* --- 2. THIS IS THE CARD TITLE --- */}
                     <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                      {/* --- 3. THIS IS THE ICON STACK --- */}
                       <span
                         className={`flex size-10 items-center justify-center rounded-xl ${iconStackBg} ${iconStackIconColor}`}
                       >
@@ -610,7 +633,6 @@ export default function ClientHomepage() {
                       {service.name}
                     </dt>
 
-                    {/* --- 4. THIS IS THE CARD DESCRIPTION --- */}
                     <dd className="mt-4 text-sm leading-6 text-gray-600 sm:text-base sm:leading-7">
                       {service.description}
                     </dd>
@@ -625,6 +647,7 @@ export default function ClientHomepage() {
       {/* ========== FEATURED WORK SECTION ========== */}
       {featuredProjects.length > 0 && profile.slug && (
         <section id="projekte" className="py-24 sm:py-32">
+          {/* ... (Rest der Featured Work Section) */}
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-brand text-base font-semibold uppercase tracking-wider">
@@ -656,11 +679,9 @@ export default function ClientHomepage() {
                     : status === "draft"
                       ? "Entwurf"
                       : "In Vorbereitung";
-                // --- 4. FIX THE IMAGE PROPERTY ---
                 const projectImage =
                   project.after_image_url ||
                   `https://placehold.co/960x720/A3A3A3/FFF?text=${encodeURIComponent(project.title || "Projekt")}`;
-                // KORREKTUR: 'any' entfernt, da 'ai_description' jetzt Teil des 'Project'-Typs ist (angenommen aus types.ts)
                 const summary = project.ai_description
                   ? `${project.ai_description.substring(0, 120)}${project.ai_description.length > 120 ? "…" : ""}`
                   : "Erfahren Sie mehr über dieses Projekt und die verwendeten Materialien im Portfolio.";
@@ -727,13 +748,13 @@ export default function ClientHomepage() {
       )}
 
       {/* ========== TESTIMONIALS SECTION ========== */}
-      {/* (This section remains unchanged) */}
       {testimonials.length > 0 && (
         <section
           id="testimonials"
           className="relative isolate overflow-hidden bg-white px-6 py-24 sm:py-32 lg:px-8"
         >
-          <div
+          {/* ... (Rest der Testimonials Section) */}
+           <div
             className="absolute inset-0 -z-10 hidden bg-[radial-gradient(45rem_50rem_at_top,theme(colors.indigo.100),white)] opacity-30 sm:block"
             aria-hidden="true"
           />
@@ -745,43 +766,47 @@ export default function ClientHomepage() {
             <h2 className="mb-12 text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
               Was unsere Kunden sagen
             </h2>
-            {testimonials.map((testimonial) => (
-              <figure key={testimonial.id} className="mt-10">
-                <blockquote className="text-center text-xl font-semibold leading-8 text-gray-900 sm:text-2xl sm:leading-9">
-                  <p>“{testimonial.body}”</p>
-                </blockquote>
-                <figcaption className="mt-10">
-                  {/* KORREKTUR: ESLint-Kommentar hinzugefügt */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    className="mx-auto size-10 rounded-full"
-                    src={`https://placehold.co/40x40/E2E8F0/475569?text=${testimonial.author_name.charAt(0)}`}
-                    alt=""
-                  />
-                  <div className="mt-4 flex items-center justify-center space-x-3 text-base">
-                    <div className="font-semibold text-gray-900">
-                      {testimonial.author_name}
+            {testimonials.map((testimonial) => {
+              const authorName =
+                testimonial.author_name?.trim() || "Anonymer Kunde";
+              const authorInitial = authorName.charAt(0).toUpperCase() || "K";
+              const authorHandle = testimonial.author_handle?.trim();
+
+              return (
+                <figure key={testimonial.id} className="mt-10">
+                  <blockquote className="text-center text-xl font-semibold leading-8 text-gray-900 sm:text-2xl sm:leading-9">
+                    <p>“{testimonial.body}”</p>
+                  </blockquote>
+                  <figcaption className="mt-10">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      className="mx-auto size-10 rounded-full"
+                      src={`https://placehold.co/40x40/E2E8F0/475569?text=${authorInitial}`}
+                      alt=""
+                    />
+                    <div className="mt-4 flex items-center justify-center space-x-3 text-base">
+                      <div className="font-semibold text-gray-900">
+                        {authorName}
+                      </div>
+                      {authorHandle && (
+                        <>
+                          <svg
+                            viewBox="0 0 2 2"
+                            width={3}
+                            height={3}
+                            aria-hidden="true"
+                            className="fill-gray-900"
+                          >
+                            <circle cx={1} cy={1} r={1} />
+                          </svg>
+                          <div className="text-gray-600">{authorHandle}</div>
+                        </>
+                      )}
                     </div>
-                    {testimonial.author_handle && (
-                      <>
-                        <svg
-                          viewBox="0 0 2 2"
-                          width={3}
-                          height={3}
-                          aria-hidden="true"
-                          className="fill-gray-900"
-                        >
-                          <circle cx={1} cy={1} r={1} />
-                        </svg>
-                        <div className="text-gray-600">
-                          {testimonial.author_handle}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </figcaption>
-              </figure>
-            ))}
+                  </figcaption>
+                </figure>
+              );
+            })}
             {profile.slug && (
               <div className="mt-16 text-center">
                 <Link
@@ -797,8 +822,8 @@ export default function ClientHomepage() {
       )}
 
       {/* ========== CONTACT SECTION ========== */}
-      {/* (This section remains unchanged) */}
       <section id="kontakt" className="bg-gray-50 py-24 sm:py-28">
+        {/* ... (Rest der Contact Section) */}
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-x-12 gap-y-16 lg:grid-cols-5">
             <div className="space-y-6 lg:col-span-2">

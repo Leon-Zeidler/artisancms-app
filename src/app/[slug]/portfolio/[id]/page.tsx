@@ -34,7 +34,7 @@ export default function ClientProjectDetailPage() {
   const projectId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   useEffect(() => {
-    if (!projectId || !profile) return notFound();
+    if (!projectId || !profile) return;
 
     const fetchProjectDetails = async () => {
       setLoading(true);
@@ -91,6 +91,14 @@ export default function ClientProjectDetailPage() {
   };
   const placeholderImg =
     "https://placehold.co/1200x800/A3A3A3/FFF?text=Kein+Bild";
+
+  if (!profile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Profil wird geladen...
+      </div>
+    );
+  }
 
   if (loading) {
     return (

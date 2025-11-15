@@ -4,7 +4,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
 import { createSupabaseClient } from "@/lib/supabaseClient";
 import { useProfile } from "@/contexts/ProfileContext"; // <-- IMPORT CONTEXT
 
@@ -30,7 +29,7 @@ export default function ClientTestimonialsPage() {
 
   // === Data Fetching ===
   useEffect(() => {
-    if (!profile) return notFound();
+    if (!profile) return;
 
     const fetchTestimonialsData = async () => {
       setLoading(true);
@@ -65,6 +64,14 @@ export default function ClientTestimonialsPage() {
 
     fetchTestimonialsData();
   }, [profile, supabase]);
+
+  if (!profile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Profil wird geladen...
+      </div>
+    );
+  }
 
   // === Render Logic ===
   if (loading) {
