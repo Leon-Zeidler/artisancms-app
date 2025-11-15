@@ -1,35 +1,37 @@
 // src/app/[slug]/impressum/page.tsx
 "use client";
 
-import React from "react";
-import LegalDisclaimer from "@/components/LegalDisclaimer";
-import { useProfile } from "@/contexts/ProfileContext"; // <-- IMPORT CONTEXT
+import { useProfile } from "@/contexts/ProfileContext";
+import { LegalDisclaimer } from "@/components/LegalDisclaimer";
 
 export default function ImpressumPage() {
-  const profile = useProfile(); // <-- GET PROFILE FROM CONTEXT
+  const profile = useProfile();
 
-  // Layout (Navbar, Footer, CSS vars) is handled by layout.tsx
-  return (
-    <div className="py-16 sm:py-24">
-      <div className="mx-auto max-w-3xl px-6 lg:px-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-          Impressum
-        </h1>
-
-        <LegalDisclaimer />
-
-        <div className="prose prose-lg prose-slate mt-10 max-w-none">
-          {profile.impressum_text ? (
-            <div style={{ whiteSpace: "pre-line" }}>
-              {profile.impressum_text}
-            </div>
-          ) : (
-            <p className="italic text-gray-500">
-              Kein Impressumstext hinterlegt.
-            </p>
-          )}
-        </div>
+  // --- FIX: "Null-Check" ---
+  // Wenn das Profil noch nicht geladen ist, zeige einen Ladezustand
+  if (!profile) {
+    return (
+      <div className="prose prose-lg mx-auto max-w-3xl px-6 py-24 sm:py-32">
+        <h1>Impressum</h1>
+        <p>Lade Impressum...</p>
       </div>
+    );
+  }
+  // --- ENDE FIX ---
+
+  // Ab hier ist 'profile' garantiert nicht 'null'
+  return (
+    <div className="prose prose-lg mx-auto max-w-3xl px-6 py-24 sm:py-32">
+      <h1>Impressum</h1>
+      
+      {/* Das 'prose' Styling wird den HTML-String korrekt formatieren */}
+      <div
+        dangerouslySetInnerHTML={{
+          __html: profile.impressum_text || "<p>Kein Impressumstext vorhanden.</p>",
+        }}
+      />
+
+      <LegalDisclaimer />
     </div>
   );
 }

@@ -49,6 +49,7 @@ type Profile = {
   show_services_section: boolean;
   show_team_page: boolean;
   show_testimonials_page: boolean;
+  show_zertifikate_page: boolean;
   slug: string | null;
 };
 type AIGenerationType = "services" | "about";
@@ -804,6 +805,7 @@ export default function EinstellungenPage() {
     show_services_section: true,
     show_team_page: true,
     show_testimonials_page: true,
+    show_zertifikate_page: true,
     slug: null,
   });
 
@@ -943,6 +945,7 @@ export default function EinstellungenPage() {
           show_services_section: profileData.show_services_section ?? true,
           show_team_page: profileData.show_team_page ?? true,
           show_testimonials_page: profileData.show_testimonials_page ?? true,
+          show_zertifikate_page: profileData.show_zertifikate_page ?? true,
           slug: profileData.slug || null, // Slug wird geladen
         });
       }
@@ -1404,6 +1407,13 @@ export default function EinstellungenPage() {
                   description="Zeigt den 'Kundenstimmen' Link in der Navigation."
                   name="show_testimonials_page"
                   isChecked={formData.show_testimonials_page}
+                  onChange={handleFormChange}
+                />
+                <SettingsToggle
+                  label="'Zertifikate' Seite anzeigen"
+                  description="Zeigt den 'Zertifikate' Link in der Navigation."
+                  name="show_zertifikate_page"
+                  isChecked={formData.show_zertifikate_page}
                   onChange={handleFormChange}
                 />
               </div>

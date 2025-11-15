@@ -9,10 +9,12 @@ import { User } from "@supabase/supabase-js";
 import { Toaster, toast } from "react-hot-toast";
 import FeedbackWidget from "@/components/FeedbackWidget";
 import WelcomeModal from "@/components/WelcomeModal";
-import { ProfileProvider, type Profile } from "@/contexts/ProfileContext";
+import { ProfileProvider, type Profile } from "@/contexts/ProfileContext"; // (Unverändert)
 import { isBetaActive } from "@/lib/subscription";
 
 // --- TYPE DEFINITIONS ---
+// --- FIX: Typ-Definition HIERHER verschoben (außerhalb der Komponente) ---
+// Dies behebt den 'SidebarLinkProps' not found error.
 type SidebarLinkProps = {
   icon: React.ElementType;
   text: string;
@@ -20,10 +22,10 @@ type SidebarLinkProps = {
   active?: boolean;
   isExternal?: boolean;
 };
+// --- ENDE FIX ---
 
-// --- 2. LOKALE PROFILE TYPE DEFINITION ENTFERNT (wir nutzen jetzt die aus dem Context) ---
-
-// --- ICONS (Unverändert) ---
+// --- ICONS ---
+// (DashboardIcon, ProjectsIcon, SettingsIcon, ArrowTopRightOnSquareIcon, ChatBubbleLeftRightIcon, InboxIcon, LockClosedIcon, UserGroupIcon, ArrowLeftOnRectangleIcon, CreditCardIcon... bleiben gleich)
 const DashboardIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
@@ -95,6 +97,22 @@ const ArrowTopRightOnSquareIcon = (props: React.SVGProps<SVGSVGElement>) => (
     />{" "}
   </svg>
 );
+// --- NEU: StarIcon (war vorher als ChatBubbleLeftRightIcon dupliziert) ---
+const StarIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.31h5.513c.47 0 .682.557.34.886l-4.14 3.001a.563.563 0 00-.182.658l1.58 4.673a.563.563 0 01-.815.632l-4.14-3a.563.563 0 00-.65 0l-4.14 3a.563.563 0 01-.815-.632l1.58-4.673a.563.563 0 00-.182-.658l-4.14-3.001a.563.563 0 01.34-.886h5.513a.563.563 0 00.475-.31l2.125-5.11z"
+    />
+  </svg>
+);
 const ChatBubbleLeftRightIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
@@ -103,12 +121,11 @@ const ChatBubbleLeftRightIcon = (props: React.SVGProps<SVGSVGElement>) => (
     strokeWidth={1.5}
     stroke="currentColor"
   >
-    {" "}
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
-      d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.31h5.513c.47 0 .682.557.34.886l-4.14 3.001a.563.563 0 00-.182.658l1.58 4.673a.563.563 0 01-.815.632l-4.14-3a.563.563 0 00-.65 0l-4.14 3a.563.563 0 01-.815-.632l1.58-4.673a.563.563 0 00-.182-.658l-4.14-3.001a.563.563 0 01.34-.886h5.513a.563.563 0 00.475-.31l2.125-5.11z"
-    />{" "}
+      d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.722.537a5.25 5.25 0 01-4.596-4.596l.537-3.722c.09-.634.45-1.209.932-1.635a5.25 5.25 0 014.242-1.343L20.25 8.511zM11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.31h5.513c.47 0 .682.557.34.886l-4.14 3.001a.563.563 0 00-.182.658l1.58 4.673a.563.563 0 01-.815.632l-4.14-3a.563.563 0 00-.65 0l-4.14 3a.563.563 0 01-.815-.632l1.58-4.673a.563.563 0 00-.182-.658l-4.14-3.001a.563.563 0 01.34-.886h5.513a.563.563 0 00.475-.31l2.125-5.111z"
+    />
   </svg>
 );
 const InboxIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -193,15 +210,17 @@ const CreditCardIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-// --- SIDEBAR COMPONENTS (Unchanged) ---
+// --- SIDEBAR COMPONENTS ---
 function Sidebar({
   user,
   userSlug,
   isAdmin,
+  fullProfile, // <-- Profil-Objekt hier empfangen
 }: {
   user: User | null;
   userSlug: string | null;
   isAdmin: boolean;
+  fullProfile: Profile | null; // <-- Typisierung hier
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -243,18 +262,39 @@ function Sidebar({
           href="/dashboard/projekte"
           active={pathname?.startsWith("/dashboard/projekte")}
         />
-        <SidebarLink
-          icon={UserGroupIcon}
-          text="Team / Über Uns"
-          href="/dashboard/team"
-          active={pathname === "/dashboard/team"}
-        />
-        <SidebarLink
-          icon={ChatBubbleLeftRightIcon}
-          text="Kundenstimmen"
-          href="/dashboard/testimonials"
-          active={pathname === "/dashboard/testimonials"}
-        />
+        
+        {/* --- FIX: Konditionale Logik basierend auf `fullProfile` --- */}
+        {/* Zeigt an, wenn Profil LÄDT (null) ODER wenn die Einstellung true ist */}
+
+        {(!fullProfile || fullProfile.show_team_page) && (
+          <SidebarLink
+            icon={UserGroupIcon}
+            text="Team / Über Uns"
+            href="/dashboard/team"
+            active={pathname === "/dashboard/team"}
+          />
+        )}
+        
+        {(!fullProfile || fullProfile.show_testimonials_page) && (
+          <SidebarLink
+            icon={ChatBubbleLeftRightIcon}
+            text="Kundenstimmen"
+            href="/dashboard/testimonials"
+            active={pathname === "/dashboard/testimonials"}
+          />
+        )}
+
+        {/* --- HIER IST DER NEUE LINK --- */}
+        {(!fullProfile || fullProfile.show_zertifikate_page) && (
+          <SidebarLink
+            icon={StarIcon}
+            text="Zertifikate"
+            href="/dashboard/zertifikate"
+            active={pathname === "/dashboard/zertifikate"}
+          />
+        )}
+        {/* --- ENDE --- */}
+
         <SidebarLink
           icon={InboxIcon}
           text="Kontaktanfragen"
@@ -295,6 +335,7 @@ function Sidebar({
       </nav>
       {user && (
         <div className="absolute bottom-0 left-0 w-64 px-5 pb-6">
+          {/* (User-Info am Ende bleibt unverändert) */}
           <div className="flex items-center rounded-xl bg-orange-50/80 p-3 shadow-inner shadow-orange-100">
             <div className="shrink-0">
               <div className="flex size-10 items-center justify-center rounded-full bg-orange-500 font-bold text-white">
@@ -322,6 +363,7 @@ function Sidebar({
   );
 }
 
+// (SidebarLink Komponente bleibt unverändert)
 function SidebarLink({
   icon: Icon,
   text,
@@ -388,7 +430,6 @@ export default function DashboardLayout({
   const [isClosingModal, setIsClosingModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // --- 3. STATE FÜR FULL PROFILE ---
   const [fullProfile, setFullProfile] = useState<Profile | null>(null);
 
   const router = useRouter();
@@ -410,7 +451,6 @@ export default function DashboardLayout({
       const currentUser = session.user;
       if (isMounted) setUser(currentUser);
 
-      // --- 4. SELECT ALL (*) ---
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
@@ -421,7 +461,6 @@ export default function DashboardLayout({
         console.error("DashboardLayout: Error checking profile:", profileError);
       } else if (profileData) {
         if (isMounted) {
-          // --- 5. SETZE FULL PROFILE ---
           const typedProfile = profileData as Profile;
           setFullProfile(typedProfile);
           setUserSlug(typedProfile.slug);
@@ -429,19 +468,11 @@ export default function DashboardLayout({
           if (typedProfile.has_seen_welcome_modal === false) {
             setShowWelcomeModal(true);
           }
-
-          // Check for admin role (assuming your Profile type supports it or we check property)
-          // The context type doesn't explicitly list 'role' but the DB has it.
-          // You might need to cast as any or extend the Profile type if TS complains.
+          
           if ((typedProfile as any).role === "admin") {
             setIsAdmin(true);
           }
-
-          const onboardingCompleteValue = typedProfile.onboarding_complete; // Type fix: check if it exists
-          // Note: onboarding_complete is not in the standard Profile type from context,
-          // but it IS in the DB. If you get TS errors here, extend the Profile type
-          // or use (typedProfile as any).onboarding_complete
-
+          
           const needsOnboarding =
             !typedProfile || (typedProfile as any).onboarding_complete !== true;
           const isOnboardingPage = pathname === "/onboarding";
@@ -539,8 +570,14 @@ export default function DashboardLayout({
           isSaving={isClosingModal}
         />
       )}
-
-      <Sidebar user={user} userSlug={userSlug} isAdmin={isAdmin} />
+      
+      {/* --- `fullProfile` wird an die Sidebar übergeben --- */}
+      <Sidebar 
+        user={user} 
+        userSlug={userSlug} 
+        isAdmin={isAdmin} 
+        fullProfile={fullProfile} 
+      />
 
       <div className="flex-1 overflow-y-auto">
         {fullProfile && isBetaActive(fullProfile) && (
@@ -550,7 +587,7 @@ export default function DashboardLayout({
           </div>
         )}
 
-        {/* --- 6. WRAP CHILDREN WITH PROVIDER --- */}
+        {/* --- `ProfileProvider` (unverändert) --- */}
         {fullProfile ? (
           <ProfileProvider profile={fullProfile}>{children}</ProfileProvider>
         ) : (

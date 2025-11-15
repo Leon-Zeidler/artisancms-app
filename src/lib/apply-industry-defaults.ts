@@ -64,7 +64,6 @@ export async function applyIndustryDefaults({
   const finalHeroSubtitle = heroSubtitle || template.heroSubtitle;
 
   // 3. Fallbacks für Rechtstexte (falls leer)
-  // --- FIX: Fallbacks `|| null` hinzufügen ---
   const finalImpressum =
     impressumText ||
     IMPRESSUM_TEMPLATE(
@@ -81,7 +80,6 @@ export async function applyIndustryDefaults({
       phone || null,
       user.email || null,
     );
-  // --- ENDE FIX ---
     
   // 4. Slug generieren
   const slug = businessName
@@ -111,7 +109,7 @@ export async function applyIndustryDefaults({
     // Step 4
     hero_title: finalHeroTitle,
     hero_subtitle: finalHeroSubtitle,
-    about_text: aboutText || null, // `about_text` ist okay als null
+    about_text: aboutText || null, 
     
     // Step 5
     impressum_text: finalImpressum,
@@ -120,9 +118,18 @@ export async function applyIndustryDefaults({
     // Standardwerte
     primary_color: "#F97316", 
     secondary_color: "#1E293B",
+
+    // --- NEUER EINTRAG ---
+    // Setzt alle Seiten-Sektionen standardmäßig auf sichtbar
+    show_services_section: true,
+    show_team_page: true,
+    show_testimonials_page: true,
+    show_zertifikate_page: true, // <-- HIER HINZUGEFÜGT
+    // --- ENDE ---
     
     // Onboarding abschließen
     onboarding_complete: true,
+    has_seen_welcome_modal: false, // Damit die Willkommens-Modal angezeigt wird
   };
 
   // 6. Update in 'profiles'-Tabelle
