@@ -15,7 +15,10 @@ type ApplyDefaultsOptions = {
   businessName: string;
   industry: Industry;
   servicesDescription?: string | null;
-  keywords?: string | null; // <-- NEU: keywords hier hinzufügen
+  keywords?: string | null;
+  heroTitle?: string | null; // <-- NEU
+  heroSubtitle?: string | null; // <-- NEU
+  aboutText?: string | null; // <-- NEU
 };
 
 /**
@@ -28,7 +31,10 @@ export async function applyIndustryDefaults({
   businessName,
   industry,
   servicesDescription,
-  keywords, // <-- NEU: keywords hier empfangen
+  keywords,
+  heroTitle, // <-- NEU
+  heroSubtitle, // <-- NEU
+  aboutText, // <-- NEU
 }: ApplyDefaultsOptions) {
   const template = INDUSTRY_TEMPLATES[industry] ?? INDUSTRY_TEMPLATES.sonstiges;
 
@@ -52,13 +58,15 @@ export async function applyIndustryDefaults({
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, ""),
 
-    // Holt Standard-Texte aus dem Template
-    hero_title: template.heroTitle.replace("[Ort]", ""), // [Ort] Platzhalter entfernen
-    hero_subtitle: template.heroSubtitle,
+    // --- AKTUALISIERT: Nimmt die bearbeiteten Texte oder die Vorlage ---
+    hero_title:
+      heroTitle || template.heroTitle.replace("[Ort]", ""),
+    hero_subtitle: heroSubtitle || template.heroSubtitle,
+    about_text: aboutText || null, // <-- NEU
+    // ---
 
     services_description: finalServicesDescription,
-    
-    keywords: keywords || null, // <-- NEU: keywords hier speichern
+    keywords: keywords || null,
 
     // Setzt Standard-Farben & Rechtliches
     primary_color: "#F97316", // Standard-Orange
