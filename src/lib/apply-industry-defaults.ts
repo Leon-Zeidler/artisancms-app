@@ -1,61 +1,73 @@
-import { createClient } from '@supabase/supabase-js';
-import { INDUSTRY_TEMPLATES, resolveIndustry, type Industry } from './industry-templates';
+// src/lib/apply-industry-defaults.ts
+import { SupabaseClient, User } from '@supabase/supabase-js';
+import { INDUSTRY_TEMPLATES, Industry, formatDefaultServices } from './industry-templates';
 
-const getAdminClient = () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceRole) {
-    throw new Error('Supabase Service Role credentials are missing');
-  }
-  return createClient(url, serviceRole, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+// --- HIER IST DER FIX (Namen korrigiert) ---
+// Wir importieren die Funktionen, die als Konstanten exportiert werden
+import { IMPRESSUM_TEMPLATE, DATENSCHUTZ_TEMPLATE } from './legalTemplates';
+
+type ApplyDefaultsOptions = {
+  user: User;
+  supabase: SupabaseClient;
+  businessName: string;
+  industry: Industry;
+  servicesDescription?: string | null; 
 };
 
-export async function applyIndustryDefaultsIfEmpty(profileId: string, rawIndustry?: string | null) {
-  const supabaseAdmin = getAdminClient();
-  const industry: Industry = resolveIndustry(rawIndustry);
+/**
+ * Wendet Branchen-Standardwerte auf ein Benutzerprofil an.
+ * Wird beim Onboarding aufgerufen.
+ */
+export async function applyIndustryDefaults({
+  user,
+  supabase,
+  businessName,
+  industry,
+  servicesDescription, 
+}: ApplyDefaultsOptions) {
+  
   const template = INDUSTRY_TEMPLATES[industry] ?? INDUSTRY_TEMPLATES.sonstiges;
 
-  const { data: profile, error } = await supabaseAdmin
-    .from('profiles')
-    .select('id, hero_title, hero_subtitle, services_description, industry')
-    .eq('id', profileId)
-    .single();
+  const finalServicesDescription = servicesDescription?.trim()?.length
+    ? servicesDescription
+    : formatDefaultServices(industry);
 
-  if (error) {
-    console.error('[industry-defaults] Failed to load profile', error.message);
-    throw error;
-  }
+  // --- HIER IST DER FIX (Namen korrigiert) ---
+  // Wir rufen die importierten Funktionen auf
+  const impressum = IMPRESSUM_TEMPLATE(businessName);
+  const datenschutz = DATENSCHUTZ_TEMPLATE(businessName);
 
-  const normalizedIndustry = resolveIndustry(profile?.industry ?? industry);
-  const { count: projectCount } = await supabaseAdmin
-    .from('projects')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', profileId);
-
-  const hasProjects = (projectCount ?? 0) > 0;
-  const hasContent = Boolean(
-    (profile?.hero_title && profile.hero_title.trim().length > 0) ||
-      (profile?.hero_subtitle && profile.hero_subtitle.trim().length > 0) ||
-      (profile?.services_description && profile.services_description.trim().length > 0)
-  );
-
-  if (hasProjects || hasContent) {
-    return;
-  }
-
-  const updates = {
-    id: profileId,
-    hero_title: template.heroTitle,
+  const profileUpdates = {
+    id: user.id,
+    email: user.email,
+    business_name: businessName,
+    industry: industry,
+    // Erstellt einen sauberen "Slug" für die URL
+    slug: businessName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+    
+    // Holt Standard-Texte aus dem Template
+    hero_title: template.heroTitle.replace('[Ort]', ''), // [Ort] Platzhalter entfernen
     hero_subtitle: template.heroSubtitle,
-    services_description: template.defaultServices.join('\n'),
-    industry: normalizedIndustry,
+    
+    services_description: finalServicesDescription,
+    
+    // Setzt Standard-Farben & Rechtliches
+    primary_color: '#F97316', // Standard-Orange
+    secondary_color: '#1E293B', // Standard-Dunkelgrau
+    impressum_text: impressum,
+    datenschutz_text: datenschutz,
+    
+    // Schließt das Onboarding ab
+    onboarding_complete: true,
   };
 
-  const { error: updateError } = await supabaseAdmin.from('profiles').upsert(updates);
-  if (updateError) {
-    console.error('[industry-defaults] Failed to apply defaults', updateError.message);
-    throw updateError;
+  // Führt das Update in der 'profiles'-Tabelle aus
+  const { error } = await supabase.from('profiles').upsert(profileUpdates);
+
+  if (error) {
+    console.error('Error applying industry defaults:', error.message);
+    throw new Error(`Konnte Profil nicht aktualisieren: ${error.message}`);
   }
+
+  return { success: true, data: profileUpdates };
 }

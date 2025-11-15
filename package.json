@@ -21,6 +21,7 @@
     "react-before-after-slider-component": "^1.1.8",
     "react-dom": "^18",
     "react-hot-toast": "^2.6.0",
+    "react-select": "^5.10.2",
     "resend": "^6.2.2",
     "stripe": "^19.3.1"
   },

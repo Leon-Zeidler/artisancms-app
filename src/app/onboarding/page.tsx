@@ -1,442 +1,298 @@
+// src/app/onboarding/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabaseClient';
-import { INDUSTRY_OPTIONS, resolveIndustry, type Industry } from '@/lib/industry-templates';
-import Link from 'next/link';
-import { User } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
+import Select from 'react-select';
+// Wir importieren INDUSTRY_TEMPLATES, um auf die Standard-Services zugreifen zu können
+import { INDUSTRY_OPTIONS, INDUSTRY_TEMPLATES, Industry } from '@/lib/industry-templates';
 import toast from 'react-hot-toast';
-// --- NEU: Vorlagen importieren ---
-import { DATENSCHUTZERKLAERUNG_TEMPLATE, IMPRESSUM_TEMPLATE } from '@/lib/legalTemplates';
 
-// --- Icons (SparklesIcon, CheckIcon, ArrowPathIcon) ---
-const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}> <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z" /> </svg> );
-const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>);
-const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
+// --- Icons für die Seite ---
+const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+  </svg>
+);
 
+const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-orange-400">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L1.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.25 12l2.846.813a4.5 4.5 0 010 3.09l-2.846.813a4.5 4.5 0 01-3.09 3.09L15 21.75l-.813-2.846a4.5 4.5 0 01-3.09-3.09L8.25 15l2.846-.813a4.5 4.5 0 013.09-3.09L15 8.25l.813 2.846a4.5 4.5 0 013.09 3.09L21.75 15l-2.846.813a4.5 4.5 0 01-3.09 3.09z" />
+  </svg>
+);
+// --- Ende Icons ---
 
-type AIGenerationType = 'services' | 'about';
-type SlugStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
-
-// --- Helper Function to Create Slug ---
-const createSlug = (name: string): string => {
-  if (!name) return '';
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/ä/g, 'ae') 
-    .replace(/ö/g, 'oe')
-    .replace(/ü/g, 'ue')
-    .replace(/ß/g, 'ss')
-    .replace(/[^\w\s-]/g, '') 
-    .replace(/[\s_]+/g, '-') 
-    .replace(/^-+|-+$/g, '');
-};
 
 export default function OnboardingPage() {
-  // === State Variables ===
   const supabase = useMemo(() => createSupabaseClient(), []);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [businessName, setBusinessName] = useState('');
-  const [address, setAddress] = useState('');
-  const [phone, setPhone] = useState('');
-  const [keywords, setKeywords] = useState('');
-  const [servicesDescription, setServicesDescription] = useState('');
-  const [aboutText, setAboutText] = useState('');
-  const [slug, setSlug] = useState('');
-  const [industry, setIndustry] = useState<Industry>('sonstiges');
-  const [slugStatus, setSlugStatus] = useState<SlugStatus>('idle'); 
-  const [slugCheckTimeout, setSlugCheckTimeout] = useState<NodeJS.Timeout | null>(null); 
-  
-  // --- NEU: State für Legal-Checkbox ---
-  const [autoFillLegal, setAutoFillLegal] = useState(true);
-
-  const [loading, setLoading] = useState(false); 
-  const [aiLoading, setAiLoading] = useState<AIGenerationType | null>(null);
-  const [error, setError] = useState<string | null>(null); 
-  const [initialLoading, setInitialLoading] = useState(true);
-
+  const [industry, setIndustry] = useState<Industry | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // === Get Current User & Check Existing Profile ===
-  useEffect(() => {
-    const checkUserAndProfile = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { router.push('/login'); return; }
-        setCurrentUser(user);
-        console.log("Checking profile for user:", user.id);
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('business_name, address, phone, services_description, about_text, onboarding_complete, slug, email, keywords, industry')
-            .eq('id', user.id).single();
+  // --- NEU: Logik für mehrstufiges Onboarding ---
+  const [step, setStep] = useState(1);
+  const [elektroServices, setElektroServices] = useState({
+    smartHome: true, // Standardmäßig an, da es ein Haupt-Service ist
+    photovoltaik: false,
+    wallbox: true, // Standardmäßig an
+  });
+  // ---
 
-        if (profileError && profileError.code !== 'PGRST116') {
-            console.error("Error fetching profile:", profileError); setError("Fehler beim Laden des Profils.");
-        } else if (profile) {
-            console.log("Existing profile found:", profile);
-            setBusinessName(profile.business_name || ''); setAddress(profile.address || ''); setPhone(profile.phone || '');
-            setKeywords(profile.keywords || '');
-            setServicesDescription(profile.services_description || ''); setAboutText(profile.about_text || '');
-            setSlug(profile.slug || '');
-            setIndustry(resolveIndustry(profile.industry));
-            if (profile.slug) setSlugStatus('available');
-            if (profile.onboarding_complete) {
-                console.log("Onboarding already complete, redirecting..."); router.push('/dashboard'); return;
-            }
-        } else {
-            console.log("No existing profile found for user:", user.id);
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+      } else {
+        setUser(user);
+        // Profil prüfen, ob Onboarding bereits abgeschlossen ist
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('onboarding_complete')
+          .eq('id', user.id)
+          .single();
+        if (profile?.onboarding_complete) {
+          router.push('/dashboard');
         }
-        setInitialLoading(false);
-    };
-    checkUserAndProfile();
-  }, [router, supabase]);
-
-  // --- Auto-suggest slug based on business name ---
-  useEffect(() => {
-      if (!slug && businessName && slugStatus !== 'available') {
-          const suggestedSlug = createSlug(businessName);
-          setSlug(suggestedSlug);
-          if (suggestedSlug) {
-              handleSlugChange({ target: { value: suggestedSlug } } as React.ChangeEvent<HTMLInputElement>);
-          }
       }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [businessName]);
+    };
+    checkUser();
+  }, [supabase, router]);
 
-  // --- Function to check slug uniqueness ---
-  const checkSlugUniqueness = useCallback(async (currentSlug: string) => {
-    if (!currentSlug.trim()) { setSlugStatus('invalid'); return; }
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(currentSlug)) { setSlugStatus('invalid'); return; }
+  const handleIndustryChange = (selectedOption: any) => {
+    setIndustry(selectedOption ? selectedOption.value : null);
+  };
 
-    setSlugStatus('checking');
+  // --- NEU: Checkbox-Handler für Elektriker-Services ---
+  const handleServiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setElektroServices(prev => ({ ...prev, [name]: checked }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user || !businessName || !industry) {
+      toast.error("Bitte füllen Sie alle Felder aus.");
+      return;
+    }
+
+    // --- NEU: Schritt-Logik ---
+    // Wenn Schritt 1 und Elektriker gewählt, gehe zu Schritt 2
+    if (industry === 'elektriker' && step === 1) {
+      setStep(2); // Zeige den nächsten Schritt
+      return; // Brich den Submit ab, um Schritt 2 anzuzeigen
+    }
+    // ---
+
+    setLoading(true);
+    let customServicesDescription: string | null = null; // Standardmäßig keine Überschreibung
+
+    // --- NEU: Baue Service-Text für Elektriker, wenn in Schritt 2 ---
+    if (industry === 'elektriker' && step === 2) {
+      const selectedServices: string[] = [];
+      if (elektroServices.smartHome) selectedServices.push('Smart Home & Intelligente Gebäudesteuerung (KNX)');
+      if (elektroServices.photovoltaik) selectedServices.push('Photovoltaik-Anlagen und Energiespeicher');
+      if (elektroServices.wallbox) selectedServices.push('Installation von E-Ladestationen (Wallboxen)');
+      
+      // Filtere die Standard-Services, um Duplikate zu vermeiden
+      // Wir holen uns die Vorlage direkt aus dem Import
+      const defaultServices = (INDUSTRY_TEMPLATES.elektriker?.defaultServices || []).filter(s => 
+        !s.toLowerCase().includes('smart home') && 
+        !s.toLowerCase().includes('photovoltaik') && 
+        !s.toLowerCase().includes('wallboxen')
+      );
+      
+      // Kombiniere die ausgewählten Top-Services mit dem Rest
+      customServicesDescription = [...selectedServices, ...defaultServices].join('\n');
+    }
+    // ---
+
     try {
-        const query = supabase.from('profiles').select('id').eq('slug', currentSlug);
-        if (currentUser) query.neq('id', currentUser.id);
-        const { data, error } = await query.limit(1);
+      // Sende die Daten an die API-Route
+      const response = await fetch('/api/industry-defaults', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName,
+          industry,
+          // --- NEU: Sende die angepassten Services mit ---
+          // Wenn `customServicesDescription` null ist, wird die API den Standard verwenden
+          servicesDescription: customServicesDescription, 
+        }),
+      });
 
-        if (error) { console.error("Error checking slug uniqueness:", error); setSlugStatus('idle'); setError("Fehler bei der Slug-Prüfung."); }
-        else if (data && data.length > 0) setSlugStatus('taken');
-        else setSlugStatus('available');
-    } catch (err) { console.error("Exception checking slug:", err); setSlugStatus('idle'); setError("Fehler bei der Slug-Prüfung."); }
-  }, [currentUser, supabase]);
-
-
-  // --- Handle Slug Input Change with Debounce ---
-  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newSlug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-    setSlug(newSlug);
-    setSlugStatus('idle'); setError(null);
-    if (slugCheckTimeout) clearTimeout(slugCheckTimeout);
-    if (newSlug.trim()) {
-        const timeout = setTimeout(() => { checkSlugUniqueness(newSlug); }, 500);
-        setSlugCheckTimeout(timeout);
-    } else {
-        setSlugStatus('invalid');
-    }
-  };
-
-  // Handle AI Text Generation
-  const handleGenerateProfileText = async (type: AIGenerationType) => { 
-    const context = businessName || 'Handwerksbetrieb'; 
-    if (!context) { setError("Bitte geben Sie zuerst den Namen des Betriebs ein."); return; } 
-    setAiLoading(type); setError(null); 
-    try { 
-      const response = await fetch('/api/generate-profile-text', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ context: context, type: type, keywords: keywords }), 
-      }); 
-      if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error || `Failed to generate ${type} text`); } 
-      const data = await response.json(); 
-      if (type === 'services') { setServicesDescription(data.text); } 
-      else if (type === 'about') { setAboutText(data.text); } 
-    } catch (err) { 
-        console.error(`Error calling ${type} generation API:`, err); 
-        const message = err instanceof Error ? err.message : "An unknown error occurred"; 
-        setError(`Fehler bei der Textgenerierung: ${message}`); 
-    } finally { 
-      setAiLoading(null); 
-    } 
-  };
-  
-  // --- Helper zum Auflösen der URL (wird für Legal Links benötigt) ---
-  const resolveSiteUrl = (): string | null => {
-    const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
-    if (envUrl && envUrl.trim().length > 0) { return envUrl; }
-    if (typeof window !== 'undefined' && window.location?.origin) { return window.location.origin; }
-    return null;
-  };
-
-
-  // === Handle Form Submission (MIT LEGAL-LOGIK) ===
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!currentUser) { setError("Benutzer nicht identifiziert."); return; }
-    if (slugStatus !== 'available') {
-        setError("Bitte wählen Sie einen gültigen und verfügbaren URL-Pfad (Slug).");
-        if(slugStatus === 'idle' || slugStatus === 'checking') checkSlugUniqueness(slug);
-        return;
-    }
-
-    setLoading(true); setError(null);
-    console.log("Submitting onboarding data for user:", currentUser.id);
-
-    // --- NEU: Legal-Texte vorbereiten ---
-    let impressumText = '';
-    let datenschutzText = '';
-    
-    if (autoFillLegal) {
-        const baseUrl = resolveSiteUrl() || ''; // Holt die Basis-URL
-        const impressumLink = `${baseUrl}/${slug}/impressum`;
-        const datenschutzLink = `${baseUrl}/${slug}/datenschutz`;
-        
-        // Ersetzt Platzhalter
-        impressumText = IMPRESSUM_TEMPLATE
-            .replace(/\[FIRMENNAME\]/g, businessName)
-            .replace(/\[ADRESSE_MEHRZEILIG\]/g, address)
-            .replace(/\[TELEFON\]/g, phone)
-            .replace(/\[EMAIL\]/g, currentUser.email || '') // Nimmt Login-E-Mail
-            .replace(/\[DATENSCHUTZ_LINK\]/g, datenschutzLink);
-
-        datenschutzText = DATENSCHUTZERKLAERUNG_TEMPLATE
-            .replace(/\[FIRMENNAME\]/g, businessName)
-            .replace(/\[ADRESSE_MEHRZEILIG\]/g, address)
-            .replace(/\[TELEFON\]/g, phone)
-            .replace(/\[EMAIL\]/g, currentUser.email || '')
-            .replace(/\[IMPRESSUM_LINK\]/g, impressumLink);
-    }
-    // --- ENDE NEU ---
-
-    const profileData = {
-        'id': currentUser.id, 
-        'business_name': businessName, 
-        'address': address,
-        'phone': phone, 
-        'keywords': keywords,
-        'services_description': servicesDescription, 
-        'about_text': aboutText,
-        'slug': slug,
-        'industry': industry,
-        'onboarding_complete': true,
-        'updated_at': new Date().toISOString(),
-        'email': currentUser.email,
-        'impressum_text': impressumText,       // <--- NEU
-        'datenschutz_text': datenschutzText    // <--- NEU
-     };
-    console.log("Data being sent to upsert:", profileData);
-
-    const upsertProfile = async () => {
-        const { data, error } = await supabase
-            .from('profiles')
-            .upsert(profileData)
-            .select()
-            .single();
-
-        if (error) {
-            if (error.message.includes('duplicate key value violates unique constraint "profiles_slug_key"')) {
-                setSlugStatus('taken');
-                throw new Error("Dieser URL-Pfad (Slug) ist bereits vergeben. Bitte wählen Sie einen anderen.");
-            }
-            console.error('Error saving profile (inside promise):', error);
-            throw error;
-        }
-        console.log('Profile saved successfully (inside promise):', data);
-        return data;
-    };
-
-    await toast.promise(
-      upsertProfile(),
-      {
-        loading: 'Profil wird gespeichert...',
-        success: (data) => {
-          // Async Side-Effects separat ausführen
-          (async () => {
-            try {
-              await fetch('/api/industry-defaults', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ industry }),
-              });
-            } catch (defaultsError) {
-              console.error('Failed to apply industry defaults after onboarding', defaultsError);
-            }
-
-            router.push('/dashboard');
-          })();
-
-          // Wichtig: synchron einen Renderable zurückgeben
-          return 'Profil erfolgreich gespeichert!';
-        },
-        error: (err: any) => {
-          console.error('Error saving profile (toast):', err);
-          if (err.message.includes('bereits vergeben')) {
-            setSlugStatus('taken');
-          }
-          return `Fehler beim Speichern: ${err.message}`;
-        },
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Ein Fehler ist aufgetreten.');
       }
-    );
 
-    setLoading(false); 
+      toast.success('Willkommen! Ihr Profil wurde eingerichtet.');
+      router.push('/dashboard'); // Weiterleiten zum Dashboard
+    
+    } catch (error: any) {
+      console.error('Onboarding-Fehler:', error);
+      toast.error(`Fehler: ${error.message}`);
+      setLoading(false);
+    }
   };
 
-  // === Render Logic (JSX) ===
-  if (initialLoading) { return ( <div className="flex min-h-screen items-center justify-center bg-gray-100"><p className="text-gray-600">Lade Benutzerdaten...</p></div> ); }
+  // --- Styling für das react-select-Dropdown ---
+  const selectStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      backgroundColor: 'white',
+      borderColor: 'rgb(203 213 225)', // slate-300
+      borderRadius: '0.5rem', // rounded-lg
+      padding: '0.25rem', // p-1
+      boxShadow: 'none',
+      '&:hover': {
+        borderColor: 'rgb(249 115 22)', // orange-500
+      },
+    }),
+    option: (provided: any, state: { isSelected: boolean }) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? 'rgb(249 115 22)' : 'white',
+      color: state.isSelected ? 'white' : 'black',
+      '&:hover': {
+        backgroundColor: 'rgb(254 243 236)', // orange-50
+        color: 'rgb(249 115 22)',
+      },
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      borderRadius: '0.5rem',
+      overflow: 'hidden',
+    }),
+  };
+  // ---
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-100 p-4 py-12">
-      <div className="w-full max-w-2xl rounded-lg bg-white p-8 shadow-xl border border-gray-200">
-        <h1 className="mb-2 text-center text-3xl font-bold text-gray-900"> Willkommen bei ArtisanCMS! </h1>
-        <p className="mb-8 text-center text-gray-600"> Bitte richten Sie Ihr Unternehmensprofil ein. </p>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-slate-50 px-4 py-12">
+      <div className="w-full max-w-md space-y-6">
+        <svg className="mx-auto h-12 w-auto text-orange-600" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Dein ArtisanCMS-Logo-Path */}
+          <path d="M16.94 37.5C16.32 37.5 15.69 37.24 15.22 36.78C14.76 36.32 14.5 35.69 14.5 35.06V26.25H5.69C5.06 26.25 4.44 25.99 3.97 25.53C3.51 25.07 3.25 24.44 3.25 23.81V16.19C3.25 15.56 3.51 14.94 3.97 14.48C4.44 14.01 5.06 13.75 5.69 13.75H14.5V4.94C14.5 4.31 14.76 3.69 15.22 3.23C15.69 2.76 16.32 2.5 16.94 2.5C17.47 2.5 17.97 2.69 18.38 3.05C18.78 3.41 19.06 3.9 19.19 4.45L21.41 12.91C21.5 13.24 21.66 13.54 21.88 13.79C22.1 14.04 22.38 14.24 22.69 14.38L31.15 18.1C31.69 18.35 32.14 18.77 32.41 19.3C32.68 19.83 32.75 20.43 32.59 21.01L30.31 29.74C30.16 30.28 29.86 30.76 29.44 31.12C29.03 31.48 28.53 31.68 28 31.68H25.5V35.06C25.5 35.69 25.24 36.32 24.78 36.78C24.31 37.24 23.69 37.5 23.06 37.5H16.94ZM34.31 13.75H25.5V23.81C25.5 24.44 25.24 25.07 24.78 25.53C24.31 25.99 23.69 26.25 23.06 26.25H20.69V35.06C20.69 35.27 20.77 35.47 20.92 35.62C21.07 35.77 21.27 35.85 21.48 35.85H23.06C23.27 35.85 23.47 35.77 23.62 35.62C23.77 35.47 23.85 35.27 23.85 35.06V27.91C23.85 27.28 24.11 26.65 24.57 26.19C25.03 25.73 25.66 25.47 26.29 25.47H28C28.21 25.47 28.41 25.39 28.56 25.24C28.71 25.09 28.79 24.89 28.81 24.68L31.09 15.95C31.13 15.74 31.09 15.53 31 15.35C30.9 15.17 30.74 15.03 30.54 14.96L22.08 11.23C21.88 11.14 21.69 11.01 21.53 10.84C21.37 10.67 21.24 10.48 21.16 10.27L18.94 1.8C18.88 1.59 18.76 1.41 18.59 1.28C18.42 1.15 18.21 1.08 18 1.08C17.79 1.08 17.59 1.16 17.44 1.31C17.29 1.46 17.21 1.66 17.21 1.88V12.09C17.21 12.72 16.95 13.35 16.49 13.81C16.03 14.27 15.4 14.53 14.77 14.53H5.96C5.75 14.53 5.55 14.61 5.4 14.76C5.25 14.91 5.17 15.11 5.17 15.32V23.03C5.17 23.24 5.25 23.44 5.4 23.59C5.55 23.74 5.75 23.82 5.96 23.82H14.77C15.4 23.82 16.03 24.08 16.49 24.54C16.95 25 17.21 25.63 17.21 26.26V35.06C17.21 35.27 17.29 35.47 17.44 35.62C17.59 35.77 17.79 35.85 18 35.85H19.58C19.79 35.85 19.99 35.77 20.14 35.62C20.29 35.47 20.37 35.27 20.37 35.06V26.25H34.31C34.94 26.25 35.56 25.99 36.03 25.53C36.49 25.07 36.75 24.44 36.75 23.81V16.19C36.75 15.56 36.49 14.94 36.03 14.48C35.56 14.01 34.94 13.75 34.31 13.75Z" fill="#F97316"/>
+        </svg>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Business Name */}
-          <div>
-            <label htmlFor="businessName" className="mb-2 block text-sm font-medium text-gray-700"> Name des Betriebs * </label>
-            <input type="text" id="businessName" value={businessName} onChange={(e) => setBusinessName(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="z.B. Tischlerei Mustermann"/>
-          </div>
+        <h2 className="text-center text-2xl font-bold text-slate-900">
+          Willkommen bei ArtisanCMS
+        </h2>
 
-          <div>
-            <label htmlFor="industry" className="mb-2 block text-sm font-medium text-gray-700"> Branche Ihres Betriebs * </label>
-            <select
-              id="industry"
-              value={industry}
-              onChange={(event) => setIndustry(event.target.value as Industry)}
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
-            >
-              {INDUSTRY_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1 text-xs text-gray-500">
-              Wählen Sie die Branche Ihres Betriebs, damit Texte und Website besser zu Ihnen passen.
+        {/* --- SCHRITT 1: Basis-Infos --- */}
+        {step === 1 && (
+          <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl bg-white p-8 shadow-xl shadow-orange-100/50">
+            <p className="text-center text-sm text-slate-600">
+              Starten wir mit den Grundlagen. Diese Infos nutzen wir, um Ihre Webseite einzurichten.
             </p>
-          </div>
-
-          {/* Slug Input */}
-          <div>
-            <label htmlFor="slug" className="mb-2 block text-sm font-medium text-gray-700"> Ihr Webseiten-Pfad (Slug) * </label>
-            <div className="relative">
-                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 sm:text-sm">
-                   artisancms.app/
-                 </span>
-                <input
-                    type="text" id="slug" name="slug"
-                    value={slug}
-                    onChange={handleSlugChange}
-                    required
-                    aria-describedby="slug-description slug-status"
-                    style={{ paddingLeft: `${Math.max(60, "artisancms.app/".length * 7 + 12)}px` }}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500"
-                    placeholder="z.b. tischlerei-mustermann"
-                 />
-                 <div id="slug-status" className="absolute inset-y-0 right-0 flex items-center pr-3">
-                    {slugStatus === 'checking' && <ArrowPathIcon className="h-5 w-5 text-gray-400" />}
-                    {slugStatus === 'available' && <CheckIcon className="h-5 w-5 text-green-500" />}
-                    {(slugStatus === 'taken' || slugStatus === 'invalid') && <span className="text-red-500 text-xl font-bold">!</span>}
-                 </div>
+            
+            <div>
+              <label htmlFor="businessName" className="block text-sm font-semibold text-slate-700">
+                Name Ihres Betriebs
+              </label>
+              <input
+                type="text"
+                id="businessName"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-slate-300 p-3 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                placeholder="z.B. Mustermann GmbH"
+                required
+              />
             </div>
-            <p id="slug-description" className="mt-1 text-xs text-gray-500">
-                Dies wird Teil Ihrer Webseiten-URL (nur Kleinbuchstaben, Zahlen und Bindestriche).
-            </p>
-            {slugStatus === 'taken' && <p className="mt-1 text-xs text-red-600">Dieser Pfad ist leider schon vergeben.</p>}
-            {slugStatus === 'invalid' && <p className="mt-1 text-xs text-red-600">Ungültige Zeichen. Nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt. Darf nicht leer sein oder mit &apos;-&apos; beginnen/enden.</p>}
-          </div>
 
-          {/* Address */}
-          <div>
-            <label htmlFor="address" className="mb-2 block text-sm font-medium text-gray-700"> Adresse * </label>
-            <textarea id="address" value={address} rows={3} onChange={(e) => setAddress(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="Musterstraße 1&#10;01454 Radeberg"/>
-          </div>
-           {/* Phone */}
-           <div>
-            <label htmlFor="phone" className="mb-2 block text-sm font-medium text-gray-700"> Telefonnummer * </label>
-            <input type="tel" id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500" placeholder="+49 123 456789"/>
-          </div>
-
-          {/* Keywords Input Field */}
-          <div>
-            <label htmlFor="keywords" className="mb-2 block text-sm font-medium text-gray-700"> Wichtige Schlagworte (Optional) </label>
-            <input 
-              type="text" 
-              id="keywords" 
-              value={keywords} 
-              onChange={(e) => setKeywords(e.target.value)} 
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500" 
-              placeholder="z.B. Badsanierung, Heizung, Solar, Möbelbau"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-               Helfen Sie der AI, bessere Texte zu generieren. Trennen Sie Begriffe mit Kommas.
-             </p>
-          </div>
-
-           {/* Services Description with AI */}
-           <div>
-            <label htmlFor="servicesDescription" className="mb-2 block text-sm font-medium text-gray-700"> Leistungen * </label>
-             <div className="relative">
-                <textarea id="servicesDescription" value={servicesDescription} rows={8} onChange={(e) => setServicesDescription(e.target.value)} required className="w-full h-40 resize-y rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28" placeholder="z.B. Badsanierung: Kompletterneuerung Ihres Badezimmers."/>
-                 <button type="button" onClick={() => handleGenerateProfileText('services')} disabled={aiLoading === 'services' || !businessName} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'services' || !businessName ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} >
-                   <SparklesIcon className={`h-4 w-4 ${aiLoading === 'services' ? 'animate-spin' : ''}`} />
-                   {aiLoading === 'services' ? "Generiere..." : "Generieren"}
-                 </button>
-             </div>
-             <p className="mt-1 text-xs text-gray-500">
-               Tipp: Formatieren Sie jede Leistung in einer neuen Zeile als: <strong>Titel: Beschreibung</strong>
-               <br/>
-               (z.B. Heizungstechnik: Installation und Wartung von Heizsystemen.)
-             </p>
-          </div>
-           {/* About Text with AI */}
-           <div>
-            <label htmlFor="aboutText" className="mb-2 block text-sm font-medium text-gray-700"> Über Ihren Betrieb * </label>
-             <div className="relative">
-                <textarea id="aboutText" value={aboutText} rows={8} onChange={(e) => setAboutText(e.target.value)} required className="w-full h-40 resize-y rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-orange-500 pr-28" placeholder="Erzählen Sie etwas über Ihre Erfahrung..."/>
-                 <button type="button" onClick={() => handleGenerateProfileText('about')} disabled={aiLoading === 'about' || !businessName} className={`absolute top-2 right-2 inline-flex items-center gap-x-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors ${ aiLoading === 'about' || !businessName ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700' }`} >
-                   <SparklesIcon className={`h-4 w-4 ${aiLoading === 'about' ? 'animate-spin' : ''}`} />
-                   {aiLoading === 'about' ? "Generiere..." : "Generieren"}
-                 </button>
-             </div>
-          </div>
-
-          {/* --- NEUE LEGAL-CHECKBOX --- */}
-          <div className="relative flex items-start rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <div className="flex h-6 items-center">
-                <input
-                  id="autoFillLegal"
-                  name="autoFillLegal"
-                  type="checkbox"
-                  checked={autoFillLegal}
-                  onChange={(e) => setAutoFillLegal(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-600"
-                />
-              </div>
-              <div className="ml-3 text-sm leading-6">
-                <label htmlFor="autoFillLegal" className="font-medium text-gray-900">
-                  Rechtstexte automatisch ausfüllen
-                </label>
-                <p className="text-gray-600">
-                  Füllt Ihr Impressum und Ihre Datenschutzerklärung mit einer Vorlage basierend auf Ihren obigen Angaben. 
-                  <span className="font-semibold text-red-600"> Sie müssen diese Texte vor der Veröffentlichung prüfen und anpassen.</span>
-                </p>
-              </div>
-          </div>
-          {/* --- ENDE NEUE LEGAL-CHECKBOX --- */}
-
-
-          {/* General Error Message Display */}
-          {error && ( <p className="text-center text-sm text-red-600">{error}</p> )}
-
-          {/* Submit Button */}
-          <div className="pt-4">
-            <button type="submit" disabled={loading || initialLoading || !currentUser || !!aiLoading || slugStatus !== 'available'} className={`w-full rounded-md px-5 py-3 text-base font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 transition-colors ${ loading || initialLoading || !currentUser || !!aiLoading || slugStatus !== 'available' ? 'bg-orange-300 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700 shadow-sm' }`} >
-              {loading ? "Speichern..." : "Speichern und Weiter zum Dashboard"}
+            <div>
+              <label htmlFor="industry" className="block text-sm font-semibold text-slate-700">
+                Ihre Branche
+              </label>
+              <Select
+                id="industry"
+                options={INDUSTRY_OPTIONS}
+                onChange={handleIndustryChange}
+                styles={selectStyles}
+                placeholder="Branche auswählen..."
+                isClearable
+                required
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              disabled={loading || !businessName || !industry}
+              className="flex w-full justify-center rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:bg-orange-300"
+            >
+              {loading ? <ArrowPathIcon className="h-5 w-5" /> : 'Weiter'}
             </button>
-          </div>
-        </form>
+          </form>
+        )}
+
+        {/* --- SCHRITT 2: Elektriker-Spezialisierung --- */}
+        {step === 2 && industry === 'elektriker' && (
+          <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl bg-white p-8 shadow-xl shadow-orange-100/50">
+            <div className="text-center">
+              <SparklesIcon className="mx-auto h-8 w-8 text-orange-500" />
+              <h3 className="mt-2 text-lg font-semibold text-slate-900">
+                Spezialisierung (Elektriker)
+              </h3>
+              <p className="mt-1 text-sm text-slate-600">
+                Was sind Ihre wichtigsten Spezialgebiete? Wir passen Ihre Service-Liste darauf an.
+              </p>
+            </div>
+           
+            <div className="space-y-3 pt-2">
+              <label className="flex cursor-pointer items-center gap-4 rounded-lg border border-slate-300 p-4 transition-all has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50 has-[:checked]:ring-1 has-[:checked]:ring-orange-500">
+                <input 
+                  type="checkbox" 
+                  name="smartHome" 
+                  checked={elektroServices.smartHome} 
+                  onChange={handleServiceChange} 
+                  className="h-4 w-4 rounded text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-sm font-medium text-slate-700">Smart Home & KNX</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-4 rounded-lg border border-slate-300 p-4 transition-all has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50 has-[:checked]:ring-1 has-[:checked]:ring-orange-500">
+                <input 
+                  type="checkbox" 
+                  name="photovoltaik" 
+                  checked={elektroServices.photovoltaik} 
+                  onChange={handleServiceChange} 
+                  className="h-4 w-4 rounded text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-sm font-medium text-slate-700">Photovoltaik & Speicher</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-4 rounded-lg border border-slate-300 p-4 transition-all has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50 has-[:checked]:ring-1 has-[:checked]:ring-orange-500">
+                <input 
+                  type="checkbox" 
+                  name="wallbox" 
+                  checked={elektroServices.wallbox} 
+                  onChange={handleServiceChange} 
+                  className="h-4 w-4 rounded text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-sm font-medium text-slate-700">E-Mobilität (Wallboxen)</span>
+              </label>
+            </div>
+           
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="flex w-full justify-center rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:bg-orange-300"
+            >
+              {loading ? <ArrowPathIcon className="mx-auto h-5 w-5" /> : 'Onboarding abschließen'}
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setStep(1)}
+              className="w-full text-center text-xs font-medium text-slate-500 hover:text-slate-700"
+            >
+              Zurück
+            </button>
+          </form>
+        )}
+
       </div>
-    </main>
+    </div>
   );
 }
