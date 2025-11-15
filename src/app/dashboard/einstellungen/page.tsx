@@ -1,3 +1,4 @@
+// src/app/dashboard/einstellungen/page.tsx
 "use client";
 
 import React, {
@@ -815,20 +816,34 @@ export default function EinstellungenPage() {
 
   // --- HINZUGEFÜGTE FUNKTION: Öffnet das Datenschutz-Modal ---
   const handleInsertDatenschutzTemplateClick = () => {
+    // --- FIX: Alle 4 Argumente übergeben, `|| ""` für business_name ---
     setFormData((prev) => ({
       ...prev,
-      datenschutz_text: DATENSCHUTZ_TEMPLATE(prev.business_name || ""),
+      datenschutz_text: DATENSCHUTZ_TEMPLATE(
+        prev.business_name || "", // <-- FIX
+        prev.address || null,
+        prev.phone || null,
+        prev.email || null,
+      ),
     }));
+    // --- ENDE FIX ---
     setShowDatenschutzWarning(true);
     toast.success("Datenschutz-Vorlage eingefügt!");
   };
 
   // --- HINZUGEFÜGTE FUNKTION: Fügt Datenschutz-Vorlage ein nach Bestätigung ---
   const handleInsertDatenschutzTemplateConfirm = () => {
+    // --- FIX: Alle 4 Argumente übergeben, `|| ""` für business_name ---
     setFormData((prev) => ({
       ...prev,
-      datenschutz_text: DATENSCHUTZ_TEMPLATE(prev.business_name || ""),
+      datenschutz_text: DATENSCHUTZ_TEMPLATE(
+        prev.business_name || "", // <-- FIX
+        prev.address || null,
+        prev.phone || null,
+        prev.email || null,
+      ),
     }));
+    // --- ENDE FIX ---
     setShowDatenschutzWarning(false);
     toast.success("Datenschutz-Vorlage eingefügt!");
   };
@@ -850,23 +865,25 @@ export default function EinstellungenPage() {
     }
 
     const baseUrl = resolveSiteUrl() || ""; // Holt die Basis-URL
-    const impressumLink = `${baseUrl}/${profile.slug}/impressum`;
-    const datenschutzLink = `${baseUrl}/${profile.slug}/datenschutz`;
 
-    // Ersetzt Platzhalter
-    const impressumText = IMPRESSUM_TEMPLATE(formData.business_name || "")
-      .replace(/\[FIRMENNAME\]/g, formData.business_name || "")
-      .replace(/\[ADRESSE_MEHRZEILIG\]/g, formData.address || "")
-      .replace(/\[TELEFON\]/g, formData.phone || "")
-      .replace(/\[EMAIL\]/g, formData.email || "") // Nimmt die öffentliche E-Mail
-      .replace(/\[DATENSCHUTZ_LINK\]/g, datenschutzLink);
+    // --- FIX: Alle 4 Argumente übergeben, `|| ""` für business_name ---
+    const impressumText = IMPRESSUM_TEMPLATE(
+      formData.business_name || "", // <-- FIX
+      formData.address || null,
+      formData.phone || null,
+      formData.email || null, // Nimmt die öffentliche E-Mail
+    );
 
-    const datenschutzText = DATENSCHUTZ_TEMPLATE(formData.business_name || "")
-      .replace(/\[FIRMENNAME\]/g, formData.business_name || "")
-      .replace(/\[ADRESSE_MEHRZEILIG\]/g, formData.address || "")
-      .replace(/\[TELEFON\]/g, formData.phone || "")
-      .replace(/\[EMAIL\]/g, formData.email || "")
-      .replace(/\[IMPRESSUM_LINK\]/g, impressumLink);
+    const datenschutzText = DATENSCHUTZ_TEMPLATE(
+      formData.business_name || "", // <-- FIX
+      formData.address || null,
+      formData.phone || null,
+      formData.email || null,
+    );
+    // --- ENDE FIX ---
+    
+    // HINWEIS: Die .replace() Logik habe ich entfernt,
+    // da die Templates jetzt direkt die Werte einfügen und keine Platzhalter mehr haben.
 
     setFormData((prev) => ({
       ...prev,
@@ -1007,8 +1024,10 @@ export default function EinstellungenPage() {
   };
 
   const handleGenerateProfileText = async (type: AIGenerationType) => {
-    const context = formData.business_name || "Handwerksbetrieb";
+    // --- FIX: business_name auf `|| ""` prüfen ---
+    const context = formData.business_name || ""; 
     if (!context) {
+    // --- ENDE FIX ---
       toast.error("Bitte geben Sie zuerst den Namen des Betriebs ein.");
       return;
     }
@@ -1019,9 +1038,16 @@ export default function EinstellungenPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          context: context,
-          type: type,
-          keywords: formData.keywords,
+          // --- FIX: API-Aufruf benötigt `industry` und `heroSubtitle` ---
+          industry: formData.industry,
+          businessName: formData.business_name || "", // <-- FIX
+          heroSubtitle: formData.hero_subtitle || "",
+          servicesList: formData.services_description || "",
+          keywordPool: formData.keywords || "",
+          address: formData.address || "",
+          phone: formData.phone || "",
+          // --- ENDE FIX ---
+          type: type, // 'services' or 'about'
         }),
       });
 

@@ -26,6 +26,8 @@ export async function POST(request: Request) {
     industry: industryName,
     keywords,
     servicesDescription,
+    address, // <-- NEU
+    phone, // <-- NEU
   } = await request.json();
   if (!businessName || !industryName) {
     return NextResponse.json(
@@ -46,7 +48,9 @@ export async function POST(request: Request) {
   const template = INDUSTRY_TEMPLATES[industry];
 
   // 1. Standard-Titel und Untertitel holen
-  const heroTitle = template.heroTitle.replace("[Ort]", "").trim();
+  // Wir extrahieren die Stadt aus der Adresse, falls vorhanden
+  const city = address?.split(",")?.[1]?.trim() || address?.split(" ")?.[1] || "";
+  const heroTitle = template.heroTitle.replace("[Ort]", city).trim();
   const heroSubtitle = template.heroSubtitle;
 
   // 2. AI anrufen, um den "Über Uns" Text zu generieren
@@ -59,6 +63,8 @@ export async function POST(request: Request) {
       template.heroSubtitle,
       servicesDescription || template.defaultServices.join("\n"),
       keywords || "",
+      address || "", // <-- NEU: Kontext an AI übergeben
+      phone || "" // <-- NEU: Kontext an AI übergeben
     );
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -73,7 +79,7 @@ export async function POST(request: Request) {
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Erstelle den "Über uns"-Text für ${businessName}.`,
+            content: `Erstelle den "Über uns"-Text für ${businessName}. Der Betrieb ist in ${city || 'der Region'} tätig.`,
           },
         ],
         max_tokens: 200,
@@ -87,8 +93,7 @@ export async function POST(request: Request) {
     aboutText = data.choices?.[0]?.message?.content?.trim() || "";
   } catch (error: any) {
     console.error("Error calling OpenAI for about text:", error.message);
-    // Bei Fehler einen leeren String zurückgeben, damit der Benutzer ihn selbst ausfüllen kann
-    aboutText = `Willkommen bei ${businessName}. Wir sind Ihr Partner für...`;
+    aboutText = `Willkommen bei ${businessName}. Wir sind Ihr ${template.label}-Fachbetrieb in ${city || 'Ihrer Region'} und spezialisiert auf...`;
   }
 
   // 3. Alle drei Texte zurückgeben

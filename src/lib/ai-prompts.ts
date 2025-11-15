@@ -83,6 +83,10 @@ export function getProfileTextPrompt(
   heroSubtitle: string,
   servicesList: string,
   keywordPool: string,
+  // --- FIX: Optionale Parameter hinzufügen ---
+  address?: string | null,
+  phone?: string | null,
+  // --- ENDE FIX ---
 ): string {
   const label = industry === "sonstiges" ? "Handwerksbetrieb" : industry;
 
@@ -96,6 +100,9 @@ export function getProfileTextPrompt(
 
   if (type === "about") {
     let prompt = `Schreibe einen freundlichen "Über uns"-Text (ca. 3-5 Sätze) für einen ${label} namens "${businessName}".`;
+    if (address) {
+      prompt += `\nDer Betrieb befindet sich hier: ${address}.`;
+    }
     prompt += `\nDie Tonalität soll so sein: "${heroSubtitle}"`;
     prompt += `\nDer Betrieb legt Wert auf (Beispiele): ${servicesList}`;
     if (keywordPool)

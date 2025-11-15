@@ -12,9 +12,14 @@ import {
   Industry,
   formatDefaultServices,
 } from "@/lib/industry-templates";
+import {
+  IMPRESSUM_TEMPLATE,
+  DATENSCHUTZ_TEMPLATE,
+} from "@/lib/legalTemplates";
 import toast from "react-hot-toast";
+import LogoUploader from "@/components/LogoUploader"; // <-- NEU
 
-// --- Icons für die Seite ---
+// --- Icons ---
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
@@ -31,7 +36,6 @@ const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => (
     />
   </svg>
 );
-
 const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
@@ -53,29 +57,35 @@ const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function OnboardingPage() {
   const supabase = useMemo(() => createSupabaseClient(), []);
   const [user, setUser] = useState<User | null>(null);
-  const [businessName, setBusinessName] = useState("");
-  const [industry, setIndustry] = useState<Industry | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // --- Logik für mehrstufiges Onboarding ---
+  // --- Logik für 6-stufiges Onboarding ---
   const [step, setStep] = useState(1);
 
-  // --- State für die neuen Felder ---
+  // --- State für alle Schritte ---
+  // Step 1
+  const [businessName, setBusinessName] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  // Step 2
+  const [industry, setIndustry] = useState<Industry | null>(null);
   const [keywords, setKeywords] = useState("");
   const [servicesDescription, setServicesDescription] = useState("");
-  
-  // --- NEU: State für Schritt 3 ---
-  const [heroTitle, setHeroTitle] = useState("");
-  const [heroSubtitle, setHeroSubtitle] = useState("");
-  const [aboutText, setAboutText] = useState("");
-  // ---
-
   const [elektroServices, setElektroServices] = useState({
     smartHome: true,
     photovoltaik: false,
     wallbox: true,
   });
+  // Step 3
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  // Step 4
+  const [heroTitle, setHeroTitle] = useState("");
+  const [heroSubtitle, setHeroSubtitle] = useState("");
+  const [aboutText, setAboutText] = useState("");
+  // Step 5
+  const [impressumText, setImpressumText] = useState("");
+  const [datenschutzText, setDatenschutzText] = useState("");
   // ---
 
   useEffect(() => {
@@ -116,54 +126,59 @@ export default function OnboardingPage() {
     setElektroServices((prev) => ({ ...prev, [name]: checked }));
   };
 
-  // --- handleSubmit ist jetzt in 3 Schritte aufgeteilt ---
+  // --- Haupt-Handler für alle Schritte ---
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!user) return toast.error("Nicht angemeldet.");
+    
+    setLoading(true);
 
     // --- LOGIK FÜR SCHRITT 1 -> 2 ---
     if (step === 1) {
-      if (!user || !businessName || !industry) {
-        toast.error("Bitte füllen Sie alle Felder aus.");
+      if (!businessName) {
+        toast.error("Bitte geben Sie einen Betriebsnamen an.");
+        setLoading(false);
         return;
       }
       setStep(2);
-      return;
+      setLoading(false);
     }
-
+    
     // --- LOGIK FÜR SCHRITT 2 -> 3 ---
-    if (step === 2) {
-      if (!user || !industry) return;
-      setLoading(true);
-
-      let customServicesDescription: string | null = null;
-      if (industry === "elektriker") {
-        const selectedServices: string[] = [];
-        if (elektroServices.smartHome)
-          selectedServices.push(
-            "Smart Home & Intelligente Gebäudesteuerung (KNX)",
-          );
-        if (elektroServices.photovoltaik)
-          selectedServices.push("Photovoltaik-Anlagen und Energiespeicher");
-        if (elektroServices.wallbox)
-          selectedServices.push("Installation von E-Ladestationen (Wallboxen)");
-
-        const defaultServices = (
-          INDUSTRY_TEMPLATES.elektriker?.defaultServices || []
-        ).filter(
-          (s) =>
-            !s.toLowerCase().includes("smart home") &&
-            !s.toLowerCase().includes("photovoltaik") &&
-            !s.toLowerCase().includes("wallboxen"),
-        );
-        customServicesDescription = [
-          ...selectedServices,
-          ...defaultServices,
-        ].join("\n");
-        // WICHTIG: Setze dies auch im State für den finalen Submit
-        setServicesDescription(customServicesDescription);
+    else if (step === 2) {
+      if (!industry) {
+        toast.error("Bitte wählen Sie eine Branche aus.");
+        setLoading(false);
+        return;
       }
       
-      // Rufe die neue API auf, um Texte vorab zu füllen
+      // Services für Elektriker konsolidieren
+      if (industry === "elektriker") {
+        const selectedServices: string[] = [];
+        if (elektroServices.smartHome) selectedServices.push("Smart Home & Intelligente Gebäudesteuerung (KNX)");
+        if (elektroServices.photovoltaik) selectedServices.push("Photovoltaik-Anlagen und Energiespeicher");
+        if (elektroServices.wallbox) selectedServices.push("Installation von E-Ladestationen (Wallboxen)");
+
+        const defaultServices = (INDUSTRY_TEMPLATES.elektriker?.defaultServices || []).filter(
+          (s) => !s.toLowerCase().includes("smart home") && !s.toLowerCase().includes("photovoltaik") && !s.toLowerCase().includes("wallboxen")
+        );
+        const combinedServices = [...selectedServices, ...defaultServices].join("\n");
+        setServicesDescription(combinedServices); // WICHTIG: Im State speichern
+      }
+      
+      setStep(3);
+      setLoading(false);
+    }
+    
+    // --- LOGIK FÜR SCHRITT 3 -> 4 ---
+    else if (step === 3) {
+      if (!address || !phone) {
+        toast.error("Bitte füllen Sie Adresse und Telefon aus.");
+        setLoading(false);
+        return;
+      }
+      
+      // Rufe API auf, um Texte für Schritt 4 vorab zu füllen
       try {
         const response = await fetch("/api/generate-onboarding-texts", {
           method: "POST",
@@ -172,7 +187,9 @@ export default function OnboardingPage() {
             businessName,
             industry,
             keywords,
-            servicesDescription: customServicesDescription || servicesDescription,
+            servicesDescription,
+            address, // <-- NEU
+            phone, // <-- NEU
           }),
         });
         if (!response.ok) throw new Error("Fehler beim Generieren der Texte.");
@@ -182,35 +199,54 @@ export default function OnboardingPage() {
         setHeroSubtitle(data.heroSubtitle || "");
         setAboutText(data.aboutText || "");
 
-        setStep(3); // Zum neuen Schritt 3 wechseln
+        setStep(4);
       } catch (error: any) {
         toast.error(`Fehler: ${error.message}`);
       } finally {
         setLoading(false);
       }
-      return;
+    }
+    
+    // --- LOGIK FÜR SCHRITT 4 -> 5 ---
+    else if (step === 4) {
+      // Generiere Rechtstexte für Schritt 5
+      setImpressumText(
+        IMPRESSUM_TEMPLATE(businessName, address, phone, user.email || null)
+      );
+      setDatenschutzText(
+        DATENSCHUTZ_TEMPLATE(businessName, address, phone, user.email || null)
+      );
+      setStep(5);
+      setLoading(false);
+    }
+    
+    // --- LOGIK FÜR SCHRITT 5 -> 6 ---
+    else if (step === 5) {
+      // Gehe zum finalen Review-Schritt
+      setStep(6);
+      setLoading(false);
     }
 
-    // --- LOGIK FÜR SCHRITT 3 (FINALER SUBMIT) ---
-    if (step === 3) {
-      if (!user || !industry) {
-        toast.error("Ein Fehler ist aufgetreten. Bitte laden Sie neu.");
-        return;
-      }
-      setLoading(true);
-
+    // --- LOGIK FÜR SCHRITT 6 (FINALER SUBMIT) ---
+    else if (step === 6) {
       try {
+        // Sende ALLE Daten an die finale API-Route
         const response = await fetch("/api/industry-defaults", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             businessName,
+            logoUrl,
             industry,
             servicesDescription,
             keywords,
-            heroTitle, // <-- NEU
-            heroSubtitle, // <-- NEU
-            aboutText, // <-- NEU
+            address,
+            phone,
+            heroTitle,
+            heroSubtitle,
+            aboutText,
+            impressumText,
+            datenschutzText,
           }),
         });
 
@@ -220,7 +256,7 @@ export default function OnboardingPage() {
         }
 
         toast.success("Willkommen! Ihr Profil wurde eingerichtet.");
-        // --- FIX: Verwende window.location.href für einen Hard-Redirect ---
+        // FIX: Hard-Redirect für sauberen State-Wechsel
         window.location.href = "/dashboard";
       } catch (error: any) {
         console.error("Onboarding-Fehler:", error);
@@ -230,24 +266,23 @@ export default function OnboardingPage() {
     }
   };
 
+  // --- Styling-Konstanten ---
   const selectStyles = {
     control: (provided: any) => ({
       ...provided,
       backgroundColor: "white",
-      borderColor: "rgb(203 213 225)", // slate-300
-      borderRadius: "0.5rem", // rounded-lg
-      padding: "0.25rem", // p-1
+      borderColor: "rgb(203 213 225)",
+      borderRadius: "0.5rem",
+      padding: "0.25rem",
       boxShadow: "none",
-      "&:hover": {
-        borderColor: "rgb(249 115 22)", // orange-500
-      },
+      "&:hover": { borderColor: "rgb(249 115 22)" },
     }),
     option: (provided: any, state: { isSelected: boolean }) => ({
       ...provided,
       backgroundColor: state.isSelected ? "rgb(249 115 22)" : "white",
       color: state.isSelected ? "white" : "black",
       "&:hover": {
-        backgroundColor: "rgb(254 243 236)", // orange-50
+        backgroundColor: "rgb(254 243 236)",
         color: "rgb(249 115 22)",
       },
     }),
@@ -257,15 +292,14 @@ export default function OnboardingPage() {
       overflow: "hidden",
     }),
   };
-
-  // --- Helper für Textarea-Felder ---
+  
   const inputStyle = "mt-1 block w-full rounded-lg border border-slate-300 p-3 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500";
   const labelStyle = "block text-sm font-semibold text-slate-700";
   const subLabelStyle = "mb-2 text-xs text-slate-500";
   const backButtonStyle = "w-full text-center text-xs font-medium text-slate-500 hover:text-slate-700 disabled:opacity-50";
   const submitButtonStyle = "flex w-full justify-center rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:bg-orange-300";
 
-
+  // --- Render-Funktion ---
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-slate-50 px-4 py-12">
       <div className="w-full max-w-md space-y-6">
@@ -286,17 +320,28 @@ export default function OnboardingPage() {
         <h2 className="text-center text-2xl font-bold text-slate-900">
           Willkommen bei ArtisanCMS
         </h2>
-
-        {/* --- SCHRITT 1: Basis-Infos --- */}
+        <p className="text-center text-sm font-semibold text-slate-500">
+          Schritt {step} von 6
+        </p>
+        
+        {/* --- SCHRITT 1: Identität (Name & Logo) --- */}
         {step === 1 && (
           <form
             onSubmit={handleSubmit}
             className="space-y-6 rounded-2xl bg-white p-8 shadow-xl shadow-orange-100/50"
           >
-            <p className="text-center text-sm text-slate-600">
-              Starten wir mit den Grundlagen. Diese Infos nutzen wir, um Ihre
-              Webseite einzurichten.
-            </p>
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-slate-900">Ihre Identität</h3>
+              <p className="mt-1 text-sm text-slate-600">
+                Starten wir mit dem Namen Ihres Betriebs und Ihrem Logo.
+              </p>
+            </div>
+            
+            <LogoUploader 
+              user={user} 
+              onUploadSuccess={setLogoUrl} 
+              initialLogoUrl={logoUrl} 
+            />
 
             <div>
               <label htmlFor="businessName" className={labelStyle}>
@@ -313,6 +358,29 @@ export default function OnboardingPage() {
               />
             </div>
 
+            <button
+              type="submit"
+              disabled={loading || !businessName}
+              className={submitButtonStyle}
+            >
+              {loading ? <ArrowPathIcon className="size-5" /> : "Weiter"}
+            </button>
+          </form>
+        )}
+
+        {/* --- SCHRITT 2: Branche & Nische --- */}
+        {step === 2 && (
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 rounded-2xl bg-white p-8 shadow-xl shadow-orange-100/50"
+          >
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-slate-900">Branche & Nische</h3>
+              <p className="mt-1 text-sm text-slate-600">
+                Wählen Sie Ihre Branche und beschreiben Sie Ihre Spezialisierung.
+              </p>
+            </div>
+          
             <div>
               <label htmlFor="industry" className={labelStyle}>
                 Ihre Branche
@@ -325,169 +393,108 @@ export default function OnboardingPage() {
                 placeholder="Branche auswählen..."
                 isClearable
                 required
+                value={INDUSTRY_OPTIONS.find(opt => opt.value === industry)}
               />
             </div>
+            
+            {/* --- Logik für Elektriker --- */}
+            {industry === "elektriker" && (
+              <div className="space-y-3 pt-2">
+                 <p className={labelStyle}>Spezialgebiete (Elektriker)</p>
+                 <label className="flex cursor-pointer items-center gap-4 rounded-lg border border-slate-300 p-4 transition-all has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50">
+                   <input type="checkbox" name="smartHome" checked={elektroServices.smartHome} onChange={handleServiceChange} className="size-4 rounded text-orange-600 focus:ring-orange-500" />
+                   <span className="text-sm font-medium text-slate-700">Smart Home & KNX</span>
+                 </label>
+                 <label className="flex cursor-pointer items-center gap-4 rounded-lg border border-slate-300 p-4 transition-all has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50">
+                   <input type="checkbox" name="photovoltaik" checked={elektroServices.photovoltaik} onChange={handleServiceChange} className="size-4 rounded text-orange-600 focus:ring-orange-500" />
+                   <span className="text-sm font-medium text-slate-700">Photovoltaik & Speicher</span>
+                 </label>
+                 <label className="flex cursor-pointer items-center gap-4 rounded-lg border border-slate-300 p-4 transition-all has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50">
+                   <input type="checkbox" name="wallbox" checked={elektroServices.wallbox} onChange={handleServiceChange} className="size-4 rounded text-orange-600 focus:ring-orange-500" />
+                   <span className="text-sm font-medium text-slate-700">E-Mobilität (Wallboxen)</span>
+                 </label>
+              </div>
+            )}
+            
+            {/* --- Logik für alle anderen --- */}
+            {industry && industry !== "elektriker" && (
+              <>
+                <div>
+                  <label htmlFor="servicesDescription" className={labelStyle}>Ihre Kernleistungen</label>
+                  <p className={subLabelStyle}>Passen Sie die Vorlage an. Eine Leistung pro Zeile.</p>
+                  <textarea id="servicesDescription" name="servicesDescription" rows={5} value={servicesDescription} onChange={(e) => setServicesDescription(e.target.value)} className={inputStyle} />
+                </div>
+                <div>
+                  <label htmlFor="keywords" className={labelStyle}>Ihre Nische / Keywords</label>
+                  <p className={subLabelStyle}>Materialien, Marken, Region, etc.</p>
+                  <textarea id="keywords" name="keywords" rows={3} value={keywords} onChange={(e) => setKeywords(e.target.value)} className={inputStyle} placeholder="z.B. Lehmputz, ökologische Farben, Altbausanierung..." />
+                </div>
+              </>
+            )}
 
-            <button
-              type="submit"
-              disabled={loading || !businessName || !industry}
-              className={submitButtonStyle}
-            >
+            <button type="submit" disabled={loading || !industry} className={submitButtonStyle}>
               {loading ? <ArrowPathIcon className="size-5" /> : "Weiter"}
             </button>
-          </form>
-        )}
-
-        {/* --- SCHRITT 2: Elektriker-Spezialisierung --- */}
-        {step === 2 && industry === "elektriker" && (
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6 rounded-2xl bg-white p-8 shadow-xl shadow-orange-100/50"
-          >
-            <div className="text-center">
-              <SparklesIcon className="mx-auto size-8 text-orange-500" />
-              <h3 className="mt-2 text-lg font-semibold text-slate-900">
-                Spezialisierung (Elektriker)
-              </h3>
-              <p className="mt-1 text-sm text-slate-600">
-                Was sind Ihre wichtigsten Spezialgebiete? Wir passen Ihre
-                Service-Liste darauf an.
-              </p>
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <label className="flex cursor-pointer items-center gap-4 rounded-lg border border-slate-300 p-4 transition-all has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50 has-[:checked]:ring-1 has-[:checked]:ring-orange-500">
-                <input
-                  type="checkbox"
-                  name="smartHome"
-                  checked={elektroServices.smartHome}
-                  onChange={handleServiceChange}
-                  className="size-4 rounded text-orange-600 focus:ring-orange-500"
-                />
-                <span className="text-sm font-medium text-slate-700">
-                  Smart Home & KNX
-                </span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-4 rounded-lg border border-slate-300 p-4 transition-all has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50 has-[:checked]:ring-1 has-[:checked]:ring-orange-500">
-                <input
-                  type="checkbox"
-                  name="photovoltaik"
-                  checked={elektroServices.photovoltaik}
-                  onChange={handleServiceChange}
-                  className="size-4 rounded text-orange-600 focus:ring-orange-500"
-                />
-                <span className="text-sm font-medium text-slate-700">
-                  Photovoltaik & Speicher
-                </span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-4 rounded-lg border border-slate-300 p-4 transition-all has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50 has-[:checked]:ring-1 has-[:checked]:ring-orange-500">
-                <input
-                  type="checkbox"
-                  name="wallbox"
-                  checked={elektroServices.wallbox}
-                  onChange={handleServiceChange}
-                  className="size-4 rounded text-orange-600 focus:ring-orange-500"
-                />
-                <span className="text-sm font-medium text-slate-700">
-                  E-Mobilität (Wallboxen)
-                </span>
-              </label>
-            </div>
-
-            <button type="submit" disabled={loading} className={submitButtonStyle}>
-              {loading ? (
-                <ArrowPathIcon className="mx-auto size-5" />
-              ) : (
-                "Weiter zu Schritt 3"
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              disabled={loading}
-              className={backButtonStyle}
-            >
+            <button type="button" onClick={() => setStep(1)} disabled={loading} className={backButtonStyle}>
               Zurück
             </button>
           </form>
         )}
-
-        {/* --- SCHRITT 2: Andere Branchen (Nische & Services) --- */}
-        {step === 2 && industry && industry !== "elektriker" && (
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6 rounded-2xl bg-white p-8 shadow-xl shadow-orange-100/50"
-          >
-            <div className="text-center">
-              <SparklesIcon className="mx-auto size-8 text-orange-500" />
-              <h3 className="mt-2 text-lg font-semibold text-slate-900">
-                Ihre Spezialisierung
-              </h3>
-              <p className="mt-1 text-sm text-slate-600">
-                Passen Sie die Texte für Ihre Branche an ("
-                {INDUSTRY_TEMPLATES[industry]?.label || industry}"). Die KI wird
-                daraus lernen.
-              </p>
-            </div>
-
-            {/* Feld: Service-Beschreibung */}
-            <div>
-              <label htmlFor="servicesDescription" className={labelStyle}>
-                Ihre Kernleistungen
-              </label>
-              <p className={subLabelStyle}>
-                Passen Sie die Vorlage an. Eine Leistung pro Zeile.
-              </p>
-              <textarea
-                id="servicesDescription"
-                name="servicesDescription"
-                rows={5}
-                value={servicesDescription}
-                onChange={(e) => setServicesDescription(e.target.value)}
-                className={inputStyle}
-                placeholder="z.B. Fassadenanstrich..."
-              />
-            </div>
-
-            {/* Feld: Keywords */}
-            <div>
-              <label htmlFor="keywords" className={labelStyle}>
-                Ihre Nische / Keywords
-              </label>
-              <p className={subLabelStyle}>
-                Was macht Sie besonders? (Materialien, Marken, Region, etc.)
-              </p>
-              <textarea
-                id="keywords"
-                name="keywords"
-                rows={3}
-                value={keywords}
-                onChange={(e) => setKeywords(e.target.value)}
-                className={inputStyle}
-                placeholder="z.B. Lehmputz, ökologische Farben, Altbausanierung, Dresden und Umgebung..."
-              />
-            </div>
-
-            <button type="submit" disabled={loading} className={submitButtonStyle}>
-              {loading ? (
-                <ArrowPathIcon className="mx-auto size-5" />
-              ) : (
-                "Weiter zu Schritt 3"
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              disabled={loading}
-              className={backButtonStyle}
-            >
-              Zurück
-            </button>
-          </form>
-        )}
-
-        {/* --- NEUER SCHRITT 3: AI-Texte bearbeiten (für alle) --- */}
+        
+        {/* --- SCHRITT 3: Kontakt --- */}
         {step === 3 && (
+           <form
+            onSubmit={handleSubmit}
+            className="space-y-6 rounded-2xl bg-white p-8 shadow-xl shadow-orange-100/50"
+          >
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-slate-900">Kontaktinformationen</h3>
+              <p className="mt-1 text-sm text-slate-600">
+                Diese Daten werden für Ihr Impressum und die Fußzeile benötigt.
+              </p>
+            </div>
+            
+            <div>
+              <label htmlFor="address" className={labelStyle}>
+                Vollständige Adresse
+              </label>
+              <input
+                type="text"
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className={inputStyle}
+                placeholder="Musterstraße 1, 12345 Musterstadt"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="phone" className={labelStyle}>
+                Telefonnummer
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className={inputStyle}
+                placeholder="+49 123 456789"
+                required
+              />
+            </div>
+            
+            <button type="submit" disabled={loading} className={submitButtonStyle}>
+              {loading ? <ArrowPathIcon className="size-5" /> : "Weiter (KI-Texte generieren)"}
+            </button>
+            <button type="button" onClick={() => setStep(2)} disabled={loading} className={backButtonStyle}>
+              Zurück
+            </button>
+          </form>
+        )}
+        
+        {/* --- SCHRITT 4: AI-Texte --- */}
+        {step === 4 && (
           <form
             onSubmit={handleSubmit}
             className="space-y-6 rounded-2xl bg-white p-8 shadow-xl shadow-orange-100/50"
@@ -498,73 +505,99 @@ export default function OnboardingPage() {
                 Startseite-Texte (Vorschlag)
               </h3>
               <p className="mt-1 text-sm text-slate-600">
-                Wir haben basierend auf Ihren Angaben erste Texte generiert. Sie
-                können diese jetzt anpassen oder später im Dashboard ändern.
+                Passen Sie die KI-Vorschläge an oder übernehmen Sie sie direkt.
               </p>
             </div>
             
             <div>
-              <label htmlFor="heroTitle" className={labelStyle}>
-                Hero-Überschrift
-              </label>
-              <input
-                type="text"
-                id="heroTitle"
-                value={heroTitle}
-                onChange={(e) => setHeroTitle(e.target.value)}
-                className={inputStyle}
-              />
+              <label htmlFor="heroTitle" className={labelStyle}>Hero-Überschrift</label>
+              <input type="text" id="heroTitle" value={heroTitle} onChange={(e) => setHeroTitle(e.target.value)} className={inputStyle} />
+            </div>
+            <div>
+              <label htmlFor="heroSubtitle" className={labelStyle}>Hero-Untertitel</label>
+              <textarea id="heroSubtitle" name="heroSubtitle" rows={3} value={heroSubtitle} onChange={(e) => setHeroSubtitle(e.target.value)} className={inputStyle} />
+            </div>
+            <div>
+              <label htmlFor="aboutText" className={labelStyle}>"Über Uns" Text (Kurzversion)</label>
+              <textarea id="aboutText" name="aboutText" rows={5} value={aboutText} onChange={(e) => setAboutText(e.target.value)} className={inputStyle} />
             </div>
 
-            <div>
-              <label htmlFor="heroSubtitle" className={labelStyle}>
-                Hero-Untertitel
-              </label>
-              <textarea
-                id="heroSubtitle"
-                name="heroSubtitle"
-                rows={3}
-                value={heroSubtitle}
-                onChange={(e) => setHeroSubtitle(e.target.value)}
-                className={inputStyle}
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="aboutText" className={labelStyle}>
-                "Über Uns" Text (Kurzversion)
-              </label>
-              <textarea
-                id="aboutText"
-                name="aboutText"
-                rows={5}
-                value={aboutText}
-                onChange={(e) => setAboutText(e.target.value)}
-                className={inputStyle}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className={submitButtonStyle}
-            >
-              {loading ? (
-                <ArrowPathIcon className="mx-auto size-5" />
-              ) : (
-                "Onboarding abschließen"
-              )}
+            <button type="submit" disabled={loading} className={submitButtonStyle}>
+              {loading ? <ArrowPathIcon className="size-5" /> : "Weiter"}
             </button>
-            <button
-              type="button"
-              onClick={() => setStep(2)}
-              disabled={loading}
-              className={backButtonStyle}
-            >
+            <button type="button" onClick={() => setStep(3)} disabled={loading} className={backButtonStyle}>
               Zurück
             </button>
           </form>
         )}
+        
+        {/* --- SCHRITT 5: Rechtliches --- */}
+        {step === 5 && (
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 rounded-2xl bg-white p-8 shadow-xl shadow-orange-100/50"
+          >
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-slate-900">Rechtstexte (Vorschlag)</h3>
+              <p className="mt-1 text-sm text-slate-600">
+                Diese Texte wurden mit Ihren Kontaktdaten vorbefüllt. 
+                <span className="font-semibold">Bitte prüfen Sie sie sorgfältig.</span>
+              </p>
+            </div>
+            
+             <div>
+              <label htmlFor="impressumText" className={labelStyle}>Impressum</label>
+              <p className={subLabelStyle}>Sie können dies später im Dashboard genauer anpassen.</p>
+              <textarea id="impressumText" name="impressumText" rows={8} value={impressumText} onChange={(e) => setImpressumText(e.target.value)} className={inputStyle + " text-xs"} />
+            </div>
+            
+            <div>
+              <label htmlFor="datenschutzText" className={labelStyle}>Datenschutzerklärung</label>
+              <p className={subLabelStyle}>Basiert auf der ArtisanCMS-Standardvorlage.</p>
+              <textarea id="datenschutzText" name="datenschutzText" rows={8} value={datenschutzText} onChange={(e) => setDatenschutzText(e.target.value)} className={inputStyle + " text-xs"} />
+            </div>
+            
+            <button type="submit" disabled={loading} className={submitButtonStyle}>
+              {loading ? <ArrowPathIcon className="size-5" /> : "Weiter zur Prüfung"}
+            </button>
+            <button type="button" onClick={() => setStep(4)} disabled={loading} className={backButtonStyle}>
+              Zurück
+            </button>
+          </form>
+        )}
+        
+        {/* --- SCHRITT 6: Review & Go Live --- */}
+        {step === 6 && (
+           <form
+            onSubmit={handleSubmit}
+            className="space-y-6 rounded-2xl bg-white p-8 shadow-xl shadow-orange-100/50"
+          >
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-slate-900">Letzte Überprüfung</h3>
+              <p className="mt-1 text-sm text-slate-600">
+                Passt alles? Mit Klick auf "Abschließen" wird Ihr Profil gespeichert und Ihre Webseite ist startklar.
+              </p>
+            </div>
+            
+            <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm">
+              <h4 className="font-semibold text-slate-800">Checkliste:</h4>
+              <p><strong>Name:</strong> {businessName}</p>
+              <p><strong>Logo:</strong> {logoUrl ? "Hochgeladen ✔" : "Kein Logo"}</p>
+              <p><strong>Branche:</strong> {INDUSTRY_TEMPLATES[industry as Industry]?.label || "N/A"}</p>
+              <p><strong>Kontakt:</strong> {address}, {phone}</p>
+              <p><strong>Hero-Titel:</strong> {heroTitle.substring(0, 40)}...</p>
+              <p><strong>Über Uns:</strong> {aboutText.substring(0, 40)}...</p>
+            </div>
+            
+            <button type="submit" disabled={loading} className={submitButtonStyle + " bg-green-600 hover:bg-green-500 shadow-green-200"}>
+              {loading ? <ArrowPathIcon className="size-5" /> : "Onboarding abschließen & Starten"}
+            </button>
+            <button type="button" onClick={() => setStep(5)} disabled={loading} className={backButtonStyle}>
+              Zurück
+            </button>
+          </form>
+        )}
+
       </div>
     </div>
   );

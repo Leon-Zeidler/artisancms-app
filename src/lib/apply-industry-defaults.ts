@@ -6,7 +6,7 @@ import {
   formatDefaultServices,
 } from "./industry-templates";
 
-// Wir importieren die Funktionen, die als Konstanten exportiert werden
+// Wir importieren die Funktionen
 import { IMPRESSUM_TEMPLATE, DATENSCHUTZ_TEMPLATE } from "./legalTemplates";
 
 type ApplyDefaultsOptions = {
@@ -14,71 +14,118 @@ type ApplyDefaultsOptions = {
   supabase: SupabaseClient;
   businessName: string;
   industry: Industry;
+  // Step 1
+  logoUrl?: string | null;
+  // Step 2
   servicesDescription?: string | null;
   keywords?: string | null;
-  heroTitle?: string | null; // <-- NEU
-  heroSubtitle?: string | null; // <-- NEU
-  aboutText?: string | null; // <-- NEU
+  // Step 3
+  address?: string | null;
+  phone?: string | null;
+  // Step 4
+  heroTitle?: string | null;
+  heroSubtitle?: string | null;
+  aboutText?: string | null;
+  // Step 5
+  impressumText?: string | null;
+  datenschutzText?: string | null;
 };
 
 /**
  * Wendet Branchen-Standardwerte auf ein Benutzerprofil an.
- * Wird beim Onboarding aufgerufen.
+ * Wird am Ende des Onboardings aufgerufen.
  */
 export async function applyIndustryDefaults({
   user,
   supabase,
   businessName,
   industry,
+  logoUrl,
   servicesDescription,
   keywords,
-  heroTitle, // <-- NEU
-  heroSubtitle, // <-- NEU
-  aboutText, // <-- NEU
+  address,
+  phone,
+  heroTitle,
+  heroSubtitle,
+  aboutText,
+  impressumText,
+  datenschutzText,
 }: ApplyDefaultsOptions) {
   const template = INDUSTRY_TEMPLATES[industry] ?? INDUSTRY_TEMPLATES.sonstiges;
 
-  // Benutzt die übergebene Beschreibung ODER die Standard-Vorlage
+  // 1. Fallback für Services (falls leer)
   const finalServicesDescription = servicesDescription?.trim()?.length
     ? servicesDescription
     : formatDefaultServices(industry);
 
-  // Wir rufen die importierten Funktionen auf
-  const impressum = IMPRESSUM_TEMPLATE(businessName);
-  const datenschutz = DATENSCHUTZ_TEMPLATE(businessName);
+  // 2. Fallbacks für AI-Texte (falls leer)
+  const finalHeroTitle =
+    heroTitle || template.heroTitle.replace("[Ort]", "");
+  const finalHeroSubtitle = heroSubtitle || template.heroSubtitle;
 
+  // 3. Fallbacks für Rechtstexte (falls leer)
+  // --- FIX: Fallbacks `|| null` hinzufügen ---
+  const finalImpressum =
+    impressumText ||
+    IMPRESSUM_TEMPLATE(
+      businessName,
+      address || null,
+      phone || null,
+      user.email || null,
+    );
+  const finalDatenschutz =
+    datenschutzText ||
+    DATENSCHUTZ_TEMPLATE(
+      businessName,
+      address || null,
+      phone || null,
+      user.email || null,
+    );
+  // --- ENDE FIX ---
+    
+  // 4. Slug generieren
+  const slug = businessName
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+  // 5. Profil-Objekt für DB erstellen
   const profileUpdates = {
     id: user.id,
     email: user.email,
     business_name: businessName,
+    slug: slug,
     industry: industry,
-    // Erstellt einen sauberen "Slug" für die URL
-    slug: businessName
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, ""),
-
-    // --- AKTUALISIERT: Nimmt die bearbeiteten Texte oder die Vorlage ---
-    hero_title:
-      heroTitle || template.heroTitle.replace("[Ort]", ""),
-    hero_subtitle: heroSubtitle || template.heroSubtitle,
-    about_text: aboutText || null, // <-- NEU
-    // ---
-
+    
+    // Step 1
+    logo_url: logoUrl || null,
+    
+    // Step 2
     services_description: finalServicesDescription,
     keywords: keywords || null,
+    
+    // Step 3
+    address: address || null,
+    phone: phone || null,
+    
+    // Step 4
+    hero_title: finalHeroTitle,
+    hero_subtitle: finalHeroSubtitle,
+    about_text: aboutText || null, // `about_text` ist okay als null
+    
+    // Step 5
+    impressum_text: finalImpressum,
+    datenschutz_text: finalDatenschutz,
 
-    // Setzt Standard-Farben & Rechtliches
-    primary_color: "#F97316", // Standard-Orange
-    secondary_color: "#1E293B", // Standard-Dunkelgrau
-    impressum_text: impressum,
-    datenschutz_text: datenschutz,
-
-    // Schließt das Onboarding ab
+    // Standardwerte
+    primary_color: "#F97316", 
+    secondary_color: "#1E293B",
+    
+    // Onboarding abschließen
     onboarding_complete: true,
   };
 
-  // Führt das Update in der 'profiles'-Tabelle aus
+  // 6. Update in 'profiles'-Tabelle
   const { error } = await supabase.from("profiles").upsert(profileUpdates);
 
   if (error) {

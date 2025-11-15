@@ -28,9 +28,6 @@ export async function POST(request: Request) {
 
   const { businessName, industry } = requestData;
 
-  // --- Akzeptiert die optionalen Felder ---
-  const { servicesDescription, keywords } = requestData; // <-- NEU: keywords hier lesen
-
   if (!businessName || !industry) {
     return NextResponse.json(
       { error: "Betriebsname und Branche sind erforderlich" },
@@ -41,15 +38,37 @@ export async function POST(request: Request) {
   // Stellt sicher, dass die Branche ein gültiger Typ ist
   const resolvedIndustry = resolveIndustry(industry);
 
+  // 2. Alle Daten aus dem Body extrahieren
+  const {
+    logoUrl,
+    servicesDescription,
+    keywords,
+    address,
+    phone,
+    heroTitle,
+    heroSubtitle,
+    aboutText,
+    impressumText,
+    datenschutzText,
+  } = requestData;
+
   try {
-    // 2. Ruft die Logik-Funktion auf und übergibt alle Daten
+    // 3. Ruft die Logik-Funktion mit allen Daten auf
     const { data } = await applyIndustryDefaults({
       user,
       supabase,
       businessName,
       industry: resolvedIndustry,
-      servicesDescription, // <-- Übergibt die (ggf. angepasste) Beschreibung
-      keywords, // <-- NEU: keywords übergeben
+      logoUrl,
+      servicesDescription,
+      keywords,
+      address,
+      phone,
+      heroTitle,
+      heroSubtitle,
+      aboutText,
+      impressumText,
+      datenschutzText,
     });
 
     return NextResponse.json({ success: true, profile: data });
