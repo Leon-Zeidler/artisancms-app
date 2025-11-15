@@ -2,16 +2,17 @@
 const { withSentryConfig } = require('@sentry/nextjs');
 
 const nextConfig = {
-  // Your normal Next.js config here
-  sentry: {
-    disableServerWebpackPlugin: true,
-    disableClientWebpackPlugin: true,
-    telemetry: false,
-  },
+  // Dein normales Next.js-Config-Objekt
+  // Der 'sentry: {}' Block wurde von hier entfernt.
 };
 
-// Optional Sentry plugin settings (currently not used since disabled above)
 const sentryWebpackPluginOptions = {
+  // Sentry-spezifische Optionen (hierher verschoben)
+  disableServerWebpackPlugin: true,
+  disableClientWebpackPlugin: true,
+  telemetry: false,
+  
+  // Deine bestehenden Webpack-Plugin-Optionen
   org: "artisancms",
   project: "javascript-nextjs",
 
@@ -26,5 +27,9 @@ const sentryWebpackPluginOptions = {
   automaticVercelMonitors: true,
 };
 
-// Disable Sentry build-time upload (no CLI runs, avoids invalid token errors)
-module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
+// Sentry-Konfiguration anwenden
+module.exports = withSentryConfig(
+  nextConfig,
+  sentryWebpackPluginOptions
+);
+// --- ENDE DATEI ---//

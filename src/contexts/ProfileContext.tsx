@@ -1,9 +1,11 @@
 // src/contexts/ProfileContext.tsx
-"use client"; // <--- DAS IST DIE LÖSUNG
+"use client";
 
 import React, { createContext, useContext, ReactNode } from 'react';
-
 import type { Industry } from '@/lib/industry-templates';
+
+// --- NEU: Plan-Typen definieren ---
+export type PlanId = 'geselle' | 'meister' | 'betrieb';
 
 // Define the shape of the profile data
 export type Profile = {
@@ -29,7 +31,6 @@ export type Profile = {
   show_team_page: boolean;
   show_testimonials_page: boolean;
   
-  // --- NEU HINZUGEFÜGT ---
   onboarding_complete?: boolean | null;
   has_seen_welcome_modal?: boolean | null;
   role?: string | null;
@@ -39,7 +40,8 @@ export type Profile = {
   beta_expires_at?: string | null; 
   stripe_customer_id?: string | null;
   stripe_subscription_id?: string | null;
-  subscription_status?: string | null;
+  subscription_status?: string | null; 
+  plan_id?: PlanId | null; // <-- Das ist das Wichtigste
 };
 
 // 1. Create the context
@@ -67,3 +69,4 @@ export function useProfile() {
   }
   return context;
 }
+// --- ENDE DATEI ---//

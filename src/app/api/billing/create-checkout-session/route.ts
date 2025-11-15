@@ -4,17 +4,36 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { cookies } from 'next/headers';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { isBetaActive } from '@/lib/subscription'; // Unser neuer Helper
-import { Profile } from '@/contexts/ProfileContext'; // Unser Typ
+import { isBetaActive } from '@/lib/subscription';
+import type { Profile, PlanId } from '@/contexts/ProfileContext';
 
-// Stripe-Client initialisieren
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-10-29.clover', // Du kannst hier auch eine neuere Version verwenden
+  apiVersion: '2025-10-29.clover', // Sicherstellen, dass diese Version aktuell ist
 });
 
-export async function POST() {
+// Map unserer internen Namen zu den Stripe Preis-IDs
+const PLAN_ID_TO_PRICE_ID: Record<PlanId, string | undefined> = {
+  geselle: process.env.STRIPE_GESELLE_PRICE_ID,
+  meister: process.env.STRIPE_MEISTER_PRICE_ID,
+  betrieb: process.env.STRIPE_BETRIEB_PRICE_ID,
+};
+
+export async function POST(request: Request) { // Request-Objekt hinzufügen
   const cookieStore = cookies();
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+
+  // --- NEU: planId aus dem Request-Body lesen ---
+  let planId: PlanId;
+  try {
+    const { planId: requestedPlan } = await request.json();
+    if (!requestedPlan || !PLAN_ID_TO_PRICE_ID[requestedPlan as PlanId]) {
+      throw new Error('Invalid planId provided.');
+    }
+    planId = requestedPlan as PlanId;
+  } catch (e) {
+    return NextResponse.json({ error: 'Invalid request body or planId.' }, { status: 400 });
+  }
+  // --- ENDE NEU ---
 
   const {
     data: { user },
@@ -23,10 +42,9 @@ export async function POST() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  // Profil holen, um Stripe-ID und Beta-Status zu prüfen
   const { data: profile } = await supabase
     .from('profiles')
-    .select('*') // Holen wir alles, um es an isBetaActive zu übergeben
+    .select('*')
     .eq('id', user.id)
     .single();
 
@@ -34,14 +52,12 @@ export async function POST() {
     return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
   }
 
-  // Wenn Nutzer noch aktive Beta hat, blockieren wir den Checkout (noch).
-  // Später kannst du das in ein "Upgrade" ändern.
   if (isBetaActive(profile as Profile)) {
      return NextResponse.json({ error: 'Beta user cannot create session yet.' }, { status: 403 });
   }
 
   const customerId = profile.stripe_customer_id;
-  const priceId = process.env.STRIPE_MEISTER_PRICE_ID;
+  const priceId = PLAN_ID_TO_PRICE_ID[planId]; // Den korrekten Preis holen
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   
   if (!priceId || !siteUrl) {
@@ -53,26 +69,21 @@ export async function POST() {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
-      // Wenn wir schon eine customerId haben, nutzen wir sie.
-      // Wenn nicht (erster Kauf), wird Stripe einen neuen Kunden anlegen.
       customer: customerId || undefined, 
-      // WICHTIG: Sende die user.id mit, damit wir sie im Webhook wiederfinden!
       client_reference_id: user.id, 
-      // Sende die E-Mail, wenn wir keinen Kunden erstellen
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: priceId,
+          price: priceId, // <-- Dynamische Preis-ID
           quantity: 1,
         },
       ],
-      // Meta-Daten, um den User im Webhook zuzuordnen (falls client_reference_id fehlt)
       metadata: {
         userId: user.id,
+        planId: planId, // <--- NEU: Dem Webhook den Plan-Namen mitteilen
       },
-      // WICHTIG: Nutze die SITE_URL aus deinem .env
-      success_url: `${siteUrl}/dashboard?billing=success`,
-      cancel_url: `${siteUrl}/dashboard/einstellungen?billing=cancel`, // Zurück zu den Einstellungen
+      success_url: `${siteUrl}/dashboard/abo?billing=success`, // Zur Abo-Seite leiten
+      cancel_url: `${siteUrl}/dashboard/abo?billing=cancel`, // Zur Abo-Seite leiten
     });
 
     return NextResponse.json({ url: session.url });
@@ -82,3 +93,4 @@ export async function POST() {
     return NextResponse.json({ error: `Stripe error: ${e.message}` }, { status: 500 });
   }
 }
+// --- ENDE DATEI ---//
