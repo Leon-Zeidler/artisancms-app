@@ -28,8 +28,8 @@ export async function POST(request: Request) {
 
   const { businessName, industry } = requestData;
 
-  // --- Akzeptiert das optionale Feld ---
-  const { servicesDescription } = requestData;
+  // --- Akzeptiert die optionalen Felder ---
+  const { servicesDescription, keywords } = requestData; // <-- NEU: keywords hier lesen
 
   if (!businessName || !industry) {
     return NextResponse.json(
@@ -49,6 +49,7 @@ export async function POST(request: Request) {
       businessName,
       industry: resolvedIndustry,
       servicesDescription, // <-- Übergibt die (ggf. angepasste) Beschreibung
+      keywords, // <-- NEU: keywords übergeben
     });
 
     return NextResponse.json({ success: true, profile: data });

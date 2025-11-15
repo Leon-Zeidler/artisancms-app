@@ -11,6 +11,7 @@ import {
   INDUSTRY_OPTIONS,
   INDUSTRY_TEMPLATES,
   Industry,
+  formatDefaultServices, // <-- NEUER IMPORT
 } from "@/lib/industry-templates";
 import toast from "react-hot-toast";
 
@@ -58,12 +59,18 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // --- NEU: Logik für mehrstufiges Onboarding ---
+  // --- Logik für mehrstufiges Onboarding ---
   const [step, setStep] = useState(1);
+
+  // --- NEU: State für die neuen Felder ---
+  const [keywords, setKeywords] = useState("");
+  const [servicesDescription, setServicesDescription] = useState("");
+  // ---
+
   const [elektroServices, setElektroServices] = useState({
-    smartHome: true, // Standardmäßig an, da es ein Haupt-Service ist
+    smartHome: true,
     photovoltaik: false,
-    wallbox: true, // Standardmäßig an
+    wallbox: true,
   });
   // ---
 
@@ -90,11 +97,22 @@ export default function OnboardingPage() {
     checkUser();
   }, [supabase, router]);
 
+  // --- AKTUALISIERT: Füllt jetzt die Service-Beschreibung vor ---
   const handleIndustryChange = (selectedOption: any) => {
-    setIndustry(selectedOption ? selectedOption.value : null);
-  };
+    const newIndustry = selectedOption ? (selectedOption.value as Industry) : null;
+    setIndustry(newIndustry);
 
-  // --- NEU: Checkbox-Handler für Elektriker-Services ---
+    if (newIndustry && newIndustry !== "elektriker") {
+      // Service-Beschreibung für andere Branchen vorabfüllen
+      setServicesDescription(formatDefaultServices(newIndustry));
+    } else {
+      // Für Elektriker (eigener Step) oder bei "keine Auswahl" leeren
+      setServicesDescription("");
+    }
+  };
+  // ---
+
+  // --- Checkbox-Handler für Elektriker-Services ---
   const handleServiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setElektroServices((prev) => ({ ...prev, [name]: checked }));
@@ -102,78 +120,83 @@ export default function OnboardingPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user || !businessName || !industry) {
-      toast.error("Bitte füllen Sie alle Felder aus.");
+
+    // --- LOGIK FÜR SCHRITT 1 ---
+    if (step === 1) {
+      if (!user || !businessName || !industry) {
+        toast.error("Bitte füllen Sie alle Felder aus.");
+        return;
+      }
+      // Immer zu Schritt 2 gehen, egal welche Branche
+      setStep(2);
       return;
     }
 
-    // --- NEU: Schritt-Logik ---
-    // Wenn Schritt 1 und Elektriker gewählt, gehe zu Schritt 2
-    if (industry === "elektriker" && step === 1) {
-      setStep(2); // Zeige den nächsten Schritt
-      return; // Brich den Submit ab, um Schritt 2 anzuzeigen
-    }
-    // ---
-
-    setLoading(true);
-    let customServicesDescription: string | null = null; // Standardmäßig keine Überschreibung
-
-    // --- NEU: Baue Service-Text für Elektriker, wenn in Schritt 2 ---
-    if (industry === "elektriker" && step === 2) {
-      const selectedServices: string[] = [];
-      if (elektroServices.smartHome)
-        selectedServices.push(
-          "Smart Home & Intelligente Gebäudesteuerung (KNX)",
-        );
-      if (elektroServices.photovoltaik)
-        selectedServices.push("Photovoltaik-Anlagen und Energiespeicher");
-      if (elektroServices.wallbox)
-        selectedServices.push("Installation von E-Ladestationen (Wallboxen)");
-
-      // Filtere die Standard-Services, um Duplikate zu vermeiden
-      // Wir holen uns die Vorlage direkt aus dem Import
-      const defaultServices = (
-        INDUSTRY_TEMPLATES.elektriker?.defaultServices || []
-      ).filter(
-        (s) =>
-          !s.toLowerCase().includes("smart home") &&
-          !s.toLowerCase().includes("photovoltaik") &&
-          !s.toLowerCase().includes("wallboxen"),
-      );
-
-      // Kombiniere die ausgewählten Top-Services mit dem Rest
-      customServicesDescription = [
-        ...selectedServices,
-        ...defaultServices,
-      ].join("\n");
-    }
-    // ---
-
-    try {
-      // Sende die Daten an die API-Route
-      const response = await fetch("/api/industry-defaults", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          businessName,
-          industry,
-          // --- NEU: Sende die angepassten Services mit ---
-          // Wenn `customServicesDescription` null ist, wird die API den Standard verwenden
-          servicesDescription: customServicesDescription,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Ein Fehler ist aufgetreten.");
+    // --- LOGIK FÜR SCHRITT 2 (DER EIGENTLICHE SUBMIT) ---
+    if (step === 2) {
+      if (!user || !industry) {
+        toast.error("Ein Fehler ist aufgetreten. Bitte laden Sie neu.");
+        return;
       }
 
-      toast.success("Willkommen! Ihr Profil wurde eingerichtet.");
-      router.push("/dashboard"); // Weiterleiten zum Dashboard
-    } catch (error: any) {
-      console.error("Onboarding-Fehler:", error);
-      toast.error(`Fehler: ${error.message}`);
-      setLoading(false);
+      setLoading(true);
+      let customServicesDescription: string | null = null;
+
+      // Baue Service-Text für Elektriker, wenn in Schritt 2
+      if (industry === "elektriker") {
+        const selectedServices: string[] = [];
+        if (elektroServices.smartHome)
+          selectedServices.push(
+            "Smart Home & Intelligente Gebäudesteuerung (KNX)",
+          );
+        if (elektroServices.photovoltaik)
+          selectedServices.push("Photovoltaik-Anlagen und Energiespeicher");
+        if (elektroServices.wallbox)
+          selectedServices.push("Installation von E-Ladestationen (Wallboxen)");
+
+        const defaultServices = (
+          INDUSTRY_TEMPLATES.elektriker?.defaultServices || []
+        ).filter(
+          (s) =>
+            !s.toLowerCase().includes("smart home") &&
+            !s.toLowerCase().includes("photovoltaik") &&
+            !s.toLowerCase().includes("wallboxen"),
+        );
+        customServicesDescription = [
+          ...selectedServices,
+          ...defaultServices,
+        ].join("\n");
+      } else {
+        // --- NEU: Nimm die (möglicherweise bearbeiteten) Services aus dem State ---
+        customServicesDescription = servicesDescription;
+      }
+      // ---
+
+      try {
+        // Sende die Daten an die API-Route
+        const response = await fetch("/api/industry-defaults", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            businessName,
+            industry,
+            servicesDescription: customServicesDescription,
+            keywords: keywords, // <-- NEU: Keywords übergeben
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Ein Fehler ist aufgetreten.");
+        }
+
+        toast.success("Willkommen! Ihr Profil wurde eingerichtet.");
+        router.push("/dashboard"); // Weiterleiten zum Dashboard
+      } catch (error: any) {
+        console.error("Onboarding-Fehler:", error);
+        toast.error(`Fehler: ${error.message}`);
+        setLoading(false);
+      }
     }
   };
 
@@ -268,7 +291,7 @@ export default function OnboardingPage() {
               <Select
                 id="industry"
                 options={INDUSTRY_OPTIONS}
-                onChange={handleIndustryChange}
+                onChange={handleIndustryChange} // <-- AKTUALISIERT
                 styles={selectStyles}
                 placeholder="Branche auswählen..."
                 isClearable
@@ -356,12 +379,98 @@ export default function OnboardingPage() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="w-full text-center text-xs font-medium text-slate-500 hover:text-slate-700"
+              disabled={loading}
+              className="w-full text-center text-xs font-medium text-slate-500 hover:text-slate-700 disabled:opacity-50"
             >
               Zurück
             </button>
           </form>
         )}
+
+        {/* --- NEUER BLOCK: Schritt 2 für ALLE ANDEREN BRANCHEN --- */}
+        {step === 2 && industry && industry !== "elektriker" && (
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 rounded-2xl bg-white p-8 shadow-xl shadow-orange-100/50"
+          >
+            <div className="text-center">
+              <SparklesIcon className="mx-auto size-8 text-orange-500" />
+              <h3 className="mt-2 text-lg font-semibold text-slate-900">
+                Fast geschafft!
+              </h3>
+              <p className="mt-1 text-sm text-slate-600">
+                Passen Sie die Texte für Ihre Branche an ("
+                {INDUSTRY_TEMPLATES[industry]?.label || industry}"). Die KI wird
+                daraus lernen.
+              </p>
+            </div>
+
+            {/* NEUES FELD: Service-Beschreibung */}
+            <div>
+              <label
+                htmlFor="servicesDescription"
+                className="block text-sm font-semibold text-slate-700"
+              >
+                Ihre Kernleistungen
+              </label>
+              <p className="mb-2 text-xs text-slate-500">
+                Passen Sie die Vorlage an. Eine Leistung pro Zeile.
+              </p>
+              <textarea
+                id="servicesDescription"
+                name="servicesDescription"
+                rows={5}
+                value={servicesDescription}
+                onChange={(e) => setServicesDescription(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-slate-300 p-3 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                placeholder="z.B. Fassadenanstrich..."
+              />
+            </div>
+
+            {/* NEUES FELD: Keywords */}
+            <div>
+              <label
+                htmlFor="keywords"
+                className="block text-sm font-semibold text-slate-700"
+              >
+                Ihre Nische / Keywords
+              </label>
+              <p className="mb-2 text-xs text-slate-500">
+                Was macht Sie besonders? (Materialien, Marken, Region, etc.)
+              </p>
+              <textarea
+                id="keywords"
+                name="keywords"
+                rows={3}
+                value={keywords}
+                onChange={(e) => setKeywords(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-slate-300 p-3 text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                placeholder="z.B. Lehmputz, ökologische Farben, Altbausanierung, Dresden und Umgebung..."
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex w-full justify-center rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:bg-orange-300"
+            >
+              {loading ? (
+                <ArrowPathIcon className="mx-auto size-5" />
+              ) : (
+                "Onboarding abschließen"
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              disabled={loading}
+              className="w-full text-center text-xs font-medium text-slate-500 hover:text-slate-700 disabled:opacity-50"
+            >
+              Zurück
+            </button>
+          </form>
+        )}
+        {/* --- ENDE NEUER BLOCK --- */}
       </div>
     </div>
   );

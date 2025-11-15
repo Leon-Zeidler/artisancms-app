@@ -6,7 +6,6 @@ import {
   formatDefaultServices,
 } from "./industry-templates";
 
-// --- HIER IST DER FIX (Namen korrigiert) ---
 // Wir importieren die Funktionen, die als Konstanten exportiert werden
 import { IMPRESSUM_TEMPLATE, DATENSCHUTZ_TEMPLATE } from "./legalTemplates";
 
@@ -16,6 +15,7 @@ type ApplyDefaultsOptions = {
   businessName: string;
   industry: Industry;
   servicesDescription?: string | null;
+  keywords?: string | null; // <-- NEU: keywords hier hinzufügen
 };
 
 /**
@@ -28,14 +28,15 @@ export async function applyIndustryDefaults({
   businessName,
   industry,
   servicesDescription,
+  keywords, // <-- NEU: keywords hier empfangen
 }: ApplyDefaultsOptions) {
   const template = INDUSTRY_TEMPLATES[industry] ?? INDUSTRY_TEMPLATES.sonstiges;
 
+  // Benutzt die übergebene Beschreibung ODER die Standard-Vorlage
   const finalServicesDescription = servicesDescription?.trim()?.length
     ? servicesDescription
     : formatDefaultServices(industry);
 
-  // --- HIER IST DER FIX (Namen korrigiert) ---
   // Wir rufen die importierten Funktionen auf
   const impressum = IMPRESSUM_TEMPLATE(businessName);
   const datenschutz = DATENSCHUTZ_TEMPLATE(businessName);
@@ -56,6 +57,8 @@ export async function applyIndustryDefaults({
     hero_subtitle: template.heroSubtitle,
 
     services_description: finalServicesDescription,
+    
+    keywords: keywords || null, // <-- NEU: keywords hier speichern
 
     // Setzt Standard-Farben & Rechtliches
     primary_color: "#F97316", // Standard-Orange
