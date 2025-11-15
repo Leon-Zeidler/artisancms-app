@@ -1,12 +1,18 @@
 // src/components/ProjectGalleryManager.tsx
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import { createSupabaseClient } from '@/lib/supabaseClient';
-import toast from 'react-hot-toast';
+import React, { useState, useMemo } from "react";
+import { createSupabaseClient } from "@/lib/supabaseClient";
+import toast from "react-hot-toast";
 
 const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+  <svg
+    {...props}
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+  >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -15,7 +21,13 @@ const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+  <svg
+    {...props}
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+  >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -24,7 +36,14 @@ const TrashIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin">
+  <svg
+    {...props}
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="size-4 animate-spin"
+  >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -58,9 +77,9 @@ export default function ProjectGalleryManager({
 
   const updateGalleryInSupabase = async (newGallery: GalleryImage[]) => {
     const { error } = await supabase
-      .from('projects')
+      .from("projects")
       .update({ gallery_images: newGallery })
-      .eq('id', projectId);
+      .eq("id", projectId);
     if (error) {
       toast.error(`Galerie konnte nicht aktualisiert werden: ${error.message}`);
       return false;
@@ -68,7 +87,9 @@ export default function ProjectGalleryManager({
     return true;
   };
 
-  const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGalleryUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     if (!event.target.files || event.target.files.length === 0) {
       return;
     }
@@ -83,10 +104,14 @@ export default function ProjectGalleryManager({
           const fileName = `${Date.now()}-${file.name}`;
           const filePath = `${userId}/${projectId}/${fileName}`;
 
-          const uploadResult = await supabase.storage.from('project-images').upload(filePath, file);
+          const uploadResult = await supabase.storage
+            .from("project-images")
+            .upload(filePath, file);
           if (uploadResult.error) throw uploadResult.error;
 
-          const { data: urlData } = supabase.storage.from('project-images').getPublicUrl(uploadResult.data.path);
+          const { data: urlData } = supabase.storage
+            .from("project-images")
+            .getPublicUrl(uploadResult.data.path);
           return { url: urlData.publicUrl, path: uploadResult.data.path };
         }),
       );
@@ -99,27 +124,31 @@ export default function ProjectGalleryManager({
         onGalleryUpdate(newGallery);
         toast.success(`${files.length} Bild(er) hinzugefügt!`, { id: toastId });
       } else {
-        toast.error('Speichern der neuen Bilder fehlgeschlagen.', { id: toastId });
+        toast.error("Speichern der neuen Bilder fehlgeschlagen.", {
+          id: toastId,
+        });
       }
     } catch (error: any) {
-      console.error('Upload failed', error);
+      console.error("Upload failed", error);
       toast.error(`Upload fehlgeschlagen: ${error.message}`, { id: toastId });
     }
 
     setIsUploading(false);
-    event.target.value = '';
+    event.target.value = "";
   };
 
   const handleImageDelete = async (image: GalleryImage) => {
-    if (!window.confirm('Soll dieses Bild wirklich gelöscht werden?')) {
+    if (!window.confirm("Soll dieses Bild wirklich gelöscht werden?")) {
       return;
     }
 
     setIsDeleting(image.path);
-    const toastId = toast.loading('Bild wird entfernt...');
+    const toastId = toast.loading("Bild wird entfernt...");
 
     try {
-      const { error: storageError } = await supabase.storage.from('project-images').remove([image.path]);
+      const { error: storageError } = await supabase.storage
+        .from("project-images")
+        .remove([image.path]);
       if (storageError) throw storageError;
 
       const newGallery = gallery.filter((img) => img.path !== image.path);
@@ -128,12 +157,14 @@ export default function ProjectGalleryManager({
       if (success) {
         setGallery(newGallery);
         onGalleryUpdate(newGallery);
-        toast.success('Bild gelöscht.', { id: toastId });
+        toast.success("Bild gelöscht.", { id: toastId });
       } else {
-        toast.error('Galerie konnte nicht aktualisiert werden.', { id: toastId });
+        toast.error("Galerie konnte nicht aktualisiert werden.", {
+          id: toastId,
+        });
       }
     } catch (error: any) {
-      console.error('Delete failed', error);
+      console.error("Delete failed", error);
       toast.error(`Löschen fehlgeschlagen: ${error.message}`, { id: toastId });
     }
 
@@ -145,31 +176,50 @@ export default function ProjectGalleryManager({
       {gallery.length > 0 ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
           {gallery.map((image) => (
-            <div key={image.path} className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm shadow-orange-100/40">
+            <div
+              key={image.path}
+              className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm shadow-orange-100/40"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={image.url} alt="Project gallery image" className="h-full w-full object-cover" />
+              <img
+                src={image.url}
+                alt="Project gallery image"
+                className="size-full object-cover"
+              />
               <button
                 type="button"
                 onClick={() => handleImageDelete(image)}
                 disabled={isDeleting === image.path || isUploading}
-                className="absolute top-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-red-500 shadow-md shadow-red-100 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="absolute right-2 top-2 inline-flex size-9 items-center justify-center rounded-full bg-white/95 text-red-500 shadow-md shadow-red-100 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                 aria-label="Bild löschen"
               >
-                {isDeleting === image.path ? <ArrowPathIcon /> : <TrashIcon className="h-4 w-4" />}
+                {isDeleting === image.path ? (
+                  <ArrowPathIcon />
+                ) : (
+                  <TrashIcon className="size-4" />
+                )}
               </button>
             </div>
           ))}
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/70 px-6 py-12 text-center shadow-sm shadow-orange-100">
-          <PhotoIcon className="mx-auto h-12 w-12 text-orange-400" />
-          <h3 className="mt-4 text-base font-semibold text-slate-800">Noch keine Galerie-Bilder</h3>
-          <p className="mt-2 text-sm text-slate-600">Fügen Sie weitere Eindrücke hinzu, um Ihr Projekt lebendig zu machen.</p>
+          <PhotoIcon className="mx-auto size-12 text-orange-400" />
+          <h3 className="mt-4 text-base font-semibold text-slate-800">
+            Noch keine Galerie-Bilder
+          </h3>
+          <p className="mt-2 text-sm text-slate-600">
+            Fügen Sie weitere Eindrücke hinzu, um Ihr Projekt lebendig zu
+            machen.
+          </p>
         </div>
       )}
 
       <div>
-        <label htmlFor="galleryUpload" className="mb-2 block text-sm font-semibold text-slate-700">
+        <label
+          htmlFor="galleryUpload"
+          className="mb-2 block text-sm font-semibold text-slate-700"
+        >
           Galerie erweitern
         </label>
         <input
@@ -179,7 +229,7 @@ export default function ProjectGalleryManager({
           accept="image/png, image/jpeg, image/webp"
           onChange={handleGalleryUpload}
           disabled={isUploading || !!isDeleting}
-          className="w-full cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm transition focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200 file:mr-4 file:rounded-full file:border-0 file:bg-orange-100 file:px-4 file:py-2 file:font-semibold file:text-orange-700 hover:file:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-70"
+          className="w-full cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm transition file:mr-4 file:rounded-full file:border-0 file:bg-orange-100 file:px-4 file:py-2 file:font-semibold file:text-orange-700 hover:file:bg-orange-200 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200 disabled:cursor-not-allowed disabled:opacity-70"
         />
         {isUploading && (
           <p className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-orange-600">

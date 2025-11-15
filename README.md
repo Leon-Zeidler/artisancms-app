@@ -21,8 +21,8 @@ git diff
 
 > **Troubleshooting:**
 >
-> * If `git apply` reports that the patch cannot be applied cleanly, ensure your local repository matches the commit prior to the fix (`2ce3c01`) or review the patch manually and copy the relevant sections into your files.
-> * If you prefer using `git am`, run `git am patches/runtime-env-guards.patch` instead; it preserves the original commit metadata.
+> - If `git apply` reports that the patch cannot be applied cleanly, ensure your local repository matches the commit prior to the fix (`2ce3c01`) or review the patch manually and copy the relevant sections into your files.
+> - If you prefer using `git am`, run `git am patches/runtime-env-guards.patch` instead; it preserves the original commit metadata.
 
 After applying the patch, redeploy or restart the application so the updated runtime guards take effect. Confirm that all required environment variables are present (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `FROM_EMAIL`, and `OPENAI_API_KEY`).
 

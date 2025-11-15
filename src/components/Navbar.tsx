@@ -40,7 +40,11 @@ const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => (
     strokeWidth="1.5"
     stroke="currentColor"
   >
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M6 18L18 6M6 6l12 12"
+    />
   </svg>
 );
 
@@ -88,7 +92,7 @@ export default function Navbar({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo/Brand Name */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <Link
                 href={homePath}
                 className="flex items-center text-xl font-bold text-gray-900"
@@ -104,7 +108,7 @@ export default function Navbar({
                     unoptimized
                   />
                 ) : (
-                  <span className="rounded-lg bg-brand/10 px-2.5 py-1 text-base font-semibold text-brand">
+                  <span className="bg-brand/10 text-brand rounded-lg px-2.5 py-1 text-base font-semibold">
                     {brandLabel}
                   </span>
                 )}
@@ -115,22 +119,22 @@ export default function Navbar({
             <div className="hidden space-x-8 md:flex">
               <Link
                 href={leistungenPath}
-                className="font-medium text-gray-600 transition-colors hover:text-brand"
+                className="hover:text-brand font-medium text-gray-600 transition-colors"
               >
                 Leistungen
               </Link>
               <Link
                 href={portfolioPath}
-                className="font-medium text-gray-600 transition-colors hover:text-brand"
+                className="hover:text-brand font-medium text-gray-600 transition-colors"
               >
                 Projekte
               </Link>
-              
+
               {/* --- 3. MAKE LINKS CONDITIONAL --- */}
               {showTeamPage && (
                 <Link
                   href={teamPath}
-                  className="font-medium text-gray-600 transition-colors hover:text-brand"
+                  className="hover:text-brand font-medium text-gray-600 transition-colors"
                 >
                   Über Uns
                 </Link>
@@ -138,15 +142,15 @@ export default function Navbar({
               {showTestimonialsPage && (
                 <Link
                   href={testimonialsPath}
-                  className="font-medium text-gray-600 transition-colors hover:text-brand"
+                  className="hover:text-brand font-medium text-gray-600 transition-colors"
                 >
                   Kundenstimmen
                 </Link>
               )}
-              
+
               <Link
                 href={kontaktPath}
-                className="font-medium text-gray-600 transition-colors hover:text-brand"
+                className="hover:text-brand font-medium text-gray-600 transition-colors"
               >
                 Kontakt
               </Link>
@@ -156,7 +160,7 @@ export default function Navbar({
             <div className="hidden md:block">
               <Link
                 href="/login"
-                className="rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                className="bg-brand hover:bg-brand-dark focus-visible:outline-brand rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
               >
                 Kunden-Login
               </Link>
@@ -167,15 +171,15 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={toggleMobileMenu}
-                className="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-brand/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand"
+                className="hover:bg-brand/10 focus:ring-brand inline-flex items-center justify-center rounded-md p-2 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset"
                 aria-controls="mobile-menu"
                 aria-expanded={isMobileMenuOpen}
               >
                 <span className="sr-only">Open main menu</span>
                 {isMobileMenuOpen ? (
-                  <CloseIcon className="block h-6 w-6" />
+                  <CloseIcon className="block size-6" />
                 ) : (
-                  <MenuIcon className="block h-6 w-6" />
+                  <MenuIcon className="block size-6" />
                 )}
               </button>
             </div>
@@ -193,7 +197,7 @@ export default function Navbar({
           />
           <aside
             id="mobile-menu"
-            className="fixed inset-y-0 right-0 z-50 w-full max-w-xs overflow-y-auto border-l border-slate-200 bg-white px-6 py-6 shadow-2xl sm:max-w-sm"
+            className="fixed inset-y-0 right-0 z-50 w-full max-w-xs overflow-y-auto border-l border-slate-200 bg-white p-6 shadow-2xl sm:max-w-sm"
             role="dialog"
             aria-modal="true"
           >
@@ -208,34 +212,34 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={closeMobileMenu}
-                className="rounded-md p-2 text-gray-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand"
+                className="focus:ring-brand rounded-md p-2 text-gray-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset"
               >
                 <span className="sr-only">Menü schließen</span>
-                <CloseIcon className="h-6 w-6" />
+                <CloseIcon className="size-6" />
               </button>
             </div>
             <nav className="mt-8 flex flex-col gap-2 text-base font-semibold text-gray-900">
               <Link
                 href={leistungenPath}
                 onClick={closeMobileMenu}
-                className="rounded-lg px-4 py-3 hover:bg-brand/10"
+                className="hover:bg-brand/10 rounded-lg px-4 py-3"
               >
                 Leistungen
               </Link>
               <Link
                 href={portfolioPath}
                 onClick={closeMobileMenu}
-                className="rounded-lg px-4 py-3 hover:bg-brand/10"
+                className="hover:bg-brand/10 rounded-lg px-4 py-3"
               >
                 Projekte
               </Link>
-              
+
               {/* --- MAKE MOBILE LINKS CONDITIONAL --- */}
               {showTeamPage && (
                 <Link
                   href={teamPath}
                   onClick={closeMobileMenu}
-                  className="rounded-lg px-4 py-3 hover:bg-brand/10"
+                  className="hover:bg-brand/10 rounded-lg px-4 py-3"
                 >
                   Über Uns
                 </Link>
@@ -244,16 +248,16 @@ export default function Navbar({
                 <Link
                   href={testimonialsPath}
                   onClick={closeMobileMenu}
-                  className="rounded-lg px-4 py-3 hover:bg-brand/10"
+                  className="hover:bg-brand/10 rounded-lg px-4 py-3"
                 >
                   Kundenstimmen
                 </Link>
               )}
-              
+
               <Link
                 href={kontaktPath}
                 onClick={closeMobileMenu}
-                className="rounded-lg px-4 py-3 hover:bg-brand/10"
+                className="hover:bg-brand/10 rounded-lg px-4 py-3"
               >
                 Kontakt
               </Link>
@@ -262,7 +266,7 @@ export default function Navbar({
               <Link
                 href="/login"
                 onClick={closeMobileMenu}
-                className="flex w-full items-center justify-center rounded-xl bg-brand px-4 py-3 text-base font-semibold text-white shadow-lg shadow-brand/20 transition hover:bg-brand-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                className="bg-brand shadow-brand/20 hover:bg-brand-dark focus-visible:outline-brand flex w-full items-center justify-center rounded-xl px-4 py-3 text-base font-semibold text-white shadow-lg transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
               >
                 Kunden-Login
               </Link>

@@ -12,12 +12,12 @@ const config: Config = {
       // 'colors' muss INNERHALB von 'extend' sein.
       colors: {
         brand: {
-          DEFAULT: 'var(--color-brand-primary)', // Main brand color
-          dark: 'var(--color-brand-primary-dark)', // Darker shade for hover
+          DEFAULT: "var(--color-brand-primary)", // Main brand color
+          dark: "var(--color-brand-primary-dark)", // Darker shade for hover
         },
         brandsec: {
-           DEFAULT: 'var(--color-brand-secondary)', // Secondary brand color
-        }
+          DEFAULT: "var(--color-brand-secondary)", // Secondary brand color
+        },
       },
       // --- ENDE DER KORREKTUR ---
     },

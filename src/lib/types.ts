@@ -1,13 +1,13 @@
-import { User } from '@supabase/supabase-js';
+import { User } from "@supabase/supabase-js";
 
 // Die zentrale Definition für ein Projekt
 export type Project = {
   id: string; // <-- FIX: Geändert von 'number' zu 'string'
   user_id: string;
   title: string | null;
-  'project-date': string | null;
+  "project-date": string | null;
   ai_description: string | null;
-  status: 'Published' | 'Draft' | string | null;
+  status: "Published" | "Draft" | string | null;
   created_at: string;
   notes: string | null;
   after_image_url: string | null;

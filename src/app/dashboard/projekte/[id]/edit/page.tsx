@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { createSupabaseClient } from '@/lib/supabaseClient';
-import { User } from '@supabase/supabase-js';
-import toast from 'react-hot-toast';
-import ProjectForm from '@/components/ProjectForm';
-import { DashboardHero } from '@/components/dashboard/DashboardHero';
-import type { Project } from '@/lib/types';
+import React, { useState, useEffect, useMemo } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { createSupabaseClient } from "@/lib/supabaseClient";
+import { User } from "@supabase/supabase-js";
+import toast from "react-hot-toast";
+import ProjectForm from "@/components/ProjectForm";
+import { DashboardHero } from "@/components/dashboard/DashboardHero";
+import type { Project } from "@/lib/types";
 
 export default function EditProjectPage() {
   const supabase = useMemo(() => createSupabaseClient(), []);
@@ -23,40 +23,47 @@ export default function EditProjectPage() {
 
   useEffect(() => {
     const getUserAndProject = async () => {
-      setLoading(true); setGeneralError(null);
+      setLoading(true);
+      setGeneralError(null);
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        toast.error("Nicht eingeloggt."); router.push('/login'); return;
+        toast.error("Nicht eingeloggt.");
+        router.push("/login");
+        return;
       }
       setCurrentUser(user);
 
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('slug')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("slug")
+        .eq("id", user.id)
         .single();
       setUserSlug(profile?.slug || null);
 
       if (!projectId) {
-         setGeneralError("Projekt-ID fehlt."); setLoading(false); return;
+        setGeneralError("Projekt-ID fehlt.");
+        setLoading(false);
+        return;
       }
 
       try {
         const { data, error } = await supabase
-          .from('projects')
-          .select('*, gallery_images')
-          .eq('id', projectId) // projectId ist string, Supabase wandelt es für 'bigint' um
-          .eq('user_id', user.id)
+          .from("projects")
+          .select("*, gallery_images")
+          .eq("id", projectId) // projectId ist string, Supabase wandelt es für 'bigint' um
+          .eq("user_id", user.id)
           .single();
 
         if (error) throw error;
-        if (!data) throw new Error("Projekt nicht gefunden oder Zugriff verweigert.");
+        if (!data)
+          throw new Error("Projekt nicht gefunden oder Zugriff verweigert.");
 
         // Die Daten aus Supabase (data.id ist number)
         // passen jetzt direkt zu unserem Project-Typ (id: number)
-        setProject(data as Project); 
-
+        setProject(data as Project);
       } catch (err: any) {
         console.error("Error fetching project:", err);
         setGeneralError(`Fehler beim Laden des Projekts: ${err.message}`);
@@ -99,7 +106,7 @@ export default function EditProjectPage() {
   }
 
   const liveProjectUrl =
-    userSlug && project.status === 'Published'
+    userSlug && project.status === "Published"
       ? `/${userSlug}/portfolio/${project.id}`
       : undefined;
 
@@ -111,17 +118,17 @@ export default function EditProjectPage() {
         subtitle="Aktualisieren Sie Inhalte, Bilder und Status dieses Projekts."
         actions={[
           {
-            label: 'Zur Projektliste',
-            href: '/dashboard/projekte',
-            variant: 'secondary',
+            label: "Zur Projektliste",
+            href: "/dashboard/projekte",
+            variant: "secondary",
           },
           ...(liveProjectUrl
             ? [
                 {
-                  label: 'Live-Seite ansehen',
+                  label: "Live-Seite ansehen",
                   href: liveProjectUrl,
-                  variant: 'primary' as const,
-                  target: '_blank',
+                  variant: "primary" as const,
+                  target: "_blank",
                 },
               ]
             : []),
@@ -129,7 +136,11 @@ export default function EditProjectPage() {
       />
 
       <div className="mx-auto max-w-5xl rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-xl shadow-orange-100/40">
-        <ProjectForm currentUser={currentUser} userSlug={userSlug} initialData={project} />
+        <ProjectForm
+          currentUser={currentUser}
+          userSlug={userSlug}
+          initialData={project}
+        />
       </div>
     </main>
   );

@@ -1,5 +1,5 @@
 // Injected content via Sentry wizard below
-const { withSentryConfig } = require('@sentry/nextjs');
+const { withSentryConfig } = require("@sentry/nextjs");
 
 const nextConfig = {
   // Dein normales Next.js-Config-Objekt
@@ -11,7 +11,7 @@ const sentryWebpackPluginOptions = {
   disableServerWebpackPlugin: true,
   disableClientWebpackPlugin: true,
   telemetry: false,
-  
+
   // Deine bestehenden Webpack-Plugin-Optionen
   org: "artisancms",
   project: "javascript-nextjs",
@@ -28,8 +28,5 @@ const sentryWebpackPluginOptions = {
 };
 
 // Sentry-Konfiguration anwenden
-module.exports = withSentryConfig(
-  nextConfig,
-  sentryWebpackPluginOptions
-);
+module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
 // --- ENDE DATEI ---//

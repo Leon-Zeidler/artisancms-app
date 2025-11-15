@@ -1,24 +1,24 @@
-import { notFound } from 'next/navigation';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import React from 'react';
+import { notFound } from "next/navigation";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import React from "react";
 
-import { ProfileProvider, type Profile } from '@/contexts/ProfileContext'; 
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { DynamicGlobalStyles } from '@/components/DynamicGlobalStyles'; // <-- 1. IMPORT THE NEW COMPONENT
+import { ProfileProvider, type Profile } from "@/contexts/ProfileContext";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { DynamicGlobalStyles } from "@/components/DynamicGlobalStyles"; // <-- 1. IMPORT THE NEW COMPONENT
 
 // --- Helper function to fetch profile by slug ---
 async function getProfileBySlug(slug: string): Promise<Profile | null> {
   const supabase = createServerComponentClient({ cookies });
 
   const { data, error } = await supabase
-    .from('profiles')
+    .from("profiles")
     .select(
       // Fetch all new columns
-      '*, is_published, show_services_section, show_team_page, show_testimonials_page'
+      "*, is_published, show_services_section, show_team_page, show_testimonials_page",
     )
-    .eq('slug', slug)
+    .eq("slug", slug)
     .single();
 
   if (error) {
@@ -61,8 +61,8 @@ export default async function ClientLayout({
     <ProfileProvider profile={profile}>
       {/* 3. USE THE IMPORTED COMPONENT */}
       <DynamicGlobalStyles
-        primaryColor={profile.primary_color || '#F97316'}
-        secondaryColor={profile.secondary_color || '#F8FAFC'}
+        primaryColor={profile.primary_color || "#F97316"}
+        secondaryColor={profile.secondary_color || "#F8FAFC"}
       />
       <div className="flex min-h-screen flex-col bg-white text-gray-900">
         <Navbar
@@ -73,7 +73,7 @@ export default async function ClientLayout({
           showTeamPage={profile.show_team_page}
           showTestimonialsPage={profile.show_testimonials_page}
         />
-        <main className="flex-grow">{children}</main>
+        <main className="grow">{children}</main>
         <Footer
           businessName={profile.business_name}
           slug={profile.slug}

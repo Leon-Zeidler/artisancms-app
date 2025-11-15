@@ -1,11 +1,11 @@
-import React from 'react';
-import Link from 'next/link';
+import React from "react";
+import Link from "next/link";
 
 type HeroAction = {
   label: string;
   href?: string;
   icon?: React.ElementType;
-  variant?: 'primary' | 'secondary';
+  variant?: "primary" | "secondary";
   target?: string;
   onClick?: () => void;
 };
@@ -18,14 +18,20 @@ type DashboardHeroProps = {
   children?: React.ReactNode;
 };
 
-const variantStyles: Record<NonNullable<HeroAction['variant']>, string> = {
+const variantStyles: Record<NonNullable<HeroAction["variant"]>, string> = {
   primary:
-    'inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-200/60 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200',
+    "inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-200/60 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200",
   secondary:
-    'inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-orange-300 hover:text-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200',
+    "inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-orange-300 hover:text-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200",
 };
 
-export function DashboardHero({ eyebrow, title, subtitle, actions, children }: DashboardHeroProps) {
+export function DashboardHero({
+  eyebrow,
+  title,
+  subtitle,
+  actions,
+  children,
+}: DashboardHeroProps) {
   return (
     <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-orange-100/40">
       <div
@@ -40,29 +46,54 @@ export function DashboardHero({ eyebrow, title, subtitle, actions, children }: D
                 {eyebrow}
               </span>
             )}
-            <h1 className="text-3xl font-bold text-slate-900 lg:text-4xl">{title}</h1>
-            {subtitle && <p className="text-base text-slate-600 lg:max-w-3xl">{subtitle}</p>}
+            <h1 className="text-3xl font-bold text-slate-900 lg:text-4xl">
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="text-base text-slate-600 lg:max-w-3xl">
+                {subtitle}
+              </p>
+            )}
           </div>
           {actions && actions.length > 0 && (
             <div className="flex flex-wrap gap-3">
-              {actions.map(({ label, href, icon: Icon, variant = 'primary', target, onClick }) => {
-                const className = variantStyles[variant];
-                if (onClick || !href) {
-                  return (
-                    <button key={label} type="button" onClick={onClick} className={className}>
-                      {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
-                      {label}
-                    </button>
-                  );
-                }
+              {actions.map(
+                ({
+                  label,
+                  href,
+                  icon: Icon,
+                  variant = "primary",
+                  target,
+                  onClick,
+                }) => {
+                  const className = variantStyles[variant];
+                  if (onClick || !href) {
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={onClick}
+                        className={className}
+                      >
+                        {Icon && <Icon className="size-4" aria-hidden="true" />}
+                        {label}
+                      </button>
+                    );
+                  }
 
-                return (
-                  <Link key={label} href={href} target={target} className={className}>
-                    {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
-                    {label}
-                  </Link>
-                );
-              })}
+                  return (
+                    <Link
+                      key={label}
+                      href={href}
+                      target={target}
+                      className={className}
+                    >
+                      {Icon && <Icon className="size-4" aria-hidden="true" />}
+                      {label}
+                    </Link>
+                  );
+                },
+              )}
             </div>
           )}
         </div>

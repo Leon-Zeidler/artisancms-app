@@ -1,13 +1,13 @@
 // src/app/dashboard/projekte/neu/page.tsx
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { createSupabaseClient } from '@/lib/supabaseClient';
-import { User } from '@supabase/supabase-js';
-import toast from 'react-hot-toast';
-import ProjectForm from '@/components/ProjectForm';
-import { DashboardHero } from '@/components/dashboard/DashboardHero';
+import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { createSupabaseClient } from "@/lib/supabaseClient";
+import { User } from "@supabase/supabase-js";
+import toast from "react-hot-toast";
+import ProjectForm from "@/components/ProjectForm";
+import { DashboardHero } from "@/components/dashboard/DashboardHero";
 
 export default function NewProjectPage() {
   const supabase = useMemo(() => createSupabaseClient(), []);
@@ -24,28 +24,28 @@ export default function NewProjectPage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        toast.error('Nicht eingeloggt.');
-        router.push('/login');
+        toast.error("Nicht eingeloggt.");
+        router.push("/login");
         return;
       }
 
       setCurrentUser(user);
 
       const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('slug')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("slug")
+        .eq("id", user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile slug:', error);
-        toast.error('Profil-Daten konnten nicht geladen werden.');
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching profile slug:", error);
+        toast.error("Profil-Daten konnten nicht geladen werden.");
       } else if (profile?.slug) {
         setUserSlug(profile.slug);
       } else {
         console.warn("User has no slug. 'View Live' link will not work.");
         toast.error(
-          'Profil unvollständig. Bitte gehen Sie zu den Einstellungen und legen Sie einen URL-Pfad (Slug) fest.',
+          "Profil unvollständig. Bitte gehen Sie zu den Einstellungen und legen Sie einen URL-Pfad (Slug) fest.",
           { duration: 6000 },
         );
       }
@@ -56,7 +56,7 @@ export default function NewProjectPage() {
     getUserAndProfile();
   }, [router, supabase]);
 
-  const overviewHref = '/dashboard/projekte';
+  const overviewHref = "/dashboard/projekte";
 
   let content: React.ReactNode = null;
   if (loading) {
@@ -68,7 +68,11 @@ export default function NewProjectPage() {
   } else if (currentUser) {
     content = (
       <div className="rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-xl shadow-orange-100/40">
-        <ProjectForm currentUser={currentUser} userSlug={userSlug} initialData={null} />
+        <ProjectForm
+          currentUser={currentUser}
+          userSlug={userSlug}
+          initialData={null}
+        />
       </div>
     );
   } else {
@@ -87,9 +91,9 @@ export default function NewProjectPage() {
         subtitle="Geben Sie die Details ein, laden Sie Bilder hoch und lassen Sie unsere KI eine Beschreibung verfassen."
         actions={[
           {
-            label: 'Zurück zur Übersicht',
+            label: "Zurück zur Übersicht",
             href: overviewHref,
-            variant: 'secondary',
+            variant: "secondary",
           },
         ]}
       />

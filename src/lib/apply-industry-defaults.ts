@@ -1,17 +1,21 @@
 // src/lib/apply-industry-defaults.ts
-import { SupabaseClient, User } from '@supabase/supabase-js';
-import { INDUSTRY_TEMPLATES, Industry, formatDefaultServices } from './industry-templates';
+import { SupabaseClient, User } from "@supabase/supabase-js";
+import {
+  INDUSTRY_TEMPLATES,
+  Industry,
+  formatDefaultServices,
+} from "./industry-templates";
 
 // --- HIER IST DER FIX (Namen korrigiert) ---
 // Wir importieren die Funktionen, die als Konstanten exportiert werden
-import { IMPRESSUM_TEMPLATE, DATENSCHUTZ_TEMPLATE } from './legalTemplates';
+import { IMPRESSUM_TEMPLATE, DATENSCHUTZ_TEMPLATE } from "./legalTemplates";
 
 type ApplyDefaultsOptions = {
   user: User;
   supabase: SupabaseClient;
   businessName: string;
   industry: Industry;
-  servicesDescription?: string | null; 
+  servicesDescription?: string | null;
 };
 
 /**
@@ -23,9 +27,8 @@ export async function applyIndustryDefaults({
   supabase,
   businessName,
   industry,
-  servicesDescription, 
+  servicesDescription,
 }: ApplyDefaultsOptions) {
-  
   const template = INDUSTRY_TEMPLATES[industry] ?? INDUSTRY_TEMPLATES.sonstiges;
 
   const finalServicesDescription = servicesDescription?.trim()?.length
@@ -43,29 +46,32 @@ export async function applyIndustryDefaults({
     business_name: businessName,
     industry: industry,
     // Erstellt einen sauberen "Slug" für die URL
-    slug: businessName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-    
+    slug: businessName
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, ""),
+
     // Holt Standard-Texte aus dem Template
-    hero_title: template.heroTitle.replace('[Ort]', ''), // [Ort] Platzhalter entfernen
+    hero_title: template.heroTitle.replace("[Ort]", ""), // [Ort] Platzhalter entfernen
     hero_subtitle: template.heroSubtitle,
-    
+
     services_description: finalServicesDescription,
-    
+
     // Setzt Standard-Farben & Rechtliches
-    primary_color: '#F97316', // Standard-Orange
-    secondary_color: '#1E293B', // Standard-Dunkelgrau
+    primary_color: "#F97316", // Standard-Orange
+    secondary_color: "#1E293B", // Standard-Dunkelgrau
     impressum_text: impressum,
     datenschutz_text: datenschutz,
-    
+
     // Schließt das Onboarding ab
     onboarding_complete: true,
   };
 
   // Führt das Update in der 'profiles'-Tabelle aus
-  const { error } = await supabase.from('profiles').upsert(profileUpdates);
+  const { error } = await supabase.from("profiles").upsert(profileUpdates);
 
   if (error) {
-    console.error('Error applying industry defaults:', error.message);
+    console.error("Error applying industry defaults:", error.message);
     throw new Error(`Konnte Profil nicht aktualisieren: ${error.message}`);
   }
 

@@ -1,11 +1,11 @@
 // src/app/api/analyze-image/route.ts
-import { NextResponse, NextRequest } from 'next/server';
-import OpenAI from 'openai';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js'; // Admin-Client
-import { resolveIndustry } from '@/lib/industry-templates';
-import { getAnalyzeImagePrompt } from '@/lib/ai-prompts'; // <-- NEUER IMPORT
+import { NextResponse, NextRequest } from "next/server";
+import OpenAI from "openai";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js"; // Admin-Client
+import { resolveIndustry } from "@/lib/industry-templates";
+import { getAnalyzeImagePrompt } from "@/lib/ai-prompts"; // <-- NEUER IMPORT
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -13,9 +13,11 @@ export async function POST(req: NextRequest) {
   try {
     const cookieStore = cookies();
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
-    
+
     // 1. Nutzer authentifizieren
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Nicht autorisiert" }, { status: 401 });
     }
@@ -23,12 +25,12 @@ export async function POST(req: NextRequest) {
     // --- 2. NEU: Profil des Nutzers holen, um Branche zu kennen ---
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
     const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('industry')
-      .eq('id', user.id)
+      .from("profiles")
+      .select("industry")
+      .eq("id", user.id)
       .single();
 
     const industry = resolveIndustry(profile?.industry);
@@ -45,15 +47,20 @@ export async function POST(req: NextRequest) {
     } else if (imageUrl) {
       // Pfad 2: Von URL zu Base64 (wichtig für GPT-4o)
       const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
+      if (!imageResponse.ok)
+        throw new Error(`Failed to fetch image: ${imageResponse.statusText}`);
       if (!imageResponse.body) throw new Error("Image response has no body.");
-      
-      const imageMimeType = imageResponse.headers.get('Content-Type') || 'image/jpeg';
+
+      const imageMimeType =
+        imageResponse.headers.get("Content-Type") || "image/jpeg";
       const imageArrayBuffer = await imageResponse.arrayBuffer();
-      const base64String = Buffer.from(imageArrayBuffer).toString('base64');
+      const base64String = Buffer.from(imageArrayBuffer).toString("base64");
       imageUrlToSend = `data:${imageMimeType};base64,${base64String}`;
     } else {
-      return NextResponse.json({ error: "imageUrl or imageData is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "imageUrl or imageData is required" },
+        { status: 400 },
+      );
     }
 
     // --- 4. NEU: Dynamischen Prompt holen ---
@@ -71,10 +78,13 @@ export async function POST(req: NextRequest) {
         {
           role: "user",
           content: [
-            { type: "text", text: "Analysiere dieses Bild gemäß deiner Anweisungen." },
+            {
+              type: "text",
+              text: "Analysiere dieses Bild gemäß deiner Anweisungen.",
+            },
             {
               type: "image_url",
-              image_url: { "url": imageUrlToSend },
+              image_url: { url: imageUrlToSend },
             },
           ],
         },
@@ -84,9 +94,11 @@ export async function POST(req: NextRequest) {
 
     const description = aiResponse.choices[0].message?.content;
     return NextResponse.json({ description });
-
   } catch (error: any) {
     console.error("Error in AI image analysis:", error.message);
-    return NextResponse.json({ error: `Fehler bei der AI-Generierung: ${error.message}` }, { status: 500 });
+    return NextResponse.json(
+      { error: `Fehler bei der AI-Generierung: ${error.message}` },
+      { status: 500 },
+    );
   }
 }

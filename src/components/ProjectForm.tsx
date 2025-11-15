@@ -1,15 +1,21 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { createSupabaseClient } from '@/lib/supabaseClient';
-import toast from 'react-hot-toast';
-import { v4 as uuidv4 } from 'uuid';
-import ProjectGalleryManager from './ProjectGalleryManager';
-import type { Project, ProjectFormProps } from '@/lib/types';
+import React, { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { createSupabaseClient } from "@/lib/supabaseClient";
+import toast from "react-hot-toast";
+import { v4 as uuidv4 } from "uuid";
+import ProjectGalleryManager from "./ProjectGalleryManager";
+import type { Project, ProjectFormProps } from "@/lib/types";
 
 const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+  <svg
+    {...props}
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+  >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -18,7 +24,13 @@ const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+  <svg
+    {...props}
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+  >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -27,12 +39,28 @@ const PhotoIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 const XCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  <svg
+    {...props}
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
   </svg>
 );
 const InformationCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+  <svg
+    {...props}
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+  >
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -46,7 +74,7 @@ const fileToBase64 = (file: File): Promise<string> => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
-      const base64String = (reader.result as string).split(',')[1];
+      const base64String = (reader.result as string).split(",")[1];
       resolve(base64String);
     };
     reader.onerror = (error) => reject(error);
@@ -62,35 +90,46 @@ interface ImageUploadCardProps {
   onRemove: () => void;
 }
 
-function ImageUploadCard({ title, description, imageUrl, isUploading, onFileChange, onRemove }: ImageUploadCardProps) {
+function ImageUploadCard({
+  title,
+  description,
+  imageUrl,
+  isUploading,
+  onFileChange,
+  onRemove,
+}: ImageUploadCardProps) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-md shadow-orange-100/50">
       <div className="border-b border-slate-100 px-6 py-5">
         <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
         <p className="mt-1 text-sm text-slate-600">{description}</p>
       </div>
-      <div className="px-6 py-6">
+      <div className="p-6">
         <div className="relative flex aspect-[16/9] w-full items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/70">
           {imageUrl ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imageUrl} alt="Project image" className="h-full w-full rounded-xl object-cover" />
+              <img
+                src={imageUrl}
+                alt="Project image"
+                className="size-full rounded-xl object-cover"
+              />
               <button
                 type="button"
                 onClick={onRemove}
-                className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-red-500 shadow-md shadow-red-100 transition hover:bg-red-50"
+                className="absolute -right-3 -top-3 flex size-8 items-center justify-center rounded-full bg-white text-red-500 shadow-md shadow-red-100 transition hover:bg-red-50"
                 title="Bild entfernen"
               >
-                <XCircleIcon className="h-5 w-5" />
+                <XCircleIcon className="size-5" />
               </button>
             </>
           ) : (
             <div className="text-center">
-              <PhotoIcon className="mx-auto h-12 w-12 text-slate-400" />
+              <PhotoIcon className="mx-auto size-12 text-slate-400" />
               <div className="mt-4 text-sm text-slate-600">
                 <label
                   htmlFor={title}
-                  className="relative cursor-pointer font-semibold text-orange-600 transition hover:text-orange-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-orange-300 focus-within:ring-offset-2"
+                  className="relative cursor-pointer font-semibold text-orange-600 transition focus-within:outline-none focus-within:ring-2 focus-within:ring-orange-300 focus-within:ring-offset-2 hover:text-orange-500"
                 >
                   <span>Bild hochladen</span>
                   <input
@@ -102,14 +141,18 @@ function ImageUploadCard({ title, description, imageUrl, isUploading, onFileChan
                     onChange={onFileChange}
                   />
                 </label>
-                <p className="mt-2 text-xs text-slate-500">PNG, JPG oder WEBP bis zu 5MB</p>
+                <p className="mt-2 text-xs text-slate-500">
+                  PNG, JPG oder WEBP bis zu 5MB
+                </p>
               </div>
             </div>
           )}
           {isUploading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-white/80">
-              <ArrowPathIcon className="h-7 w-7 animate-spin text-orange-500" />
-              <span className="mt-2 text-sm font-medium text-orange-600">Wird hochgeladen...</span>
+              <ArrowPathIcon className="size-7 animate-spin text-orange-500" />
+              <span className="mt-2 text-sm font-medium text-orange-600">
+                Wird hochgeladen...
+              </span>
             </div>
           )}
         </div>
@@ -121,25 +164,35 @@ function ImageUploadCard({ title, description, imageUrl, isUploading, onFileChan
 const SpotlightHint = () => (
   <div className="rounded-2xl border border-orange-200 bg-orange-50/80 p-5 shadow-sm shadow-orange-100">
     <div className="flex items-start gap-3">
-      <InformationCircleIcon className="h-5 w-5 text-orange-500" aria-hidden="true" />
+      <InformationCircleIcon
+        className="size-5 text-orange-500"
+        aria-hidden="true"
+      />
       <p className="text-sm text-slate-700">
-        <span className="font-semibold text-orange-600">Tipp für den Start:</span> Laden Sie zuerst ein „Nachher“-Bild hoch.
-        Unsere KI erstellt daraus automatisch eine passende Projektbeschreibung.
+        <span className="font-semibold text-orange-600">
+          Tipp für den Start:
+        </span>{" "}
+        Laden Sie zuerst ein „Nachher“-Bild hoch. Unsere KI erstellt daraus
+        automatisch eine passende Projektbeschreibung.
       </p>
     </div>
   </div>
 );
 
-export default function ProjectForm({ currentUser, userSlug, initialData }: ProjectFormProps) {
+export default function ProjectForm({
+  currentUser,
+  userSlug,
+  initialData,
+}: ProjectFormProps) {
   const supabase = useMemo(() => createSupabaseClient(), []);
   const router = useRouter();
 
   const [formData, setFormData] = useState({
-    title: initialData?.title || '',
-    'project-date': initialData?.['project-date'] || '',
-    ai_description: initialData?.ai_description || '',
-    notes: initialData?.notes || '',
-    status: initialData?.status || 'Draft',
+    title: initialData?.title || "",
+    "project-date": initialData?.["project-date"] || "",
+    ai_description: initialData?.ai_description || "",
+    notes: initialData?.notes || "",
+    status: initialData?.status || "Draft",
     after_image_url: initialData?.after_image_url || null,
     after_image_storage_path: initialData?.after_image_storage_path || null,
     before_image_url: initialData?.before_image_url || null,
@@ -152,7 +205,11 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -162,52 +219,71 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = async (file: File, type: 'before' | 'after'): Promise<{ url: string; path: string }> => {
-    const fileExt = file.name.split('.').pop();
+  const handleImageUpload = async (
+    file: File,
+    type: "before" | "after",
+  ): Promise<{ url: string; path: string }> => {
+    const fileExt = file.name.split(".").pop();
     const newFileName = `${Date.now()}-${uuidv4()}.${fileExt}`;
     const storagePath = `${currentUser.id}/${newFileName}`;
 
     try {
-      if (type === 'before' && formData.before_image_storage_path) {
-        await supabase.storage.from('project-images').remove([formData.before_image_storage_path]);
+      if (type === "before" && formData.before_image_storage_path) {
+        await supabase.storage
+          .from("project-images")
+          .remove([formData.before_image_storage_path]);
       }
-      if (type === 'after' && formData.after_image_storage_path) {
-        await supabase.storage.from('project-images').remove([formData.after_image_storage_path]);
+      if (type === "after" && formData.after_image_storage_path) {
+        await supabase.storage
+          .from("project-images")
+          .remove([formData.after_image_storage_path]);
       }
     } catch (removeError) {
-      console.error('Error removing old image, proceeding with upload anyway:', removeError);
+      console.error(
+        "Error removing old image, proceeding with upload anyway:",
+        removeError,
+      );
     }
 
-    const { error: uploadError } = await supabase.storage.from('project-images').upload(storagePath, file);
+    const { error: uploadError } = await supabase.storage
+      .from("project-images")
+      .upload(storagePath, file);
     if (uploadError) {
-      console.error('Image upload error:', uploadError);
-      throw new Error(`Fehler beim Hochladen des Bildes: ${uploadError.message}`);
+      console.error("Image upload error:", uploadError);
+      throw new Error(
+        `Fehler beim Hochladen des Bildes: ${uploadError.message}`,
+      );
     }
 
-    const { data: publicUrlData } = supabase.storage.from('project-images').getPublicUrl(storagePath);
+    const { data: publicUrlData } = supabase.storage
+      .from("project-images")
+      .getPublicUrl(storagePath);
     if (!publicUrlData) {
-      throw new Error('Konnte öffentliche URL nach Upload nicht abrufen.');
+      throw new Error("Konnte öffentliche URL nach Upload nicht abrufen.");
     }
 
     return { url: publicUrlData.publicUrl, path: storagePath };
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'before' | 'after') => {
+  const handleFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "before" | "after",
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Bild ist zu groß. Max. 5MB.');
+      toast.error("Bild ist zu groß. Max. 5MB.");
       return;
     }
 
-    if (type === 'before') setIsUploadingBefore(true);
+    if (type === "before") setIsUploadingBefore(true);
     else setIsUploadingAfter(true);
 
     try {
       const { url, path } = await handleImageUpload(file, type);
 
-      if (type === 'before') {
+      if (type === "before") {
         setFormData((prev) => ({
           ...prev,
           before_image_url: url,
@@ -229,37 +305,41 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
         }
       }
 
-      toast.success(`"${type === 'before' ? 'Vorher' : 'Nachher'}" Bild erfolgreich hochgeladen.`);
+      toast.success(
+        `"${type === "before" ? "Vorher" : "Nachher"}" Bild erfolgreich hochgeladen.`,
+      );
     } catch (error: any) {
-      toast.error(error.message || 'Fehler beim Upload.');
+      toast.error(error.message || "Fehler beim Upload.");
     } finally {
-      if (type === 'before') setIsUploadingBefore(false);
+      if (type === "before") setIsUploadingBefore(false);
       else setIsUploadingAfter(false);
     }
   };
 
   const handleGenerateDescription = async (
-    imagePayload: { imageData: string; mimeType: string } | { imageUrl: string },
+    imagePayload:
+      | { imageData: string; mimeType: string }
+      | { imageUrl: string },
   ) => {
     setIsGenerating(true);
 
     try {
-      const response = await fetch('/api/analyze-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/analyze-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(imagePayload),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Antwort vom Server war nicht OK.');
+        throw new Error(error.error || "Antwort vom Server war nicht OK.");
       }
 
       const data = await response.json();
       setFormData((prev) => ({ ...prev, ai_description: data.description }));
-      toast.success('Beschreibung erfolgreich generiert!');
+      toast.success("Beschreibung erfolgreich generiert!");
     } catch (err: any) {
-      console.error('Error generating description:', err);
+      console.error("Error generating description:", err);
       toast.error(`Fehler bei AI-Generierung: ${err.message}`);
     } finally {
       setIsGenerating(false);
@@ -278,10 +358,10 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
     e.preventDefault();
     setIsSaving(true);
 
-    const dataToUpsert: Omit<Project, 'id' | 'created_at'> = {
+    const dataToUpsert: Omit<Project, "id" | "created_at"> = {
       user_id: currentUser.id,
       title: formData.title,
-      'project-date': formData['project-date'] || null,
+      "project-date": formData["project-date"] || null,
       ai_description: formData.ai_description,
       notes: formData.notes,
       status: formData.status,
@@ -303,28 +383,28 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
 
     const savePromise = async () => {
       const { data, error } = await supabase
-        .from('projects')
+        .from("projects")
         .upsert(finalUpsertData)
         .select()
         .single();
 
       if (error) {
-        console.error('Error saving project:', error);
+        console.error("Error saving project:", error);
         throw error;
       }
       return data;
     };
 
     await toast.promise(savePromise(), {
-      loading: 'Projekt wird gespeichert...',
+      loading: "Projekt wird gespeichert...",
       success: (data) => {
         setIsSaving(false);
         if (!initialData) {
           router.push(`/dashboard/projekte/${data.id}/edit`);
-          return 'Projekt erfolgreich erstellt!';
+          return "Projekt erfolgreich erstellt!";
         }
         router.refresh();
-        return 'Projekt erfolgreich gespeichert!';
+        return "Projekt erfolgreich gespeichert!";
       },
       error: (err: any) => {
         setIsSaving(false);
@@ -333,39 +413,57 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
     });
   };
 
-  const handleRemoveImage = async (type: 'before' | 'after') => {
-    const pathToRemove = type === 'before' ? formData.before_image_storage_path : formData.after_image_storage_path;
+  const handleRemoveImage = async (type: "before" | "after") => {
+    const pathToRemove =
+      type === "before"
+        ? formData.before_image_storage_path
+        : formData.after_image_storage_path;
     if (!pathToRemove) {
-      console.log('No image path to remove.');
+      console.log("No image path to remove.");
       return;
     }
 
-    const toastId = toast.loading('Bild wird gelöscht...');
+    const toastId = toast.loading("Bild wird gelöscht...");
 
     try {
-      const { error } = await supabase.storage.from('project-images').remove([pathToRemove]);
+      const { error } = await supabase.storage
+        .from("project-images")
+        .remove([pathToRemove]);
       if (error) throw error;
 
-      if (type === 'before') {
-        setFormData((prev) => ({ ...prev, before_image_url: null, before_image_storage_path: null }));
+      if (type === "before") {
+        setFormData((prev) => ({
+          ...prev,
+          before_image_url: null,
+          before_image_storage_path: null,
+        }));
       } else {
-        setFormData((prev) => ({ ...prev, after_image_url: null, after_image_storage_path: null }));
+        setFormData((prev) => ({
+          ...prev,
+          after_image_url: null,
+          after_image_storage_path: null,
+        }));
       }
 
       if (initialData?.id) {
         const updateData =
-          type === 'before'
+          type === "before"
             ? { before_image_url: null, before_image_storage_path: null }
             : { after_image_url: null, after_image_storage_path: null };
 
-        const { error: dbError } = await supabase.from('projects').update(updateData).eq('id', initialData.id);
+        const { error: dbError } = await supabase
+          .from("projects")
+          .update(updateData)
+          .eq("id", initialData.id);
         if (dbError) throw dbError;
       }
 
-      toast.success('Bild erfolgreich entfernt.', { id: toastId });
+      toast.success("Bild erfolgreich entfernt.", { id: toastId });
     } catch (err: any) {
-      console.error('Error removing image:', err);
-      toast.error(`Fehler beim Entfernen des Bilds: ${err.message}`, { id: toastId });
+      console.error("Error removing image:", err);
+      toast.error(`Fehler beim Entfernen des Bilds: ${err.message}`, {
+        id: toastId,
+      });
     }
   };
 
@@ -373,14 +471,15 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
     setFormData((prev) => ({ ...prev, gallery_images: newGallery }));
   };
 
-  const isFormDisabled = isUploadingBefore || isUploadingAfter || isGenerating || isSaving;
+  const isFormDisabled =
+    isUploadingBefore || isUploadingAfter || isGenerating || isSaving;
   const publicProjectUrl =
-    userSlug && initialData?.id && initialData?.status === 'Published'
+    userSlug && initialData?.id && initialData?.status === "Published"
       ? `/${userSlug}/portfolio/${initialData.id}`
       : null;
 
   const fieldClasses =
-    'block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200';
+    "block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm transition focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200";
 
   return (
     <div className="space-y-10">
@@ -388,11 +487,16 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
 
       <form onSubmit={handleSubmit} className="space-y-12">
         <section className="space-y-8 border-b border-slate-200 pb-12">
-          <h2 className="text-xl font-semibold text-slate-900">Projektdetails</h2>
+          <h2 className="text-xl font-semibold text-slate-900">
+            Projektdetails
+          </h2>
           <div className="grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2">
             <div className="space-y-10">
               <div>
-                <label htmlFor="title" className="block text-sm font-medium text-slate-600">
+                <label
+                  htmlFor="title"
+                  className="block text-sm font-medium text-slate-600"
+                >
                   Titel
                 </label>
                 <div className="mt-2">
@@ -410,7 +514,10 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
                 </div>
               </div>
               <div>
-                <label htmlFor="project-date" className="block text-sm font-medium text-slate-600">
+                <label
+                  htmlFor="project-date"
+                  className="block text-sm font-medium text-slate-600"
+                >
                   Projektdatum
                 </label>
                 <div className="mt-2">
@@ -418,7 +525,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
                     type="date"
                     name="project-date"
                     id="project-date"
-                    value={formData['project-date'] || ''}
+                    value={formData["project-date"] || ""}
                     onChange={handleDateChange}
                     disabled={isFormDisabled}
                     className={fieldClasses}
@@ -427,14 +534,17 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
               </div>
             </div>
             <div>
-              <label htmlFor="status" className="block text-sm font-medium text-slate-600">
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium text-slate-600"
+              >
                 Status
               </label>
               <div className="mt-2">
                 <select
                   id="status"
                   name="status"
-                  value={formData.status || 'Draft'}
+                  value={formData.status || "Draft"}
                   onChange={handleChange}
                   disabled={isFormDisabled}
                   className={fieldClasses}
@@ -445,7 +555,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
               </div>
               {publicProjectUrl && (
                 <p className="mt-3 text-sm text-slate-600">
-                  Öffentlicher Link:{' '}
+                  Öffentlicher Link:{" "}
                   <a
                     href={publicProjectUrl}
                     target="_blank"
@@ -461,23 +571,25 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
         </section>
 
         <section className="space-y-8 border-b border-slate-200 pb-12">
-          <h2 className="text-xl font-semibold text-slate-900">Projektbilder</h2>
+          <h2 className="text-xl font-semibold text-slate-900">
+            Projektbilder
+          </h2>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <ImageUploadCard
               title="Nachher Bild (Titelbild)"
               description="Das Hauptbild Ihres Projekts. Wird als Titelbild verwendet."
               imageUrl={formData.after_image_url}
               isUploading={isUploadingAfter}
-              onFileChange={(e) => handleFileChange(e, 'after')}
-              onRemove={() => handleRemoveImage('after')}
+              onFileChange={(e) => handleFileChange(e, "after")}
+              onRemove={() => handleRemoveImage("after")}
             />
             <ImageUploadCard
               title="Vorher Bild (Optional)"
               description="Zeigen Sie den Ausgangszustand, falls vorhanden."
               imageUrl={formData.before_image_url}
               isUploading={isUploadingBefore}
-              onFileChange={(e) => handleFileChange(e, 'before')}
-              onRemove={() => handleRemoveImage('before')}
+              onFileChange={(e) => handleFileChange(e, "before")}
+              onRemove={() => handleRemoveImage("before")}
             />
           </div>
         </section>
@@ -485,9 +597,12 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
         <section className="space-y-6 border-b border-slate-200 pb-12">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">KI Projektbeschreibung</h2>
+              <h2 className="text-xl font-semibold text-slate-900">
+                KI Projektbeschreibung
+              </h2>
               <p className="mt-1 text-sm text-slate-600">
-                Lassen Sie eine Beschreibung automatisch generieren, basierend auf dem „Nachher“-Bild.
+                Lassen Sie eine Beschreibung automatisch generieren, basierend
+                auf dem „Nachher“-Bild.
               </p>
             </div>
             <button
@@ -496,14 +611,18 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
               disabled={isFormDisabled || !formData.after_image_url}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-orange-100 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200 disabled:cursor-not-allowed disabled:bg-orange-100 disabled:text-orange-300"
             >
-              {isGenerating ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : 'Beschreibung generieren'}
+              {isGenerating ? (
+                <ArrowPathIcon className="size-5 animate-spin" />
+              ) : (
+                "Beschreibung generieren"
+              )}
             </button>
           </div>
           <textarea
             id="ai_description"
             name="ai_description"
             rows={10}
-            value={formData.ai_description || ''}
+            value={formData.ai_description || ""}
             onChange={handleChange}
             disabled={isFormDisabled}
             className={`${fieldClasses} min-h-[200px] leading-6`}
@@ -513,7 +632,9 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
 
         {initialData?.id && (
           <section className="space-y-8 border-b border-slate-200 pb-12">
-            <h2 className="text-xl font-semibold text-slate-900">Projektgalerie</h2>
+            <h2 className="text-xl font-semibold text-slate-900">
+              Projektgalerie
+            </h2>
             <ProjectGalleryManager
               projectId={initialData.id}
               userId={currentUser.id}
@@ -524,9 +645,14 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
         )}
 
         <section className="space-y-6">
-          <h2 className="text-xl font-semibold text-slate-900">Private Notizen</h2>
+          <h2 className="text-xl font-semibold text-slate-900">
+            Private Notizen
+          </h2>
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-slate-600">
+            <label
+              htmlFor="notes"
+              className="block text-sm font-medium text-slate-600"
+            >
               Notizen (Nur für Sie sichtbar)
             </label>
             <div className="mt-2">
@@ -534,7 +660,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
                 id="notes"
                 name="notes"
                 rows={3}
-                value={formData.notes || ''}
+                value={formData.notes || ""}
                 onChange={handleChange}
                 disabled={isFormDisabled}
                 className={`${fieldClasses} leading-6`}
@@ -547,7 +673,7 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
         <div className="flex items-center justify-end gap-4">
           <button
             type="button"
-            onClick={() => router.push('/dashboard/projekte')}
+            onClick={() => router.push("/dashboard/projekte")}
             disabled={isFormDisabled}
             className="text-sm font-semibold text-slate-500 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:text-slate-300"
           >
@@ -558,7 +684,11 @@ export default function ProjectForm({ currentUser, userSlug, initialData }: Proj
             disabled={isFormDisabled}
             className="inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-orange-100 transition hover:bg-orange-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200 disabled:cursor-not-allowed disabled:bg-orange-100 disabled:text-orange-300"
           >
-            {isSaving ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : 'Projekt speichern'}
+            {isSaving ? (
+              <ArrowPathIcon className="size-5 animate-spin" />
+            ) : (
+              "Projekt speichern"
+            )}
           </button>
         </div>
       </form>

@@ -16,7 +16,12 @@
 
   body {
     @apply min-h-full bg-slate-50 text-slate-900 antialiased font-sans;
-    background-image: radial-gradient(125% 125% at 50% 0%, rgba(248, 250, 252, 1) 0%, rgba(226, 232, 240, 0.7) 45%, rgba(248, 250, 252, 1) 100%);
+    background-image: radial-gradient(
+      125% 125% at 50% 0%,
+      rgba(248, 250, 252, 1) 0%,
+      rgba(226, 232, 240, 0.7) 45%,
+      rgba(248, 250, 252, 1) 100%
+    );
     padding-bottom: env(safe-area-inset-bottom);
   }
 
@@ -29,8 +34,8 @@
   }
 
   :focus-visible {
-  outline: 2px solid var(--color-brand-primary);
-  outline-offset: 3px;
+    outline: 2px solid var(--color-brand-primary);
+    outline-offset: 3px;
   }
 
   ::selection {

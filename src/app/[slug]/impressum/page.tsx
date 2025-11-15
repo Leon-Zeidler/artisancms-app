@@ -1,9 +1,9 @@
 // src/app/[slug]/impressum/page.tsx
 "use client";
 
-import React from 'react';
-import LegalDisclaimer from '@/components/LegalDisclaimer';
-import { useProfile } from '@/contexts/ProfileContext'; // <-- IMPORT CONTEXT
+import React from "react";
+import LegalDisclaimer from "@/components/LegalDisclaimer";
+import { useProfile } from "@/contexts/ProfileContext"; // <-- IMPORT CONTEXT
 
 export default function ImpressumPage() {
   const profile = useProfile(); // <-- GET PROFILE FROM CONTEXT
@@ -18,15 +18,15 @@ export default function ImpressumPage() {
 
         <LegalDisclaimer />
 
-        <div className="mt-10 prose prose-lg prose-slate max-w-none">
+        <div className="prose prose-lg prose-slate mt-10 max-w-none">
           {profile.impressum_text ? (
-               <div style={{ whiteSpace: 'pre-line' }}>
-                  {profile.impressum_text}
-               </div>
+            <div style={{ whiteSpace: "pre-line" }}>
+              {profile.impressum_text}
+            </div>
           ) : (
-              <p className="text-gray-500 italic">
-                  Kein Impressumstext hinterlegt.
-              </p>
+            <p className="italic text-gray-500">
+              Kein Impressumstext hinterlegt.
+            </p>
           )}
         </div>
       </div>

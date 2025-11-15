@@ -1,4 +1,6 @@
-export const IMPRESSUM_TEMPLATE = (businessName: string) =>`Angaben gemäß § 5 TMG:
+export const IMPRESSUM_TEMPLATE = (
+  businessName: string,
+) => `Angaben gemäß § 5 TMG:
 
 [FIRMENNAME]
 [ADRESSE_MEHRZEILIG]
@@ -11,8 +13,9 @@ Telefon: [TELEFON]
 E-Mail: [EMAIL]
 `;
 
-
-export const DATENSCHUTZ_TEMPLATE = (businessName: string) =>`1. Verantwortlicher
+export const DATENSCHUTZ_TEMPLATE = (
+  businessName: string,
+) => `1. Verantwortlicher
 
 [FIRMENNAME]
 [ADRESSE_MEHRZEILIG]

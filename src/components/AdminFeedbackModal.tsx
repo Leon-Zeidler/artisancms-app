@@ -1,30 +1,71 @@
 // src/components/AdminFeedbackModal.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { type Feedback as FeedbackType } from '@/app/dashboard/admin/page'; // We'll export this type
+import React, { useState, useEffect } from "react";
+import { type Feedback as FeedbackType } from "@/app/dashboard/admin/page"; // We'll export this type
 
 // --- Icons ---
-const XMarkIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg>);
-const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg {...props} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 animate-spin"> <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /> </svg> );
+const XMarkIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+  >
+    {" "}
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M6 18L18 6M6 6l12 12"
+    />{" "}
+  </svg>
+);
+const ArrowPathIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    {...props}
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="size-4 animate-spin"
+  >
+    {" "}
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+    />{" "}
+  </svg>
+);
 
 interface AdminFeedbackModalProps {
   item: FeedbackType | null;
   onClose: () => void;
-  onSave: (itemId: string, newNote: string, newResolvedStatus: boolean) => Promise<void>;
+  onSave: (
+    itemId: string,
+    newNote: string,
+    newResolvedStatus: boolean,
+  ) => Promise<void>;
   isSaving: boolean;
   userEmail: string;
 }
 
-export default function AdminFeedbackModal({ item, onClose, onSave, isSaving, userEmail }: AdminFeedbackModalProps) {
-  const [adminNote, setAdminNote] = useState('');
+export default function AdminFeedbackModal({
+  item,
+  onClose,
+  onSave,
+  isSaving,
+  userEmail,
+}: AdminFeedbackModalProps) {
+  const [adminNote, setAdminNote] = useState("");
   const [isResolved, setIsResolved] = useState(false);
 
   // When the modal opens (when 'item' changes),
   // update the internal state for the note and checkbox.
   useEffect(() => {
     if (item) {
-      setAdminNote(item.admin_notes || '');
+      setAdminNote(item.admin_notes || "");
       setIsResolved(item.is_resolved || false);
     }
   }, [item]);
@@ -39,7 +80,7 @@ export default function AdminFeedbackModal({ item, onClose, onSave, isSaving, us
 
   return (
     <div
-      className="fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm flex items-center justify-center"
+      className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 backdrop-blur-sm"
       onClick={onClose}
       aria-modal="true"
     >
@@ -49,7 +90,9 @@ export default function AdminFeedbackModal({ item, onClose, onSave, isSaving, us
       >
         <div className="flex items-start justify-between border-b border-orange-100 px-6 py-5">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">Feedback Details</h3>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Feedback Details
+            </h3>
             <p className="text-sm text-slate-500">
               From: <strong className="text-slate-900">{userEmail}</strong>
             </p>
@@ -59,39 +102,56 @@ export default function AdminFeedbackModal({ item, onClose, onSave, isSaving, us
             className="rounded-full bg-orange-50 p-1.5 text-orange-500 transition hover:bg-orange-100 hover:text-orange-600"
             aria-label="Close modal"
           >
-            <XMarkIcon className="h-6 w-6" />
+            <XMarkIcon className="size-6" />
           </button>
         </div>
 
-        <div className="max-h-[70vh] space-y-5 overflow-y-auto px-6 py-6">
+        <div className="max-h-[70vh] space-y-5 overflow-y-auto p-6">
           {/* Feedback Details */}
           <div className="space-y-2">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">Category</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">
+                Category
+              </label>
               <p className="ml-2 inline-flex items-center rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600">
                 {item.category}
               </p>
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">Page URL</label>
-              <p className="mt-1 text-sm font-mono text-slate-600">{item.page_url}</p>
+              <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">
+                Page URL
+              </label>
+              <p className="mt-1 font-mono text-sm text-slate-600">
+                {item.page_url}
+              </p>
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">Submitted At</label>
-              <p className="mt-1 text-sm text-slate-600">{new Date(item.created_at).toLocaleString('de-DE')}</p>
+              <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">
+                Submitted At
+              </label>
+              <p className="mt-1 text-sm text-slate-600">
+                {new Date(item.created_at).toLocaleString("de-DE")}
+              </p>
             </div>
             <div>
               {/* --- FIX: Replaced ' with &apos; --- */}
-              <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">User&apos;s Message</label>
-              <div className="mt-2 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm shadow-orange-100/40">
-                <p className="text-sm leading-6 text-slate-700 whitespace-pre-wrap">{item.message}</p>
+              <label className="text-xs font-semibold uppercase tracking-wide text-orange-500">
+                User&apos;s Message
+              </label>
+              <div className="mt-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-orange-100/40">
+                <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                  {item.message}
+                </p>
               </div>
             </div>
           </div>
 
           {/* Admin Notes */}
           <div className="border-t border-orange-100 pt-4">
-            <label htmlFor="admin_notes" className="mb-2 block text-sm font-semibold text-slate-800">
+            <label
+              htmlFor="admin_notes"
+              className="mb-2 block text-sm font-semibold text-slate-800"
+            >
               Your Admin Notes
             </label>
             <textarea
@@ -113,11 +173,14 @@ export default function AdminFeedbackModal({ item, onClose, onSave, isSaving, us
                 type="checkbox"
                 checked={isResolved}
                 onChange={(e) => setIsResolved(e.target.checked)}
-                className="h-4 w-4 rounded border-orange-300 text-orange-500 focus:ring-orange-400 focus:ring-offset-0"
+                className="size-4 rounded border-orange-300 text-orange-500 focus:ring-orange-400 focus:ring-offset-0"
               />
             </div>
             <div className="ml-3 text-sm leading-6">
-              <label htmlFor="is_resolved" className="font-semibold text-slate-800">
+              <label
+                htmlFor="is_resolved"
+                className="font-semibold text-slate-800"
+              >
                 Mark as Resolved
               </label>
               <p className="text-xs text-slate-500">
@@ -143,8 +206,8 @@ export default function AdminFeedbackModal({ item, onClose, onSave, isSaving, us
             disabled={isSaving}
             className="inline-flex items-center gap-x-2 rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:bg-orange-300"
           >
-            {isSaving && <ArrowPathIcon className="h-4 w-4" />}
-            {isSaving ? 'Saving...' : 'Save Note & Close'}
+            {isSaving && <ArrowPathIcon className="size-4" />}
+            {isSaving ? "Saving..." : "Save Note & Close"}
           </button>
         </div>
       </div>

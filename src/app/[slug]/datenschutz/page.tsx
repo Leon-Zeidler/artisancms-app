@@ -1,9 +1,9 @@
 // src/app/[slug]/datenschutz/page.tsx
 "use client";
 
-import React from 'react';
-import LegalDisclaimer from '@/components/LegalDisclaimer';
-import { useProfile } from '@/contexts/ProfileContext'; // <-- IMPORT CONTEXT
+import React from "react";
+import LegalDisclaimer from "@/components/LegalDisclaimer";
+import { useProfile } from "@/contexts/ProfileContext"; // <-- IMPORT CONTEXT
 
 export default function DatenschutzPage() {
   const profile = useProfile(); // <-- GET PROFILE FROM CONTEXT
@@ -18,15 +18,15 @@ export default function DatenschutzPage() {
 
         <LegalDisclaimer />
 
-        <div className="mt-10 prose prose-lg prose-slate max-w-none">
+        <div className="prose prose-lg prose-slate mt-10 max-w-none">
           {profile.datenschutz_text ? (
-               <div style={{ whiteSpace: 'pre-line' }}>
-                  {profile.datenschutz_text}
-               </div>
+            <div style={{ whiteSpace: "pre-line" }}>
+              {profile.datenschutz_text}
+            </div>
           ) : (
-              <p className="text-gray-500 italic">
-                  Kein Datenschutzerklärungstext hinterlegt.
-              </p>
+            <p className="italic text-gray-500">
+              Kein Datenschutzerklärungstext hinterlegt.
+            </p>
           )}
         </div>
       </div>
